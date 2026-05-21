@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-neutral-950 text-neutral-50;
+}
+
+/* Reusable UI helpers */
+.card {
+  @apply rounded-2xl border border-neutral-800 bg-neutral-900/70 shadow-sm;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition;
+}
+
+.btn-primary {
+  @apply btn bg-indigo-600 text-white hover:bg-indigo-500;
+}
+
+.btn-ghost {
+  @apply btn bg-neutral-900 text-neutral-100 hover:bg-neutral-800;
+}
+
+.input {
+  @apply w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-indigo-500;
+}
+
+.label {
+  @apply text-sm font-medium text-neutral-300;
+}
+
+.h1 {
+  @apply text-3xl font-semibold tracking-tight;
+}
+
+.h2 {
+  @apply text-lg font-semibold tracking-tight;
+}
+
+.muted {
+  @apply text-sm text-neutral-400;
+}
