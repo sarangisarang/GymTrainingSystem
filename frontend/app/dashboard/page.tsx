@@ -103,7 +103,7 @@ function DashboardInner() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/exercises" className="card p-5 hover:border-indigo-500/50 transition-colors">
           <div className="text-2xl">🏋️</div>
           <h2 className="mt-3 font-semibold">Exercises</h2>
@@ -118,6 +118,11 @@ function DashboardInner() {
           <div className="text-2xl">📊</div>
           <h2 className="mt-3 font-semibold">Programs</h2>
           <p className="muted mt-1 text-sm">Training programs from 1RM</p>
+        </Link>
+        <Link href="/progress" className="card p-5 hover:border-indigo-500/50 transition-colors">
+          <div className="text-2xl">📈</div>
+          <h2 className="mt-3 font-semibold">Progress</h2>
+          <p className="muted mt-1 text-sm">Strength & volume charts</p>
         </Link>
       </div>
 

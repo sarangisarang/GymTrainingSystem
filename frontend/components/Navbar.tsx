@@ -75,6 +75,7 @@ export default function Navbar() {
           <NavLink href="/exercises" label="Exercises" />
           <NavLink href="/workouts" label="Workouts" />
           <NavLink href="/programs" label="Programs" />
+          <NavLink href="/progress" label="Progress" />
           <Link
             href="/cart"
             className="rounded-xl px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-900"
