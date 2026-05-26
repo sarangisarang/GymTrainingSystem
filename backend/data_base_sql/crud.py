@@ -549,9 +549,15 @@ def predict_exercise_progress(
     Linear regression on this user's weight history for one exercise.
 
     Models weight = intercept + slope * days_since_first_session and projects when
-    `target_weight` will be reached. Plateau is flagged when the slope is essentially
-    flat (<= 0.1 kg/week) and already_achieved when the last recorded weight already
-    meets the target.
+    `target_weight` will be reached. The weekly slope is classified into one of three
+    semantic buckets via `reason`:
+
+      slope > +0.1 kg/week   -> "steady_progress"
+      slope in [-0.1, +0.1]  -> "plateau"        (essentially flat)
+      slope <  -0.1 kg/week  -> "regression"     (getting weaker — different fix)
+
+    `already_achieved` is independent and true when the last logged weight already
+    meets or exceeds the target.
 
     Implemented with the Python standard library (no numpy dependency).
     """
@@ -602,8 +608,14 @@ def predict_exercise_progress(
 
     target = float(target_weight)
     current_weight = ys[-1]
-    plateau = slope_per_week <= 0.1
     already_achieved = current_weight >= target
+
+    if slope_per_week > 0.1:
+        reason = "steady_progress"
+    elif slope_per_week < -0.1:
+        reason = "regression"
+    else:
+        reason = "plateau"
 
     weeks_to_target = None
     predicted_date = None
@@ -619,7 +631,7 @@ def predict_exercise_progress(
         "slope_kg_per_week": round(slope_per_week, 3),
         "weeks_to_target": weeks_to_target,
         "predicted_date": predicted_date,
-        "plateau": plateau,
+        "reason": reason,
         "already_achieved": already_achieved,
     }
 

@@ -153,6 +153,8 @@ export type ExerciseHistoryEntry = {
   volume_kg: string;
 };
 
+export type PredictionReason = "steady_progress" | "plateau" | "regression";
+
 export type ExercisePrediction = {
   sessions: number;
   current_weight: number;
@@ -160,7 +162,7 @@ export type ExercisePrediction = {
   slope_kg_per_week: number;
   weeks_to_target: number | null;
   predicted_date: string | null; // ISO "YYYY-MM-DD"
-  plateau: boolean;
+  reason: PredictionReason;
   already_achieved: boolean;
 };
 

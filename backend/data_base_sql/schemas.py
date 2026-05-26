@@ -193,7 +193,7 @@ class ExercisePredictionRead(BaseModel):
     slope_kg_per_week: float
     weeks_to_target: Optional[float] = None
     predicted_date: Optional[str] = None
-    plateau: bool
+    reason: Literal["steady_progress", "plateau", "regression"]
     already_achieved: bool
 
 

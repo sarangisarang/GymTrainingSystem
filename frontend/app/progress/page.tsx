@@ -371,7 +371,9 @@ function ProgressInner() {
                   <>
                     <p className="muted text-xs">Result</p>
                     <p className="mt-1 text-sm text-amber-300">
-                      Cannot estimate — slope is non-positive. Build momentum first.
+                      {prediction.reason === "regression"
+                        ? "Cannot estimate — recent trend is downward. Address recovery first."
+                        : "Cannot estimate — slope is essentially flat. Build momentum first."}
                     </p>
                   </>
                 )}
@@ -379,10 +381,20 @@ function ProgressInner() {
             </div>
           )}
 
-          {prediction?.plateau && !prediction.already_achieved && (
+          {prediction && prediction.reason === "plateau" && !prediction.already_achieved && (
             <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-              ⚠ Plateau detected — your weekly progression is essentially flat
-              ({prediction.slope_kg_per_week} kg/week). Consider a deload, a program switch, or revisiting form.
+              ⚠ <span className="font-semibold">Plateau detected</span> — your weekly progression
+              is essentially flat ({prediction.slope_kg_per_week} kg/week). Consider a deload,
+              a program switch, or revisiting form.
+            </div>
+          )}
+
+          {prediction && prediction.reason === "regression" && !prediction.already_achieved && (
+            <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              🔻 <span className="font-semibold">Regression detected</span> — you&apos;re getting
+              weaker on this lift ({prediction.slope_kg_per_week} kg/week). Check recovery,
+              sleep, nutrition and form before adding load. If this persists, deload or pause
+              this exercise.
             </div>
           )}
         </div>
