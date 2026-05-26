@@ -539,6 +539,103 @@ def get_exercise_history(db: Session, user_id: UUID, exercise_id: UUID) -> list[
     return result
 
 
+def predict_exercise_progress(
+    db: Session,
+    user_id: UUID,
+    exercise_id: UUID,
+    target_weight: Decimal,
+) -> dict:
+    """
+    Linear regression on this user's weight history for one exercise.
+
+    Models weight = intercept + slope * days_since_first_session and projects when
+    `target_weight` will be reached. The weekly slope is classified into one of three
+    semantic buckets via `reason`:
+
+      slope > +0.1 kg/week   -> "steady_progress"
+      slope in [-0.1, +0.1]  -> "plateau"        (essentially flat)
+      slope <  -0.1 kg/week  -> "regression"     (getting weaker — different fix)
+
+    `already_achieved` is independent and true when the last logged weight already
+    meets or exceeds the target.
+
+    Implemented with the Python standard library (no numpy dependency).
+    """
+    rows = (
+        db.query(Workout.date, WorkoutExercise.weight)
+        .join(WorkoutExercise, WorkoutExercise.workout_id == Workout.id)
+        .filter(
+            Workout.user_id == str(user_id),
+            WorkoutExercise.exercise_id == str(exercise_id),
+            WorkoutExercise.weight.isnot(None),
+        )
+        .order_by(Workout.date.asc())
+        .all()
+    )
+
+    points = [
+        (row.date, float(row.weight))
+        for row in rows
+        if row.weight is not None and float(row.weight) > 0
+    ]
+    if len(points) < 3:
+        raise HTTPException(
+            status_code=422,
+            detail="Need at least 3 weighted sessions for this exercise to predict.",
+        )
+
+    first_date = points[0][0]
+    xs = [(d - first_date).days for d, _ in points]
+    ys = [w for _, w in points]
+    n = len(xs)
+
+    # Least-squares linear regression (closed form)
+    sum_x = sum(xs)
+    sum_y = sum(ys)
+    sum_xx = sum(x * x for x in xs)
+    sum_xy = sum(x * y for x, y in zip(xs, ys))
+    denom = n * sum_xx - sum_x * sum_x
+    if denom == 0:
+        # All sessions on the same day -> cannot infer a slope.
+        raise HTTPException(
+            status_code=422,
+            detail="Sessions need to span more than one day to predict progress.",
+        )
+
+    slope_per_day = (n * sum_xy - sum_x * sum_y) / denom
+    intercept = (sum_y - slope_per_day * sum_x) / n
+    slope_per_week = slope_per_day * 7
+
+    target = float(target_weight)
+    current_weight = ys[-1]
+    already_achieved = current_weight >= target
+
+    if slope_per_week > 0.1:
+        reason = "steady_progress"
+    elif slope_per_week < -0.1:
+        reason = "regression"
+    else:
+        reason = "plateau"
+
+    weeks_to_target = None
+    predicted_date = None
+    if not already_achieved and slope_per_day > 0:
+        target_days = (target - intercept) / slope_per_day
+        weeks_to_target = round((target_days - xs[-1]) / 7, 2)
+        predicted_date = (first_date + timedelta(days=int(round(target_days)))).isoformat()
+
+    return {
+        "sessions": n,
+        "current_weight": round(current_weight, 2),
+        "target_weight": round(target, 2),
+        "slope_kg_per_week": round(slope_per_week, 3),
+        "weeks_to_target": weeks_to_target,
+        "predicted_date": predicted_date,
+        "reason": reason,
+        "already_achieved": already_achieved,
+    }
+
+
 def get_user_stats(db: Session, user_id: UUID) -> dict:
     """Returns summary stats: total workouts, streak, volume this week, workouts this week."""
     from datetime import date as d_type, timedelta

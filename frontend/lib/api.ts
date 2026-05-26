@@ -153,6 +153,19 @@ export type ExerciseHistoryEntry = {
   volume_kg: string;
 };
 
+export type PredictionReason = "steady_progress" | "plateau" | "regression";
+
+export type ExercisePrediction = {
+  sessions: number;
+  current_weight: number;
+  target_weight: number;
+  slope_kg_per_week: number;
+  weeks_to_target: number | null;
+  predicted_date: string | null; // ISO "YYYY-MM-DD"
+  reason: PredictionReason;
+  already_achieved: boolean;
+};
+
 export type UserStats = {
   total_workouts: number;
   current_streak: number;
@@ -337,6 +350,14 @@ export async function getUserStats() {
 
 export async function getExerciseHistory(exerciseId: string) {
   return apiFetch<ExerciseHistoryEntry[]>(`/workouts/history/exercise/${exerciseId}`, { auth: true });
+}
+
+export async function getExercisePrediction(exerciseId: string, targetWeightKg: number) {
+  const qs = new URLSearchParams({ target_weight: String(targetWeightKg) });
+  return apiFetch<ExercisePrediction>(
+    `/workouts/predict/${exerciseId}?${qs.toString()}`,
+    { auth: true },
+  );
 }
 
 // ── Programs ──────────────────────────────────────────────────────────────

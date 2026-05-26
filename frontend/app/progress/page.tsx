@@ -18,9 +18,11 @@ import Protected from "@/components/Protected";
 import {
   getExercises,
   getExerciseHistory,
+  getExercisePrediction,
   getWorkouts,
   type ExerciseRead,
   type ExerciseHistoryEntry,
+  type ExercisePrediction,
   type WorkoutRead,
 } from "@/lib/api";
 import {
@@ -89,6 +91,32 @@ function ProgressInner() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // ── Predictive Strength Engine ────────────────────────────────────────────
+  const [targetInput, setTargetInput] = useState<string>("");
+  const [prediction, setPrediction] = useState<ExercisePrediction | null>(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionErr, setPredictionErr] = useState<string | null>(null);
+
+  async function runPrediction() {
+    if (!selectedId) return;
+    const target = parseFloat(targetInput);
+    if (!Number.isFinite(target) || target <= 0) {
+      setPredictionErr("Enter a target weight greater than 0.");
+      return;
+    }
+    setPredictionLoading(true);
+    setPredictionErr(null);
+    try {
+      const p = await getExercisePrediction(selectedId, target);
+      setPrediction(p);
+    } catch (e: unknown) {
+      setPrediction(null);
+      setPredictionErr(e instanceof Error ? e.message : "Prediction failed");
+    } finally {
+      setPredictionLoading(false);
+    }
+  }
+
   // Initial load: exercises (for selector) + workouts (for weekly volume).
   useEffect(() => {
     (async () => {
@@ -113,6 +141,8 @@ function ProgressInner() {
 
   // Load history whenever the selected exercise changes.
   useEffect(() => {
+    setPrediction(null);
+    setPredictionErr(null);
     if (!selectedId) {
       setHistory([]);
       return;
@@ -151,6 +181,41 @@ function ProgressInner() {
     if (strengthData.length === 0) return null;
     return strengthData.reduce((best, d) => (d.weight > best.weight ? d : best), strengthData[0]);
   }, [strengthData]);
+
+  // Combined chart data: historical points + a projection segment.
+  // Recharts treats `connectNulls={false}` lines as: drawn only between adjacent non-null
+  // points. So we seed the LAST historical point's `projection` with its weight, then
+  // append a synthetic future point whose `projection = target_weight`.
+  type StrengthChartPoint = {
+    date: string;
+    label: string;
+    weight: number | null;
+    projection: number | null;
+  };
+  const strengthChartData = useMemo<StrengthChartPoint[]>(() => {
+    const base: StrengthChartPoint[] = strengthData.map((d, i) => ({
+      date: d.date,
+      label: d.label,
+      weight: d.weight,
+      projection: i === strengthData.length - 1 ? d.weight : null,
+    }));
+    if (
+      prediction &&
+      prediction.predicted_date &&
+      prediction.weeks_to_target != null &&
+      prediction.weeks_to_target > 0 &&
+      !prediction.already_achieved &&
+      base.length > 0
+    ) {
+      base.push({
+        date: prediction.predicted_date,
+        label: fmtShort(parseDate(prediction.predicted_date)),
+        weight: null,
+        projection: prediction.target_weight,
+      });
+    }
+    return base;
+  }, [strengthData, prediction]);
 
   // ── Weekly volume data (last 8 weeks, zero-filled) ─────────────────────────
   const weeklyVolume = useMemo(() => {
@@ -224,6 +289,116 @@ function ProgressInner() {
           </select>
         </div>
 
+        {/* ── Prediction controls ───────────────────────────────────────────── */}
+        <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950/40 p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label className="label text-xs">Predict reaching</label>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  placeholder="100"
+                  className="input w-28"
+                  value={targetInput}
+                  onChange={(e) => setTargetInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") runPrediction();
+                  }}
+                />
+                <span className="muted text-sm">kg</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={runPrediction}
+              disabled={predictionLoading || !selectedId || !targetInput}
+            >
+              {predictionLoading ? "Predicting…" : "Predict"}
+            </button>
+            {prediction && (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => {
+                  setPrediction(null);
+                  setPredictionErr(null);
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {predictionErr && (
+            <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {predictionErr}
+            </div>
+          )}
+
+          {prediction && (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg bg-neutral-900/70 p-3">
+                <p className="muted text-xs">Current</p>
+                <p className="mt-1 text-lg font-semibold">{prediction.current_weight} kg</p>
+                <p className="muted text-xs mt-1">{prediction.sessions} sessions</p>
+              </div>
+              <div className="rounded-lg bg-neutral-900/70 p-3">
+                <p className="muted text-xs">Target</p>
+                <p className="mt-1 text-lg font-semibold">{prediction.target_weight} kg</p>
+                <p className="muted text-xs mt-1">
+                  {prediction.slope_kg_per_week >= 0 ? "+" : ""}
+                  {prediction.slope_kg_per_week} kg / week
+                </p>
+              </div>
+              <div className="rounded-lg bg-neutral-900/70 p-3 sm:col-span-2">
+                {prediction.already_achieved ? (
+                  <>
+                    <p className="muted text-xs">Result</p>
+                    <p className="mt-1 text-lg font-semibold text-emerald-400">Already achieved 🎉</p>
+                  </>
+                ) : prediction.weeks_to_target != null && prediction.predicted_date ? (
+                  <>
+                    <p className="muted text-xs">Estimated time to target</p>
+                    <p className="mt-1 text-lg font-semibold">
+                      ~{prediction.weeks_to_target} weeks
+                    </p>
+                    <p className="muted text-xs mt-1">around {prediction.predicted_date}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="muted text-xs">Result</p>
+                    <p className="mt-1 text-sm text-amber-300">
+                      {prediction.reason === "regression"
+                        ? "Cannot estimate — recent trend is downward. Address recovery first."
+                        : "Cannot estimate — slope is essentially flat. Build momentum first."}
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {prediction && prediction.reason === "plateau" && !prediction.already_achieved && (
+            <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+              ⚠ <span className="font-semibold">Plateau detected</span> — your weekly progression
+              is essentially flat ({prediction.slope_kg_per_week} kg/week). Consider a deload,
+              a program switch, or revisiting form.
+            </div>
+          )}
+
+          {prediction && prediction.reason === "regression" && !prediction.already_achieved && (
+            <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              🔻 <span className="font-semibold">Regression detected</span> — you&apos;re getting
+              weaker on this lift ({prediction.slope_kg_per_week} kg/week). Check recovery,
+              sleep, nutrition and form before adding load. If this persists, deload or pause
+              this exercise.
+            </div>
+          )}
+        </div>
+
         <div className="mt-5">
           {historyLoading ? (
             <div className="h-[300px] animate-pulse rounded-xl bg-neutral-800" />
@@ -240,14 +415,14 @@ function ProgressInner() {
                 </div>
               )}
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={strengthData} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
+                <LineChart data={strengthChartData} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
                   <XAxis dataKey="label" stroke={COLORS.axis} fontSize={12} tickMargin={8} />
                   <YAxis stroke={COLORS.axis} fontSize={12} width={44} unit=" kg" />
                   <Tooltip
                     contentStyle={tooltipStyle}
                     labelStyle={{ color: "#fafafa" }}
-                    formatter={(value: number) => [`${value} kg`, "Weight"]}
+                    formatter={(value: number, name: string) => [`${value} kg`, name]}
                   />
                   <Line
                     type="monotone"
@@ -257,6 +432,16 @@ function ProgressInner() {
                     dot={{ r: 3, fill: COLORS.primary }}
                     activeDot={{ r: 5 }}
                     name="Weight"
+                    isAnimationActive={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="projection"
+                    stroke={COLORS.primarySoft}
+                    strokeWidth={2}
+                    strokeDasharray="6 4"
+                    dot={{ r: 3, fill: COLORS.primarySoft }}
+                    name="Projection"
                     isAnimationActive={false}
                   />
                   {prPoint && (
