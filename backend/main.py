@@ -11,6 +11,7 @@ from fastAPI_functions.exercises import router as exercises_router
 from fastAPI_functions.workout import router as workout_router
 from fastAPI_functions.workout_exercises import router as workout_exercises_router
 from fastAPI_functions.programs import router as programs_router
+from fastAPI_functions.ai_coach import router as ai_coach_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -63,6 +64,8 @@ app.add_middleware(
         "http://3.70.203.212",
         "http://3.70.203.212:3000",
         "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -79,6 +82,7 @@ app.include_router(exercises_router)
 app.include_router(workout_router)
 app.include_router(workout_exercises_router)
 app.include_router(programs_router)
+app.include_router(ai_coach_router)
 
 
 @app.get("/")
