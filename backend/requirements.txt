@@ -33,4 +33,7 @@ uvloop==0.22.1
 watchfiles==1.1.1
 websockets==15.0.1
 wheel==0.45.1
-email-validator>=2.0.0anthropic>=0.104.0
+email-validator>=2.0.0
+httpx>=0.28
+anthropic>=0.104.0  # TODO: review — listed but not imported in code (ai_coach.py uses httpx for Gemini directly)
+
