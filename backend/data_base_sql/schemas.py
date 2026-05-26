@@ -186,6 +186,17 @@ class ExerciseHistoryEntry(BaseModel):
     volume_kg: str
 
 
+class ExercisePredictionRead(BaseModel):
+    sessions: int
+    current_weight: float
+    target_weight: float
+    slope_kg_per_week: float
+    weeks_to_target: Optional[float] = None
+    predicted_date: Optional[str] = None
+    plateau: bool
+    already_achieved: bool
+
+
 class UserStatsRead(BaseModel):
     total_workouts: int
     current_streak: int

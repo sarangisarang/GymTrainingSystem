@@ -7,7 +7,14 @@ from sqlalchemy.orm import Session
 
 from .security import get_current_user
 from data_base_sql.database import get_db
-from data_base_sql.schemas import WorkoutCreate, WorkoutRead, WorkoutAnalysisRead, ExerciseHistoryEntry, UserStatsRead
+from data_base_sql.schemas import (
+    WorkoutCreate,
+    WorkoutRead,
+    WorkoutAnalysisRead,
+    ExerciseHistoryEntry,
+    ExercisePredictionRead,
+    UserStatsRead,
+)
 from data_base_sql.crud import (
     create_workout,
     get_workout,
@@ -16,6 +23,7 @@ from data_base_sql.crud import (
     delete_workout,
     get_exercise_history,
     get_user_stats,
+    predict_exercise_progress,
 )
 from data_base_sql.calculations import calculate_workout_analysis
 
@@ -49,6 +57,17 @@ def api_get_exercise_history(
     current_user=Depends(get_current_user),
 ):
     return get_exercise_history(db, current_user.id, exercise_id)
+
+
+@router.get("/predict/{exercise_id}", response_model=ExercisePredictionRead)
+def api_predict_exercise_progress(
+    exercise_id: UUID,
+    target_weight: Decimal = Query(..., gt=0, description="Target weight in kg"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Predict when the user will reach `target_weight` for this exercise based on history."""
+    return predict_exercise_progress(db, current_user.id, exercise_id, target_weight)
 
 
 @router.get("/", response_model=list[WorkoutRead])
