@@ -8,6 +8,7 @@ import {
   getApiBase,
   getExercises,
   getWorkout,
+  updateWorkoutStatus,
   type ExerciseRead,
   type WorkoutExerciseRead,
 } from "@/lib/api";
@@ -49,6 +50,21 @@ function WorkoutPlayerInner() {
   const [restTimerState, setRestTimerState] = useState<TimerState>("IDLE");
 
   const base = useMemo(() => getApiBase(), []);
+
+  function beep(freq = 880, dur = 0.15) {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      osc.start();
+      osc.stop(ctx.currentTime + dur);
+    } catch {}
+  }
   const totalTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -128,6 +144,8 @@ function WorkoutPlayerInner() {
 
     setTrainingTimerState("RUNNING");
     setRestTimerState("IDLE");
+
+    updateWorkoutStatus(workoutId, "IN_PROGRESS").catch(() => {});
   }
 
   // ---------- Training timer controls ----------
@@ -154,6 +172,7 @@ function WorkoutPlayerInner() {
     setRestElapsed(0);
     setRestTimerState("RUNNING");
     setTrainingTimerState("PAUSED");
+    beep(660, 0.1);
   }
 
   function pauseRest() {
@@ -173,35 +192,42 @@ function WorkoutPlayerInner() {
   function finishCurrentSet() {
     if (!current) return;
 
-    // Si aún quedan sets -> parar training y arrancar rest automáticamente
+    // Noch Sätze übrig → Training stoppen, Pause starten
     if (currentSet < current.sets) {
       setTrainingTimerState("IDLE");
       setTrainingElapsed(0);
-
       setCurrentSet((prev) => prev + 1);
-
       setRestElapsed(0);
       setRestTimerState("RUNNING");
+      beep(660, 0.1);
       return;
     }
 
-    // Si terminó el ejercicio, pasar al siguiente
+    // Übung fertig → Pause, dann nächste Übung
     if (currentExerciseIndex < workoutExercises.length - 1) {
-      setCurrentExerciseIndex((prev) => prev + 1);
-      setCurrentSet(1);
-
+      setTrainingTimerState("IDLE");
       setTrainingElapsed(0);
       setRestElapsed(0);
-
-      setTrainingTimerState("RUNNING");
-      setRestTimerState("IDLE");
+      setRestTimerState("RUNNING");
+      beep(880, 0.2);
+      // nach Pause zur nächsten Übung
+      const restDuration = (current.rest_limit_seconds || current.rest_seconds || 60) * 1000;
+      setTimeout(() => {
+        setCurrentExerciseIndex((prev) => prev + 1);
+        setCurrentSet(1);
+        setRestTimerState("IDLE");
+        setTrainingTimerState("RUNNING");
+      }, restDuration);
       return;
     }
 
-    // Si no hay más ejercicios, terminar workout
+    // Workout abgeschlossen
+    beep(880, 0.15);
+    setTimeout(() => beep(1100, 0.25), 200);
     setFinished(true);
     setTrainingTimerState("IDLE");
     setRestTimerState("IDLE");
+    updateWorkoutStatus(workoutId, "COMPLETED", totalElapsed).catch(() => {});
   }
 
   function skipToNextExercise() {
@@ -220,6 +246,7 @@ function WorkoutPlayerInner() {
     setFinished(true);
     setTrainingTimerState("IDLE");
     setRestTimerState("IDLE");
+    updateWorkoutStatus(workoutId, "COMPLETED", totalElapsed).catch(() => {});
   }
 
   if (loading) return <p className="muted">Loading…</p>;
@@ -466,8 +493,14 @@ function WorkoutPlayerInner() {
 
             <div className="card p-6">
               <div className="flex flex-wrap gap-3">
-                <button className="btn-primary" type="button" onClick={finishCurrentSet}>
-                  Complete set / continue
+                <button
+                  className="btn-primary disabled:opacity-40"
+                  type="button"
+                  onClick={finishCurrentSet}
+                  disabled={restTimerState === "RUNNING"}
+                  title={restTimerState === "RUNNING" ? "Warte auf das Ende der Pause" : ""}
+                >
+                  {restTimerState === "RUNNING" ? "⏳ Pause läuft…" : "✓ Satz abgeschlossen"}
                 </button>
                 <button className="btn-ghost" type="button" onClick={skipToNextExercise}>
                   Next exercise
@@ -479,15 +512,14 @@ function WorkoutPlayerInner() {
             </div>
 
             <div className="card p-6 text-sm text-neutral-300">
-              <p>Ahora tienes dos relojes:</p>
+              <p className="font-semibold text-neutral-100">So funktioniert es:</p>
               <ul className="mt-2 list-disc space-y-1 pl-5">
-                <li>Training timer: cuenta el tiempo activo mientras haces el ejercicio.</li>
-                <li>Rest timer: cuenta la pausa/descanso entre sets.</li>
+                <li><strong>Training-Timer:</strong> Zählt die aktive Zeit während der Übung.</li>
+                <li><strong>Pausen-Timer:</strong> Zählt die Erholungszeit zwischen den Sätzen.</li>
               </ul>
               <p className="mt-3">
-                Cuando terminas un set, el descanso puede empezar automáticamente.
-                Cuando pasas al siguiente ejercicio, se reinician los dos relojes y
-                empieza el training timer del nuevo ejercicio.
+                Nach jedem Satz startet die Pause automatisch. Beim nächsten Satz
+                werden beide Timer zurückgesetzt.
               </p>
             </div>
           </div>

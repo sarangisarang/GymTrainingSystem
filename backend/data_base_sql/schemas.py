@@ -88,12 +88,20 @@ class WorkoutCreate(BaseModel):
     exercises: List[WorkoutExerciseInWorkoutCreate] = Field(default_factory=list)
 
 
+class WorkoutStatusUpdate(BaseModel):
+    status: str  # PLANNED | IN_PROGRESS | COMPLETED | CANCELLED
+    duration_seconds: Optional[int] = None
+
+
 class WorkoutRead(ConfiguredModel):
     id: UUID
     user_id: UUID
     date: dt.date
     notes: Optional[str] = None
     created_at: dt.datetime
+    status: str = "PLANNED"
+    duration_seconds: Optional[int] = None
+    completed_at: Optional[dt.datetime] = None
     workout_exercises: List[WorkoutExerciseRead] = Field(default_factory=list)
 
 
@@ -204,6 +212,25 @@ class UserStatsRead(BaseModel):
     workouts_this_week: int
     total_volume_kg: str
     favorite_muscle_group: Optional[str] = None
+
+
+class WeeklyVolumeEntry(BaseModel):
+    week: str        # "2026-W20"
+    volume_kg: float
+
+
+class TopExerciseEntry(BaseModel):
+    exercise_id: str
+    name: str
+    volume_kg: float
+
+
+class DashboardAnalyticsRead(BaseModel):
+    completed_count: int
+    weekly_volume_kg: float
+    avg_duration_min: Optional[float] = None
+    top_exercises: List[TopExerciseEntry]
+    weekly_trend: List[WeeklyVolumeEntry]
 
 
 class UserUpdateRequest(BaseModel):

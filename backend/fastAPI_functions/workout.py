@@ -10,19 +10,23 @@ from data_base_sql.database import get_db
 from data_base_sql.schemas import (
     WorkoutCreate,
     WorkoutRead,
+    WorkoutStatusUpdate,
     WorkoutAnalysisRead,
     ExerciseHistoryEntry,
     ExercisePredictionRead,
     UserStatsRead,
+    DashboardAnalyticsRead,
 )
 from data_base_sql.crud import (
     create_workout,
     get_workout,
     get_workouts_paginated,
     update_workout,
+    update_workout_status,
     delete_workout,
     get_exercise_history,
     get_user_stats,
+    get_dashboard_analytics,
     predict_exercise_progress,
 )
 from data_base_sql.calculations import calculate_workout_analysis
@@ -40,6 +44,14 @@ def api_create_workout(
     current_user=Depends(get_current_user),
 ):
     return create_workout(db, current_user.id, data)
+
+
+@router.get("/analytics/dashboard", response_model=DashboardAnalyticsRead)
+def api_get_dashboard_analytics(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    return get_dashboard_analytics(db, current_user.id)
 
 
 @router.get("/stats/summary", response_model=UserStatsRead)
@@ -125,6 +137,24 @@ def api_update_workout(
     if str(workout.user_id) != str(current_user.id):
         raise HTTPException(status_code=403, detail="Access denied")
     return update_workout(db, workout_id, data)
+
+
+@router.patch("/{workout_id}/status", response_model=WorkoutRead)
+def api_update_workout_status(
+    workout_id: UUID,
+    data: WorkoutStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    workout = get_workout(db, workout_id)
+    if not workout:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    if str(workout.user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    allowed = {"PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"}
+    if data.status not in allowed:
+        raise HTTPException(status_code=400, detail=f"status must be one of {allowed}")
+    return update_workout_status(db, workout_id, data.status, data.duration_seconds)
 
 
 @router.delete("/{workout_id}")

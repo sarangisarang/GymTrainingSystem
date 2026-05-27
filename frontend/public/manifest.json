@@ -1,0 +1,34 @@
+{
+  "name": "Gym Tracker",
+  "short_name": "GymTracker",
+  "description": "Verfolge dein Training, analysiere deinen Fortschritt und nutze deinen KI-Coach.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Dashboard"
+    }
+  ],
+  "categories": ["health", "fitness", "sports"],
+  "lang": "de"
+}

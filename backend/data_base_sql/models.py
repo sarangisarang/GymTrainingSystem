@@ -49,6 +49,10 @@ class Workout(Base):
     date = Column(Date, nullable=False)
     notes = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
+    # PLANNED → IN_PROGRESS → COMPLETED | CANCELLED
+    status = Column(String(20), nullable=False, default="PLANNED")
+    duration_seconds = Column(Integer, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="workouts")
     workout_exercises = relationship(

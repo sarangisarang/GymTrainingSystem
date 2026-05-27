@@ -36,6 +36,12 @@ def ensure_sqlite_schema():
         "estimated_total_duration_seconds": "ALTER TABLE training_program_items ADD COLUMN estimated_total_duration_seconds INTEGER NOT NULL DEFAULT 0",
     }
 
+    workout_columns = {
+        "status": "ALTER TABLE workouts ADD COLUMN status TEXT NOT NULL DEFAULT 'PLANNED'",
+        "duration_seconds": "ALTER TABLE workouts ADD COLUMN duration_seconds INTEGER",
+        "completed_at": "ALTER TABLE workouts ADD COLUMN completed_at DATETIME",
+    }
+
     with engine.begin() as conn:
         workout_existing = {
             row[1]
@@ -43,6 +49,14 @@ def ensure_sqlite_schema():
         }
         for column_name, ddl in workout_exercise_columns.items():
             if column_name not in workout_existing:
+                conn.execute(text(ddl))
+
+        workouts_existing = {
+            row[1]
+            for row in conn.execute(text("PRAGMA table_info(workouts)"))
+        }
+        for column_name, ddl in workout_columns.items():
+            if column_name not in workouts_existing:
                 conn.execute(text(ddl))
 
         program_existing = {

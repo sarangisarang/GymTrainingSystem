@@ -742,6 +742,87 @@ def change_user_password(db: Session, user_id: UUID, new_password: str):
 # PAGINATED / FILTERED QUERIES
 # ============================================================
 
+def get_dashboard_analytics(db: Session, user_id: UUID) -> dict:
+    """All metrics are derived from COMPLETED workouts only."""
+    from datetime import date as d_type
+
+    completed = (
+        db.query(Workout)
+        .filter(Workout.user_id == str(user_id), Workout.status == "COMPLETED")
+        .order_by(Workout.date.desc())
+        .all()
+    )
+
+    completed_count = len(completed)
+
+    today = d_type.today()
+    week_start = today - timedelta(days=today.weekday())
+
+    weekly_vol = Decimal("0")
+    ex_volume: dict[str, Decimal] = {}
+    week_trend: dict[str, Decimal] = {}
+
+    for w in completed:
+        w_vol = Decimal("0")
+        for we in w.workout_exercises:
+            if we.weight:
+                v = Decimal(str(we.weight)) * Decimal(we.sets * we.reps)
+                w_vol += v
+                ex_volume[we.exercise_id] = ex_volume.get(we.exercise_id, Decimal("0")) + v
+
+        if week_start <= w.date <= today:
+            weekly_vol += w_vol
+
+        iso = w.date.isocalendar()
+        wk = f"{iso.year}-W{iso.week:02d}"
+        week_trend[wk] = week_trend.get(wk, Decimal("0")) + w_vol
+
+    durations = [w.duration_seconds for w in completed if w.duration_seconds]
+    avg_duration_min = round(sum(durations) / len(durations) / 60, 1) if durations else None
+
+    ex_ids = list(ex_volume.keys())
+    exercises = db.query(Exercise).filter(Exercise.id.in_(ex_ids)).all() if ex_ids else []
+    ex_name_map = {e.id: e.name for e in exercises}
+
+    top = sorted(ex_volume.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_exercises = [
+        {
+            "exercise_id": eid,
+            "name": ex_name_map.get(eid, "Unknown"),
+            "volume_kg": float(vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+        }
+        for eid, vol in top
+    ]
+
+    sorted_weeks = sorted(week_trend.items())[-8:]
+    weekly_trend = [
+        {"week": wk, "volume_kg": float(vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))}
+        for wk, vol in sorted_weeks
+    ]
+
+    return {
+        "completed_count": completed_count,
+        "weekly_volume_kg": float(weekly_vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+        "avg_duration_min": avg_duration_min,
+        "top_exercises": top_exercises,
+        "weekly_trend": weekly_trend,
+    }
+
+
+def update_workout_status(db: Session, workout_id: UUID, status: str, duration_seconds: int | None = None):
+    workout = get_workout(db, workout_id)
+    if not workout:
+        return None
+    workout.status = status
+    if duration_seconds is not None:
+        workout.duration_seconds = duration_seconds
+    if status == "COMPLETED":
+        workout.completed_at = datetime.utcnow()
+    db.commit()
+    db.refresh(workout)
+    return workout
+
+
 def get_workouts_paginated(
     db: Session,
     user_id: UUID,

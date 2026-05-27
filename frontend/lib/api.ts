@@ -75,6 +75,9 @@ export type WorkoutRead = {
   date: string;
   notes?: string | null;
   created_at?: string;
+  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | string;
+  duration_seconds?: number | null;
+  completed_at?: string | null;
   workout_exercises: WorkoutExerciseRead[];
 };
 
@@ -173,6 +176,25 @@ export type UserStats = {
   workouts_this_week: number;
   total_volume_kg: string;
   favorite_muscle_group?: string | null;
+};
+
+export type WeeklyVolumeEntry = {
+  week: string;
+  volume_kg: number;
+};
+
+export type TopExerciseEntry = {
+  exercise_id: string;
+  name: string;
+  volume_kg: number;
+};
+
+export type DashboardAnalytics = {
+  completed_count: number;
+  weekly_volume_kg: number;
+  avg_duration_min: number | null;
+  top_exercises: TopExerciseEntry[];
+  weekly_trend: WeeklyVolumeEntry[];
 };
 
 export type CreateWorkoutPayload = {
@@ -344,8 +366,24 @@ export async function deleteWorkout(id: string) {
   });
 }
 
+export async function updateWorkoutStatus(
+  id: string,
+  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED",
+  duration_seconds?: number | null,
+) {
+  return apiFetch<WorkoutRead>(`/workouts/${id}/status`, {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify({ status, duration_seconds: duration_seconds ?? null }),
+  });
+}
+
 export async function getUserStats() {
   return apiFetch<UserStats>("/workouts/stats/summary", { auth: true });
+}
+
+export async function getDashboardAnalytics() {
+  return apiFetch<DashboardAnalytics>("/workouts/analytics/dashboard", { auth: true });
 }
 
 export async function getExerciseHistory(exerciseId: string) {

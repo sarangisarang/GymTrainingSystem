@@ -8,6 +8,29 @@ import { deleteWorkout, getWorkouts, type WorkoutRead } from "@/lib/api";
 
 const PAGE_SIZE = 10;
 
+const STATUS_STYLES: Record<string, string> = {
+  PLANNED: "bg-neutral-800 text-neutral-400",
+  IN_PROGRESS: "bg-blue-500/20 text-blue-300",
+  COMPLETED: "bg-green-500/20 text-green-300",
+  CANCELLED: "bg-red-500/20 text-red-300",
+};
+
+function StatusBadge({ status }: { status?: string | null }) {
+  const s = status ?? "PLANNED";
+  const cls = STATUS_STYLES[s] ?? STATUS_STYLES.PLANNED;
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
+      {s}
+    </span>
+  );
+}
+
+function formatDuration(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s}s`;
+}
+
 export default function WorkoutsPage() {
   return (
     <Protected>
@@ -101,10 +124,16 @@ function WorkoutsInner() {
               <div key={w.id} className="card p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <Link href={`/workouts/${w.id}`} className="font-medium hover:underline">
-                      {new Date(w.date).toLocaleDateString()} — {w.workout_exercises?.length ?? 0} exercise{w.workout_exercises?.length !== 1 ? "s" : ""}
-                    </Link>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link href={`/workouts/${w.id}`} className="font-medium hover:underline">
+                        {new Date(w.date).toLocaleDateString()} — {w.workout_exercises?.length ?? 0} exercise{w.workout_exercises?.length !== 1 ? "s" : ""}
+                      </Link>
+                      <StatusBadge status={w.status} />
+                    </div>
                     {w.notes ? <p className="muted mt-1 text-sm">{w.notes}</p> : <p className="muted mt-1 text-sm">No notes</p>}
+                    {w.duration_seconds ? (
+                      <p className="muted mt-0.5 text-xs">{formatDuration(w.duration_seconds)}</p>
+                    ) : null}
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <Link className="btn-primary" href={`/workouts/${w.id}/start`}>Start</Link>

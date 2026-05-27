@@ -77,6 +77,7 @@ export default function Navbar() {
           <NavLink href="/programs" label="Programs" />
           <NavLink href="/progress" label="Progress" />
           <NavLink href="/coach" label="🤖 KI-Coach" />
+          <NavLink href="/report" label="📄 Report" />
           <Link
             href="/cart"
             className="rounded-xl px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-900"
