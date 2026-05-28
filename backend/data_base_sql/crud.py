@@ -742,10 +742,23 @@ def change_user_password(db: Session, user_id: UUID, new_password: str):
 # PAGINATED / FILTERED QUERIES
 # ============================================================
 
+def _app_today():
+    """Return today's date in the configured APP_TIMEZONE (falls back to local time)."""
+    import os
+    from datetime import date as d_type
+    tz_name = os.getenv("APP_TIMEZONE", "")
+    if tz_name:
+        try:
+            from zoneinfo import ZoneInfo
+            from datetime import datetime
+            return datetime.now(ZoneInfo(tz_name)).date()
+        except Exception:
+            pass
+    return d_type.today()
+
+
 def get_dashboard_analytics(db: Session, user_id: UUID) -> dict:
     """All metrics are derived from COMPLETED workouts only."""
-    from datetime import date as d_type
-
     completed = (
         db.query(Workout)
         .filter(Workout.user_id == str(user_id), Workout.status == "COMPLETED")
@@ -755,7 +768,7 @@ def get_dashboard_analytics(db: Session, user_id: UUID) -> dict:
 
     completed_count = len(completed)
 
-    today = d_type.today()
+    today = _app_today()
     week_start = today - timedelta(days=today.weekday())
 
     weekly_vol = Decimal("0")
