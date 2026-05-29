@@ -47,6 +47,17 @@ export type UserRead = {
   email: string;
   name?: string | null;
   created_at?: string;
+  role?: "athlete" | "coach" | string;
+};
+
+export type AthleteProgress = {
+  athlete_id: string;
+  name?: string | null;
+  email: string;
+  total_workouts: number;
+  completed_workouts: number;
+  last_workout_date?: string | null;
+  total_volume_kg: string;
 };
 
 export type ExerciseRead = {
@@ -432,6 +443,63 @@ export async function generateProgram(payload: {
 
 export async function getMyPrograms() {
   return apiFetch<ProgramRead[]>("/programs/mine", { auth: true });
+}
+
+// ── Coach Dashboard ───────────────────────────────────────────────────────
+
+export async function becomeCoach() {
+  return apiFetch<UserRead>("/coach/become-coach", { method: "POST", auth: true });
+}
+
+export async function inviteAthlete(email: string) {
+  return apiFetch<AthleteProgress>("/coach/athletes/invite", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify({ athlete_email: email }),
+  });
+}
+
+export async function removeAthlete(athleteId: string) {
+  return apiFetch<{ message: string }>(`/coach/athletes/${athleteId}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
+export async function getCoachAthletes() {
+  return apiFetch<AthleteProgress[]>("/coach/athletes", { auth: true });
+}
+
+export async function getAthleteWorkouts(athleteId: string) {
+  return apiFetch<WorkoutRead[]>(`/coach/athletes/${athleteId}/workouts`, { auth: true });
+}
+
+export type ReportPeriod = "weekly" | "monthly";
+
+export async function downloadReportPdf(period: ReportPeriod): Promise<void> {
+  const base = getApiBase();
+  const token = getToken();
+  const res = await fetch(`${base}/reports/${period}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Report download failed: ${res.status}`);
+  }
+
+  const disposition = res.headers.get("content-disposition") || "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  const filename = match?.[1] ?? `GymTracker-${period}.pdf`;
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export async function generateNextCycle(

@@ -33,6 +33,21 @@ class UserRead(ConfiguredModel):
     email: str
     name: Optional[str] = None
     created_at: dt.datetime
+    role: str = "athlete"
+
+
+class AthleteProgressRead(BaseModel):
+    athlete_id: str
+    name: Optional[str]
+    email: str
+    total_workouts: int
+    completed_workouts: int
+    last_workout_date: Optional[str]
+    total_volume_kg: str
+
+
+class CoachInviteRequest(BaseModel):
+    athlete_email: str
 
 
 class ExerciseCreate(BaseModel):

@@ -27,8 +27,22 @@ class User(Base):
     name = Column(String, nullable=True)
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    role = Column(String(20), nullable=False, default="athlete")  # athlete | coach
 
     workouts = relationship("Workout", back_populates="user")
+
+
+class CoachClient(Base):
+    __tablename__ = "coach_clients"
+    __table_args__ = (UniqueConstraint("coach_id", "athlete_id", name="uq_coach_athlete"),)
+
+    id = UUID_PK()
+    coach_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    athlete_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    coach = relationship("User", foreign_keys=[coach_id])
+    athlete = relationship("User", foreign_keys=[athlete_id])
 
 
 class Exercise(Base):
