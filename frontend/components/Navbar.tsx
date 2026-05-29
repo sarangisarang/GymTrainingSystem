@@ -79,14 +79,14 @@ export default function Navbar() {
           <NavLink href="/coach" label="🤖 KI-Coach" />
           <NavLink href="/coach/dashboard" label="👨‍💼 Coach" />
           <NavLink href="/report" label="📄 Report" />
-          <Link
-            href="/cart"
-            className="rounded-xl px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-900"
-          >
-            🧺 Cart{cartCount ? (
-              <span className="ml-2 rounded-full bg-indigo-600 px-2 py-0.5 text-xs text-white">{cartCount}</span>
-            ) : null}
-          </Link>
+          {cartCount > 0 && (
+            <Link
+              href="/cart"
+              className="rounded-xl px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-900"
+            >
+              🧺 <span className="ml-1 rounded-full bg-indigo-600 px-2 py-0.5 text-xs text-white">{cartCount}</span>
+            </Link>
+          )}
         </nav>
 
         {right}

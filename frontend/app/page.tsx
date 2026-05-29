@@ -5,18 +5,18 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 
 const FEATURES = [
-  { icon: "⏱️", title: "Live Workout Session", desc: "Guided player with dual timers, audio signals and set tracking.", tag: "Woche 2" },
-  { icon: "🔮", title: "Predictive Strength Engine", desc: "Linear regression predicts when you reach your target weight.", tag: "Woche 2" },
-  { icon: "🤖", title: "KI-Coach", desc: "AI trainer (Gemini) analyses last 10 workouts — streaming SSE.", tag: "Woche 2" },
-  { icon: "📈", title: "Progress Analytics", desc: "Strength curve, weekly volume bars and body-weight trend.", tag: "Woche 2" },
-  { icon: "📊", title: "Training Programs", desc: "Auto-generate 4-week programs from 1RM — strength / hypertrophy / endurance.", tag: "Woche 2" },
-  { icon: "📄", title: "PDF Reports", desc: "Server-side weekly & monthly reports via reportlab with PRs and volume stats.", tag: "Woche 2" },
-  { icon: "👨‍💼", title: "Coach Dashboard", desc: "Invite athletes, view workouts, assign programs. Role-based access.", tag: "Woche 3" },
-  { icon: "📱", title: "PWA", desc: "Service worker, offline support, installable on Android & iOS.", tag: "Woche 2" },
-  { icon: "🔐", title: "Auth & Security", desc: "JWT auth, ownership checks, 403/401 on every endpoint.", tag: "Woche 1" },
-  { icon: "📋", title: "Workout Status", desc: "PLANNED → IN_PROGRESS → COMPLETED with duration tracking.", tag: "Woche 3" },
-  { icon: "🏠", title: "Dashboard Analytics", desc: "COMPLETED-only metrics: avg duration, top exercises, weekly trend.", tag: "Woche 3" },
-  { icon: "🌐", title: "Landing Page", desc: "Professional landing page with features, stats and CTA.", tag: "Woche 3" },
+  { icon: "⏱️", title: "Live-Workout", desc: "Geführter Workout-Modus mit Trainings- & Pausentimer, Audio-Signale, Satz-Tracking.", tag: "Woche 2" },
+  { icon: "🔮", title: "Kraft-Prognose", desc: "Lineare Regression auf Trainingsdaten — prognostiziert das Erreichen des Zielgewichts.", tag: "Woche 2" },
+  { icon: "🤖", title: "KI-Coach", desc: "Gemini AI analysiert die letzten 10 Einheiten und liefert personalisierte Empfehlungen per SSE.", tag: "Woche 2" },
+  { icon: "📈", title: "Fortschrittsanalyse", desc: "Kraftkurve mit PR-Highlight, wöchentliches Volumen-Balkendiagramm, Körpergewichtstrend.", tag: "Woche 2" },
+  { icon: "📊", title: "Trainingsprogramme", desc: "Automatisch generierte 4-Wochen-Programme aus dem 1RM — Kraft, Hypertrophie oder Ausdauer.", tag: "Woche 2" },
+  { icon: "📄", title: "PDF-Berichte", desc: "Serverseitige Wochen- & Monatsberichte mit reportlab — Volumen, neue PRs, Streak.", tag: "Woche 2" },
+  { icon: "👨‍💼", title: "Coach-Dashboard", desc: "Athleten einladen, Workouts einsehen, Programme zuweisen. Rollenbasierter Zugriff.", tag: "Woche 3" },
+  { icon: "📱", title: "PWA", desc: "Service Worker, Offline-Unterstützung, auf Android & iOS installierbar.", tag: "Woche 2" },
+  { icon: "🔐", title: "Auth & Sicherheit", desc: "JWT-Authentifizierung, Eigentumscheck, 401/403 bei geschützten Endpoints.", tag: "Woche 1" },
+  { icon: "📋", title: "Workout-Status", desc: "PLANNED → IN_PROGRESS → COMPLETED mit Dauer-Tracking und completed_at Zeitstempel.", tag: "Woche 3" },
+  { icon: "🏠", title: "Dashboard-Analytics", desc: "Nur COMPLETED-Workouts: Ø Dauer, Top-Übungen, Wochentrend — korrekt isoliert.", tag: "Woche 3" },
+  { icon: "🌐", title: "Landing Page", desc: "Präsentationsfertige Startseite mit Features, Tech-Stack und Architekturübersicht.", tag: "Woche 3" },
 ];
 
 const BACKEND = ["FastAPI", "SQLAlchemy", "SQLite", "JWT (python-jose)", "Argon2 (passlib)", "Pydantic v2", "reportlab", "httpx (Gemini SSE)", "uvicorn"];
@@ -97,7 +97,7 @@ export default function HomePage() {
       {/* ── Features ── */}
       <div>
         <div className="mb-12 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-indigo-400 mb-3">Implementierte Features</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">Implementierte Features</p>
           <h2 className="text-4xl font-extrabold text-neutral-50">12 Features in 3 Wochen</h2>
           <p className="mt-4 text-neutral-500 text-lg">Alle Features sind live, getestet und in GitHub dokumentiert.</p>
         </div>
@@ -127,7 +127,7 @@ export default function HomePage() {
       {/* ── Tech Stack ── */}
       <div>
         <div className="mb-10 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-indigo-400 mb-3">Technologie-Stack</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">Technologie-Stack</p>
           <h2 className="text-4xl font-extrabold text-neutral-50">Modern & Production-ready</h2>
         </div>
 
@@ -157,7 +157,7 @@ export default function HomePage() {
       {/* ── Architektur ── */}
       <div className="rounded-3xl border border-neutral-800 bg-neutral-900/40 px-8 py-14 md:px-16">
         <div className="mb-10 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-indigo-400 mb-3">Architektur</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">Architektur</p>
           <h2 className="text-4xl font-extrabold">Wie das System aufgebaut ist</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
