@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 
 const FEATURES = [
@@ -24,6 +25,8 @@ const TOOLS = ["GitHub", "Git", "Pytest", "VS Code", "Postman"];
 
 export default function HomePage() {
   const { user, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="space-y-20">
@@ -54,7 +57,7 @@ export default function HomePage() {
           </p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
-            {loading ? null : user ? (
+            {!mounted ? null : user ? (
               <Link href="/dashboard" className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all shadow-lg shadow-indigo-600/30">
                 Dashboard öffnen →
               </Link>
@@ -185,7 +188,7 @@ export default function HomePage() {
           Kompletter Source-Code auf GitHub — oder App direkt ausprobieren.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
-          {!user && !loading && (
+          {mounted && !user && (
             <Link href="/register" className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-10 py-4 text-base font-bold text-white transition-all shadow-xl shadow-indigo-600/30">
               App starten →
             </Link>
