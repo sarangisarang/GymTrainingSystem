@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Text, Date, DateTime, ForeignKey, Integer, Numeric, UniqueConstraint
+from sqlalchemy import Boolean, Column, String, Text, Date, DateTime, ForeignKey, Integer, Numeric, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -28,6 +28,7 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     role = Column(String(20), nullable=False, default="athlete")  # athlete | coach
+    leaderboard_opt_in = Column(Boolean, nullable=False, default=False)
 
     workouts = relationship("Workout", back_populates="user")
 
@@ -128,6 +129,18 @@ class TrainingProgram(Base):
 
     user = relationship("User")
     items = relationship("TrainingProgramItem", back_populates="program", cascade="all, delete")
+
+
+class UserAchievement(Base):
+    __tablename__ = "user_achievements"
+    __table_args__ = (UniqueConstraint("user_id", "badge_id", name="uq_user_badge"),)
+
+    id = UUID_PK()
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    badge_id = Column(String(40), nullable=False)
+    earned_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User")
 
 
 class TrainingProgramItem(Base):

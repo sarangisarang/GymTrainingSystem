@@ -34,6 +34,7 @@ class UserRead(ConfiguredModel):
     name: Optional[str] = None
     created_at: dt.datetime
     role: str = "athlete"
+    leaderboard_opt_in: bool = False
 
 
 class AthleteProgressRead(BaseModel):
@@ -267,3 +268,47 @@ class NextCycleRequest(BaseModel):
     goal: Optional[Literal["strength", "hypertrophy", "endurance"]] = None
     training_days_per_week: int = Field(default=3, ge=1, le=7)
     adjustments: List[NextCycleExerciseAdjustment] = Field(default_factory=list)
+
+
+# ── Gamification (Issue #11) ──────────────────────────────────────────────
+
+class BadgeRead(BaseModel):
+    id: str
+    name: str
+    description: str
+    icon: str
+    earned: bool
+    earned_at: Optional[dt.datetime] = None
+
+
+class AchievementsRead(BaseModel):
+    badges: List[BadgeRead]
+    newly_earned: List[BadgeRead]
+
+
+class WeeklyChallengeRead(BaseModel):
+    id: str
+    label: str
+    target_kg: float
+    current_kg: float
+    progress: float          # 0..1 (or >1 if overshot)
+    completed: bool
+    week: str                # "2026-W22"
+
+
+class LeaderboardEntry(BaseModel):
+    rank: int
+    name: str
+    best_streak: int
+    total_volume_kg: float
+    is_self: bool
+
+
+class LeaderboardRead(BaseModel):
+    metric: Literal["best_streak"] = "best_streak"
+    entries: List[LeaderboardEntry]
+    self_opted_in: bool
+
+
+class LeaderboardOptInRequest(BaseModel):
+    opt_in: bool

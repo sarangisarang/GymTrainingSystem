@@ -48,6 +48,7 @@ export type UserRead = {
   name?: string | null;
   created_at?: string;
   role?: "athlete" | "coach" | string;
+  leaderboard_opt_in?: boolean;
 };
 
 export type AthleteProgress = {
@@ -518,3 +519,64 @@ export async function generateNextCycle(
   });
 }
 
+
+
+// -- Gamification (Issue #11) ---------------------------------------------
+
+export type BadgeRead = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  earned_at?: string | null;
+};
+
+export type AchievementsRead = {
+  badges: BadgeRead[];
+  newly_earned: BadgeRead[];
+};
+
+export type WeeklyChallengeRead = {
+  id: string;
+  label: string;
+  target_kg: number;
+  current_kg: number;
+  progress: number;
+  completed: boolean;
+  week: string;
+};
+
+export type LeaderboardEntry = {
+  rank: number;
+  name: string;
+  best_streak: number;
+  total_volume_kg: number;
+  is_self: boolean;
+};
+
+export type LeaderboardRead = {
+  metric: 'best_streak';
+  entries: LeaderboardEntry[];
+  self_opted_in: boolean;
+};
+
+export async function getAchievements() {
+  return apiFetch<AchievementsRead>('/achievements/', { auth: true });
+}
+
+export async function getWeeklyChallenge() {
+  return apiFetch<WeeklyChallengeRead>('/achievements/weekly-challenge', { auth: true });
+}
+
+export async function getLeaderboard() {
+  return apiFetch<LeaderboardRead>('/leaderboard/', { auth: true });
+}
+
+export async function setLeaderboardOptIn(opt_in: boolean) {
+  return apiFetch<UserRead>('/achievements/leaderboard-opt-in', {
+    method: 'PATCH',
+    auth: true,
+    body: JSON.stringify({ opt_in }),
+  });
+}
