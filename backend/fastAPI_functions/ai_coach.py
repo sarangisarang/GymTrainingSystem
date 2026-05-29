@@ -170,6 +170,12 @@ async def ai_coach(
     if not body.message.strip():
         raise HTTPException(status_code=400, detail="Nachricht darf nicht leer sein.")
 
+    if not os.getenv("GEMINI_API_KEY"):
+        raise HTTPException(
+            status_code=503,
+            detail="KI-Coach ist nicht konfiguriert. GEMINI_API_KEY fehlt.",
+        )
+
     context = _build_context(db, str(current_user.id))
 
     return StreamingResponse(

@@ -1,0 +1,85 @@
+Was wurde gemacht
+=================
+
+#10 — Echte Workout-Historie & Persistenz
+------------------------------------------
+
+Backend:
+- models.py — Das Workout-Modell wurde um drei Felder erweitert:
+  status (PLANNED / IN_PROGRESS / COMPLETED / CANCELLED),
+  duration_seconds und completed_at
+- main.py — Automatische SQLite-Migration fuer die neuen Felder beim Serverstart
+- schemas.py — Neues Schema WorkoutStatusUpdate;
+  WorkoutRead um die neuen Felder ergaenzt
+- crud.py — Neue Funktion update_workout_status()
+- workout.py — Neuer Endpoint PATCH /workouts/{id}/status
+  mit Eigentumscheck (403) und Validierung ungueltiger Status-Werte (400)
+
+Frontend:
+- lib/api.ts — WorkoutRead-Typ aktualisiert;
+  neue Funktion updateWorkoutStatus()
+- workouts/[id]/start/page.tsx — Start setzt Status auf IN_PROGRESS;
+  Abschluss setzt COMPLETED und speichert die Dauer auf dem Server
+- workouts/page.tsx — Farbige Status-Badges
+  (PLANNED / IN_PROGRESS / COMPLETED / CANCELLED)
+  und Daueranzeige pro Workout
+- report/page.tsx — Volumen wird nur aus COMPLETED-Workouts berechnet;
+  geplante Workouts fliessen nicht ein
+
+
+#11 — Dashboard Analytics
+--------------------------
+
+Backend:
+- schemas.py — Neue Schemas: WeeklyVolumeEntry, TopExerciseEntry,
+  DashboardAnalyticsRead
+- crud.py — Neue Funktion get_dashboard_analytics()
+  Alle Metriken ausschliesslich aus COMPLETED-Workouts:
+  Wochenvolumen, Durchschnittsdauer, Top-5-Uebungen nach Volumen,
+  Wochentrend der letzten 8 Wochen
+- workout.py — Neuer Endpoint GET /workouts/analytics/dashboard
+
+Frontend:
+- lib/api.ts — Neuer Typ DashboardAnalytics;
+  neue Funktion getDashboardAnalytics()
+- dashboard/page.tsx — Komplett neu gebaut:
+  Recharts-Balkendiagramm fuer den Wochentrend (Spitzenwoche hervorgehoben),
+  Top-Uebungen als Fortschrittsbalken,
+  Performance-Leiste (abgeschlossene Workouts / Volumen diese Woche / Gesamtvolumen),
+  Status-Badges in der Workout-Uebersicht
+
+
+KI-Coach (fruehere Session, heute verifiziert)
+-----------------------------------------------
+
+Heute wurde der KI-Trainer im Gym Tracker getestet und verifiziert.
+Der Endpoint POST /ai/coach funktioniert mit SSE-Streaming und gibt
+die Antwort schrittweise zurueck.
+Die letzten 10 Workouts werden als Kontext genutzt, sodass die
+Empfehlungen spezifisch und nicht generisch sind.
+Ein Problem war, dass der Backend-Port nicht erreichbar war (Prozess lief,
+aber GEMINI_API_KEY fehlte beim Start, dadurch kein Port-Binding).
+Nach Neustart mit korrekter .env-Konfiguration konnte der Live-Test
+erfolgreich mit HTTP 200 abgeschlossen werden.
+
+Hinweis: Statt Claude/Anthropic wurde Gemini mit Model-Fallback verwendet
+(gemini-2.0-flash -> gemini-2.0-flash-lite -> gemini-2.5-flash -> gemini-flash-latest).
+Die Akzeptanzkriterien bleiben erfuellt, da die letzten 10 Workouts als
+Kontext gesendet werden und die Antwort spezifisch per SSE gestreamt wird.
+
+
+Hinweis fuer den Produktivbetrieb
+----------------------------------
+Der Server laeuft derzeit auf CEST. Wird die Anwendung auf einem UTC-Server
+deployed, verschiebt sich die Wochengrenze um 2 Stunden.
+Vor dem Deployment in crud.py beheben:
+get_dashboard_analytics() -> date.today() durch user-/app-timezone-basierte Logik ersetzen.
+completed_at sollte timezone-aware gespeichert und die Wochenberechnung
+mit APP_TIMEZONE durchgefuehrt werden.
+
+Zusaetzlich sollte beim Backend-Start geprueft werden, ob GEMINI_API_KEY geladen ist,
+damit fehlende .env-Konfiguration nicht zu einem schwer erkennbaren Startproblem fuehrt.
+(Bereits als logging.warning in main.py implementiert — beim naechsten Start sichtbar.)
+
+Backend-Start immer mit GEMINI_API_KEY aus .env:
+  cd backend && set -a && source .env && set +a && uvicorn main:app --host 0.0.0.0 --port 8000

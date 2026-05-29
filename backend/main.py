@@ -1,4 +1,5 @@
 import os
+import logging
 from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -70,6 +71,22 @@ def ensure_sqlite_schema():
 
 
 ensure_sqlite_schema()
+
+
+def check_startup_config() -> None:
+    missing = []
+    if not os.getenv("GEMINI_API_KEY"):
+        missing.append("GEMINI_API_KEY")
+    if missing:
+        logging.warning(
+            "⚠️  Missing environment variables: %s — "
+            "AI Coach will return errors at runtime. "
+            "Load .env before starting: set -a && source .env && set +a",
+            ", ".join(missing),
+        )
+
+
+check_startup_config()
 
 app = FastAPI(title="TEAM3 Gym API")
 
