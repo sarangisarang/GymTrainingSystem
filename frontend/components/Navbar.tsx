@@ -26,8 +26,10 @@ export default function Navbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [cartCount, setCartCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const update = () => setCartCount(readCart().length);
     update();
     const t = window.setInterval(update, 800);
@@ -79,14 +81,14 @@ export default function Navbar() {
           <NavLink href="/coach" label="🤖 KI-Coach" />
           <NavLink href="/coach/dashboard" label="👨‍💼 Coach" />
           <NavLink href="/report" label="📄 Report" />
-          <Link
-            href="/cart"
-            className="rounded-xl px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-900"
-          >
-            🧺 Cart{cartCount ? (
-              <span className="ml-2 rounded-full bg-indigo-600 px-2 py-0.5 text-xs text-white">{cartCount}</span>
-            ) : null}
-          </Link>
+          {mounted && cartCount > 0 && (
+            <Link
+              href="/cart"
+              className="rounded-xl px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-900"
+            >
+              🧺 <span className="ml-1 rounded-full bg-indigo-600 px-2 py-0.5 text-xs text-white">{cartCount}</span>
+            </Link>
+          )}
         </nav>
 
         {right}
