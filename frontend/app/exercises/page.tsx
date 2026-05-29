@@ -105,6 +105,7 @@ function ExercisesInner() {
             <label className="label" htmlFor="exercise-search">Search</label>
             <input
               id="exercise-search"
+              data-testid="exercise-search"
               className="input mt-2"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

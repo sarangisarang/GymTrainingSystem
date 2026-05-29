@@ -162,7 +162,7 @@ function WorkoutDetailInner() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link className="btn-primary" href={`/workouts/${workout.id}/start`}>Start workout</Link>
+            <Link className="btn-primary" data-testid="start-workout" href={`/workouts/${workout.id}/start`}>Start workout</Link>
             <button
               type="button"
               className="btn-ghost"
