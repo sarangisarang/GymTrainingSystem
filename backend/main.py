@@ -13,6 +13,7 @@ from fastAPI_functions.workout import router as workout_router
 from fastAPI_functions.workout_exercises import router as workout_exercises_router
 from fastAPI_functions.programs import router as programs_router
 from fastAPI_functions.ai_coach import router as ai_coach_router
+from fastAPI_functions.reports import router as reports_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -101,6 +102,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
@@ -114,6 +116,7 @@ app.include_router(workout_router)
 app.include_router(workout_exercises_router)
 app.include_router(programs_router)
 app.include_router(ai_coach_router)
+app.include_router(reports_router)
 
 
 @app.get("/")

@@ -742,23 +742,10 @@ def change_user_password(db: Session, user_id: UUID, new_password: str):
 # PAGINATED / FILTERED QUERIES
 # ============================================================
 
-def _app_today():
-    """Return today's date in the configured APP_TIMEZONE (falls back to local time)."""
-    import os
-    from datetime import date as d_type
-    tz_name = os.getenv("APP_TIMEZONE", "")
-    if tz_name:
-        try:
-            from zoneinfo import ZoneInfo
-            from datetime import datetime
-            return datetime.now(ZoneInfo(tz_name)).date()
-        except Exception:
-            pass
-    return d_type.today()
-
-
 def get_dashboard_analytics(db: Session, user_id: UUID) -> dict:
     """All metrics are derived from COMPLETED workouts only."""
+    from datetime import date as d_type
+
     completed = (
         db.query(Workout)
         .filter(Workout.user_id == str(user_id), Workout.status == "COMPLETED")
@@ -768,7 +755,7 @@ def get_dashboard_analytics(db: Session, user_id: UUID) -> dict:
 
     completed_count = len(completed)
 
-    today = _app_today()
+    today = d_type.today()
     week_start = today - timedelta(days=today.weekday())
 
     weekly_vol = Decimal("0")
@@ -819,6 +806,251 @@ def get_dashboard_analytics(db: Session, user_id: UUID) -> dict:
         "avg_duration_min": avg_duration_min,
         "top_exercises": top_exercises,
         "weekly_trend": weekly_trend,
+    }
+
+
+def get_report_period_data(
+    db: Session,
+    user_id: UUID,
+    start_date,
+    end_date,
+) -> dict:
+    """
+    Aggregated metrics for a PDF report covering [start_date, end_date].
+
+    Considers only COMPLETED workouts inside the window for in-period metrics,
+    plus all-time history to detect new Personal Records that landed in the
+    window (max weight per exercise inside window > max weight before window).
+    """
+    in_period = (
+        db.query(Workout)
+        .filter(
+            Workout.user_id == str(user_id),
+            Workout.status == "COMPLETED",
+            Workout.date >= start_date,
+            Workout.date <= end_date,
+        )
+        .order_by(Workout.date.asc())
+        .all()
+    )
+
+    total_volume = Decimal("0")
+    total_sets = 0
+    total_reps = 0
+    ex_volume: dict[str, Decimal] = {}
+    ex_max_in_period: dict[str, Decimal] = {}
+
+    for w in in_period:
+        for we in w.workout_exercises:
+            if we.weight is None:
+                continue
+            weight = Decimal(str(we.weight))
+            vol = weight * Decimal(we.sets * we.reps)
+            total_volume += vol
+            total_sets += we.sets
+            total_reps += we.sets * we.reps
+            ex_volume[we.exercise_id] = ex_volume.get(we.exercise_id, Decimal("0")) + vol
+            prev = ex_max_in_period.get(we.exercise_id)
+            if prev is None or weight > prev:
+                ex_max_in_period[we.exercise_id] = weight
+
+    ex_max_before: dict[str, Decimal] = {}
+    if ex_max_in_period:
+        before_rows = (
+            db.query(WorkoutExercise.exercise_id, WorkoutExercise.weight)
+            .join(Workout, Workout.id == WorkoutExercise.workout_id)
+            .filter(
+                Workout.user_id == str(user_id),
+                Workout.status == "COMPLETED",
+                Workout.date < start_date,
+                WorkoutExercise.exercise_id.in_(list(ex_max_in_period.keys())),
+                WorkoutExercise.weight.isnot(None),
+            )
+            .all()
+        )
+        for row in before_rows:
+            w = Decimal(str(row.weight))
+            prev = ex_max_before.get(row.exercise_id)
+            if prev is None or w > prev:
+                ex_max_before[row.exercise_id] = w
+
+    ex_ids = list(ex_volume.keys())
+    exercises = db.query(Exercise).filter(Exercise.id.in_(ex_ids)).all() if ex_ids else []
+    ex_name_map = {e.id: e.name for e in exercises}
+
+    top = sorted(ex_volume.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_exercises = [
+        {
+            "exercise_id": eid,
+            "name": ex_name_map.get(eid, "Unknown"),
+            "volume_kg": float(vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+        }
+        for eid, vol in top
+    ]
+
+    new_prs = []
+    for eid, cur in ex_max_in_period.items():
+        before = ex_max_before.get(eid)
+        if before is None or cur > before:
+            new_prs.append({
+                "exercise_id": eid,
+                "name": ex_name_map.get(eid, "Unknown"),
+                "weight_kg": float(cur),
+                "previous_kg": float(before) if before is not None else None,
+            })
+    new_prs.sort(key=lambda x: x["weight_kg"], reverse=True)
+
+    workouts_summary = []
+    for w in in_period:
+        vol = Decimal("0")
+        sets = 0
+        for we in w.workout_exercises:
+            sets += we.sets
+            if we.weight is not None:
+                vol += Decimal(str(we.weight)) * Decimal(we.sets * we.reps)
+        workouts_summary.append({
+            "date": w.date.isoformat(),
+            "exercises": len(w.workout_exercises),
+            "sets": sets,
+            "volume_kg": float(vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            "duration_min": round(w.duration_seconds / 60, 1) if w.duration_seconds else None,
+        })
+
+    stats = get_user_stats(db, user_id)
+
+    return {
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "completed_count": len(in_period),
+        "total_volume_kg": float(total_volume.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+        "total_sets": total_sets,
+        "total_reps": total_reps,
+        "top_exercises": top_exercises,
+        "new_prs": new_prs,
+        "workouts": workouts_summary,
+        "current_streak": stats["current_streak"],
+        "best_streak": stats["best_streak"],
+    }
+
+
+def get_report_period_data(
+    db: Session,
+    user_id: UUID,
+    start_date,
+    end_date,
+) -> dict:
+    """Aggregated metrics for a PDF report covering [start_date, end_date].
+    Only COMPLETED workouts in the window count toward metrics.
+    New PRs = max weight in window > max weight before window.
+    """
+    in_period = (
+        db.query(Workout)
+        .filter(
+            Workout.user_id == str(user_id),
+            Workout.status == "COMPLETED",
+            Workout.date >= start_date,
+            Workout.date <= end_date,
+        )
+        .order_by(Workout.date.asc())
+        .all()
+    )
+
+    total_volume = Decimal("0")
+    total_sets = 0
+    total_reps = 0
+    ex_volume: dict[str, Decimal] = {}
+    ex_max_in_period: dict[str, Decimal] = {}
+
+    for w in in_period:
+        for we in w.workout_exercises:
+            if we.weight is None:
+                continue
+            weight = Decimal(str(we.weight))
+            vol = weight * Decimal(we.sets * we.reps)
+            total_volume += vol
+            total_sets += we.sets
+            total_reps += we.sets * we.reps
+            ex_volume[we.exercise_id] = ex_volume.get(we.exercise_id, Decimal("0")) + vol
+            prev = ex_max_in_period.get(we.exercise_id)
+            if prev is None or weight > prev:
+                ex_max_in_period[we.exercise_id] = weight
+
+    ex_max_before: dict[str, Decimal] = {}
+    if ex_max_in_period:
+        before_rows = (
+            db.query(WorkoutExercise.exercise_id, WorkoutExercise.weight)
+            .join(Workout, Workout.id == WorkoutExercise.workout_id)
+            .filter(
+                Workout.user_id == str(user_id),
+                Workout.status == "COMPLETED",
+                Workout.date < start_date,
+                WorkoutExercise.exercise_id.in_(list(ex_max_in_period.keys())),
+                WorkoutExercise.weight.isnot(None),
+            )
+            .all()
+        )
+        for row in before_rows:
+            w = Decimal(str(row.weight))
+            prev = ex_max_before.get(row.exercise_id)
+            if prev is None or w > prev:
+                ex_max_before[row.exercise_id] = w
+
+    ex_ids = list(ex_volume.keys())
+    exercises = db.query(Exercise).filter(Exercise.id.in_(ex_ids)).all() if ex_ids else []
+    ex_name_map = {e.id: e.name for e in exercises}
+
+    top = sorted(ex_volume.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_exercises = [
+        {
+            "exercise_id": eid,
+            "name": ex_name_map.get(eid, "Unknown"),
+            "volume_kg": float(vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+        }
+        for eid, vol in top
+    ]
+
+    new_prs = []
+    for eid, cur in ex_max_in_period.items():
+        before = ex_max_before.get(eid)
+        if before is None or cur > before:
+            new_prs.append({
+                "exercise_id": eid,
+                "name": ex_name_map.get(eid, "Unknown"),
+                "weight_kg": float(cur),
+                "previous_kg": float(before) if before is not None else None,
+            })
+    new_prs.sort(key=lambda x: x["weight_kg"], reverse=True)
+
+    workouts_summary = []
+    for w in in_period:
+        vol = Decimal("0")
+        sets = 0
+        for we in w.workout_exercises:
+            sets += we.sets
+            if we.weight is not None:
+                vol += Decimal(str(we.weight)) * Decimal(we.sets * we.reps)
+        workouts_summary.append({
+            "date": w.date.isoformat(),
+            "exercises": len(w.workout_exercises),
+            "sets": sets,
+            "volume_kg": float(vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            "duration_min": round(w.duration_seconds / 60, 1) if w.duration_seconds else None,
+        })
+
+    stats = get_user_stats(db, user_id)
+
+    return {
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "completed_count": len(in_period),
+        "total_volume_kg": float(total_volume.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+        "total_sets": total_sets,
+        "total_reps": total_reps,
+        "top_exercises": top_exercises,
+        "new_prs": new_prs,
+        "workouts": workouts_summary,
+        "current_streak": stats["current_streak"],
+        "best_streak": stats["best_streak"],
     }
 
 

@@ -434,6 +434,34 @@ export async function getMyPrograms() {
   return apiFetch<ProgramRead[]>("/programs/mine", { auth: true });
 }
 
+export type ReportPeriod = "weekly" | "monthly";
+
+export async function downloadReportPdf(period: ReportPeriod): Promise<void> {
+  const base = getApiBase();
+  const token = getToken();
+  const res = await fetch(`${base}/reports/${period}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Report download failed: ${res.status}`);
+  }
+
+  const disposition = res.headers.get("content-disposition") || "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  const filename = match?.[1] ?? `GymTracker-${period}.pdf`;
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export async function generateNextCycle(
   programId: string,
   payload: {
