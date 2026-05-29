@@ -19,7 +19,7 @@ const FEATURES = [
   { icon: "🌐", title: "Landing Page", desc: "Präsentationsfertige Startseite mit Features, Tech-Stack und Architekturübersicht.", tag: "Woche 3" },
 ];
 
-const BACKEND = ["FastAPI", "SQLAlchemy", "SQLite", "JWT (python-jose)", "Argon2 (passlib)", "Pydantic v2", "reportlab", "httpx (Gemini SSE)", "uvicorn"];
+const BACKEND = ["FastAPI", "SQLAlchemy", "PostgreSQL", "MongoDB (Logs)", "JWT (python-jose)", "Argon2 (passlib)", "Pydantic v2", "reportlab", "httpx (Gemini SSE)", "uvicorn"];
 const FRONTEND = ["Next.js 15", "TypeScript", "Tailwind CSS", "Recharts", "Playwright", "PWA (Service Worker)", "jsPDF", "html2canvas"];
 const TOOLS = ["GitHub", "Git", "Pytest", "VS Code", "Postman"];
 
@@ -162,7 +162,7 @@ export default function HomePage() {
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {[
-            { icon: "🗄️", title: "Backend — FastAPI", items: ["30+ REST Endpoints", "JWT Authentication", "SQLite + SQLAlchemy ORM", "Gemini AI (SSE Streaming)", "reportlab PDF Generator", "Pytest — 6 Tests"] },
+            { icon: "🗄️", title: "Backend — FastAPI", items: ["30+ REST Endpoints", "JWT Authentication", "PostgreSQL (Business-Daten)", "MongoDB (Request-Logs)", "Gemini AI (SSE Streaming)", "reportlab PDF Generator"] },
             { icon: "💻", title: "Frontend — Next.js", items: ["12 App-Seiten (App Router)", "TypeScript — vollständig typisiert", "Tailwind CSS + Recharts", "PWA mit Service Worker", "Playwright E2E Tests", "data-testid Selektoren"] },
             { icon: "🔄", title: "Workflow — GitHub", items: ["Feature Branches", "Pull Requests (#22 gemergt)", "12 Issues geschlossen", "Co-Authorship (TEAM3)", "Commit-Historie sauber", "Merge-Konflikte gelöst"] },
           ].map((col) => (
