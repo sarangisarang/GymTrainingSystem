@@ -15,6 +15,7 @@ export type AuthUser = {
   email: string;
   name?: string | null;
   created_at?: string;
+  role?: "athlete" | "coach" | string;
 };
 
 type AuthContextValue = {

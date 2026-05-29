@@ -14,6 +14,7 @@ from fastAPI_functions.workout_exercises import router as workout_exercises_rout
 from fastAPI_functions.programs import router as programs_router
 from fastAPI_functions.ai_coach import router as ai_coach_router
 from fastAPI_functions.reports import router as reports_router
+from fastAPI_functions.coach_dashboard import router as coach_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -69,6 +70,13 @@ def ensure_sqlite_schema():
             if column_name not in program_existing:
                 conn.execute(text(ddl))
 
+        users_existing = {
+            row[1]
+            for row in conn.execute(text("PRAGMA table_info(users)"))
+        }
+        if "role" not in users_existing:
+            conn.execute(text("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'athlete'"))
+
 
 ensure_sqlite_schema()
 
@@ -117,6 +125,7 @@ app.include_router(workout_exercises_router)
 app.include_router(programs_router)
 app.include_router(ai_coach_router)
 app.include_router(reports_router)
+app.include_router(coach_router)
 
 
 @app.get("/")

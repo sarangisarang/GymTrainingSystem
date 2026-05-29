@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy.orm import Session
-from .models import User, Exercise, Workout, WorkoutExercise, UserExerciseMax, TrainingProgram, TrainingProgramItem
+from .models import User, Exercise, Workout, WorkoutExercise, UserExerciseMax, TrainingProgram, TrainingProgramItem, CoachClient
 from .calculations import build_program_item_metrics
 from .schemas import UserCreate, ExerciseCreate, WorkoutCreate, WorkoutExerciseCreate, UserExerciseMaxCreate, TrainingProgramGenerateRequest, NextCycleRequest
 from passlib.context import CryptContext
@@ -1145,3 +1145,88 @@ def generate_next_cycle(db: Session, user_id: UUID, program_id: UUID, request: N
         exercise_ids=[UUID(ex_id) for ex_id in exercise_ids],
     )
     return generate_training_program(db, user_id, generate_request)
+
+
+# ============================================================
+# COACH-DASHBOARD CRUD
+# ============================================================
+
+def set_user_role(db: Session, user_id: UUID, role: str):
+    user = get_user(db, user_id)
+    if not user:
+        return None
+    user.role = role
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def add_athlete_to_coach(db: Session, coach_id: UUID, athlete_id: UUID):
+    existing = (
+        db.query(CoachClient)
+        .filter(CoachClient.coach_id == str(coach_id), CoachClient.athlete_id == str(athlete_id))
+        .first()
+    )
+    if existing:
+        return existing
+    link = CoachClient(coach_id=str(coach_id), athlete_id=str(athlete_id))
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+    return link
+
+
+def remove_athlete_from_coach(db: Session, coach_id: UUID, athlete_id: UUID):
+    link = (
+        db.query(CoachClient)
+        .filter(CoachClient.coach_id == str(coach_id), CoachClient.athlete_id == str(athlete_id))
+        .first()
+    )
+    if link:
+        db.delete(link)
+        db.commit()
+    return True
+
+
+def get_coach_athletes(db: Session, coach_id: UUID) -> list:
+    links = db.query(CoachClient).filter(CoachClient.coach_id == str(coach_id)).all()
+    result = []
+    for link in links:
+        athlete = get_user(db, UUID(link.athlete_id))
+        if not athlete:
+            continue
+        workouts = db.query(Workout).filter(Workout.user_id == str(athlete.id)).all()
+        completed = [w for w in workouts if w.status == "COMPLETED"]
+        last_date = max((w.date for w in completed), default=None)
+        vol = Decimal("0")
+        for w in completed:
+            for we in w.workout_exercises:
+                if we.weight:
+                    vol += Decimal(str(we.weight)) * Decimal(we.sets * we.reps)
+        result.append({
+            "athlete_id": str(athlete.id),
+            "name": athlete.name,
+            "email": athlete.email,
+            "total_workouts": len(workouts),
+            "completed_workouts": len(completed),
+            "last_workout_date": last_date.isoformat() if last_date else None,
+            "total_volume_kg": str(vol.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+        })
+    return result
+
+
+def get_athlete_workouts_for_coach(db: Session, coach_id: UUID, athlete_id: UUID):
+    link = (
+        db.query(CoachClient)
+        .filter(CoachClient.coach_id == str(coach_id), CoachClient.athlete_id == str(athlete_id))
+        .first()
+    )
+    if not link:
+        return None
+    return (
+        db.query(Workout)
+        .filter(Workout.user_id == str(athlete_id))
+        .order_by(Workout.date.desc())
+        .limit(20)
+        .all()
+    )
