@@ -1,0 +1,30 @@
+# Keep the build context small and never bake secrets or local state into the image.
+
+# Secrets / local config — injected at runtime via --env-file or Secrets Manager
+.env
+.env.*
+!.env.example
+
+# Local SQLite database (containers use PostgreSQL via DATABASE_URL)
+*.db
+gym.db
+
+# Python caches & virtualenvs
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# Local uploads / generated assets (not part of the image)
+exercise_images/
+static/exercises/*
+!static/exercises/.gitkeep
+
+# Tooling / VCS
+.git/
+.gitignore
+.mypy_cache/
+.ruff_cache/
+*.md
