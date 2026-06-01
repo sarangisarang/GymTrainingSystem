@@ -21,7 +21,15 @@
 // confidence that the joint is actually visible in frame.
 export type Landmark = { x: number; y: number; z: number; visibility?: number };
 
-export type ExerciseId = "squat" | "curl" | "pushup";
+export type ExerciseId =
+  | "squat"
+  | "curl"
+  | "pushup"
+  | "lunge"
+  | "situp"
+  | "shoulderpress"
+  | "lateralraise"
+  | "tricepsext";
 
 export type RepPhase = "TOP" | "BOTTOM";
 
@@ -54,10 +62,16 @@ type ExerciseConfig = {
   label: string;
   // [pointA, vertex, pointC] — left-side indices; right-side mirrored below.
   joints: readonly [keyof typeof LM, keyof typeof LM, keyof typeof LM];
-  downAngle: number; // enter BOTTOM when the angle falls below this
-  upAngle: number; // count a rep when the angle climbs back above this
-  // Target depth used only for the form hint (e.g. "go deeper").
-  depthHintAngle: number;
+  downAngle: number; // lower threshold of the hysteresis band
+  upAngle: number; // upper threshold of the hysteresis band
+  // Where the muscular EFFORT happens in the movement:
+  //   "low"  → effort at the bottom / small angle  (squat, curl, push-up, …)
+  //   "high" → effort at the top / large angle     (shoulder press, raise)
+  // This single flag lets one state machine handle both flexion-type and
+  // extension-type exercises instead of duplicating the logic.
+  effort: "low" | "high";
+  // Angle the user should reach at the effort point, used for the form hint.
+  targetAngle: number;
   hint: string;
 };
 
@@ -68,7 +82,8 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     joints: ["leftHip", "leftKnee", "leftAnkle"],
     downAngle: 100,
     upAngle: 160,
-    depthHintAngle: 95,
+    effort: "low",
+    targetAngle: 95,
     hint: "Go deeper into the squat",
   },
   // Elbow angle: arm extended ≈ 170°, fully curled ≈ 40°.
@@ -77,7 +92,8 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     joints: ["leftShoulder", "leftElbow", "leftWrist"],
     downAngle: 60,
     upAngle: 150,
-    depthHintAngle: 55,
+    effort: "low",
+    targetAngle: 55,
     hint: "Curl all the way up",
   },
   // Elbow angle: top of push-up ≈ 170°, bottom ≈ 80-90°.
@@ -86,8 +102,62 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     joints: ["leftShoulder", "leftElbow", "leftWrist"],
     downAngle: 95,
     upAngle: 160,
-    depthHintAngle: 90,
+    effort: "low",
+    targetAngle: 90,
     hint: "Lower your chest further",
+  },
+  // Front-knee angle: standing ≈ 170°, deep lunge ≈ 90°.
+  lunge: {
+    label: "Lunge",
+    joints: ["leftHip", "leftKnee", "leftAnkle"],
+    downAngle: 110,
+    upAngle: 160,
+    effort: "low",
+    targetAngle: 100,
+    hint: "Drop your back knee lower",
+  },
+  // Hip angle (shoulder-hip-knee): lying flat ≈ 160°, crunched up ≈ 70°.
+  situp: {
+    label: "Sit-Up",
+    joints: ["leftShoulder", "leftHip", "leftKnee"],
+    downAngle: 80,
+    upAngle: 135,
+    effort: "low",
+    targetAngle: 75,
+    hint: "Sit up higher",
+  },
+  // Elbow angle: racked at shoulders ≈ 80°, pressed overhead ≈ 165°.
+  // Effort is at the TOP (extension), so effort = "high".
+  shoulderpress: {
+    label: "Shoulder Press",
+    joints: ["leftShoulder", "leftElbow", "leftWrist"],
+    downAngle: 95,
+    upAngle: 155,
+    effort: "high",
+    targetAngle: 160,
+    hint: "Press all the way overhead",
+  },
+  // Shoulder abduction (hip-shoulder-wrist): arm down ≈ 15°, raised ≈ 90°.
+  // Effort is at the TOP of the raise, so effort = "high".
+  lateralraise: {
+    label: "Lateral Raise",
+    joints: ["leftHip", "leftShoulder", "leftWrist"],
+    downAngle: 35,
+    upAngle: 75,
+    effort: "high",
+    targetAngle: 85,
+    hint: "Raise your arm to shoulder height",
+  },
+  // Elbow angle: bent behind head ≈ 60°, extended up ≈ 165°.
+  // Effort is at the extension (top), so effort = "high".
+  tricepsext: {
+    label: "Triceps Ext.",
+    joints: ["leftShoulder", "leftElbow", "leftWrist"],
+    downAngle: 80,
+    upAngle: 150,
+    effort: "high",
+    targetAngle: 160,
+    hint: "Fully extend your elbow",
   },
 };
 
@@ -173,27 +243,44 @@ export function measureAngle(
  */
 export class RepCounter {
   private exercise: ExerciseId;
+  // "TOP" = the resting / ready position, "BOTTOM" = the active / effort
+  // position. These labels stay constant across exercise types even though
+  // the actual joint angle at "effort" is low for some (squat) and high for
+  // others (shoulder press) — see ExerciseConfig.effort.
   private phase: RepPhase = "TOP";
-  private smoothedAngle = 180;
-  private deepestThisRep = 180;
+  private smoothedAngle: number;
+  // The most extreme angle reached during the ongoing effort phase, used to
+  // judge whether the rep was performed through full range of motion.
+  private extremeThisRep: number;
   reps = 0;
   lastRepWasShallow = false;
 
   constructor(exercise: ExerciseId) {
     this.exercise = exercise;
+    this.smoothedAngle = this.restValue();
+    this.extremeThisRep = this.restValue();
+  }
+
+  // The angle the joint sits at while resting, used to seed the smoother so
+  // the counter never fires a phantom rep on the very first frames.
+  //   effort "low"  → rests at a high angle (≈180°)
+  //   effort "high" → rests at a low angle  (≈0°)
+  private restValue(): number {
+    return EXERCISES[this.exercise].effort === "low" ? 180 : 0;
   }
 
   /** Switch exercise mid-session and reset the per-rep tracking state. */
   setExercise(exercise: ExerciseId) {
     this.exercise = exercise;
     this.phase = "TOP";
-    this.deepestThisRep = 180;
+    this.smoothedAngle = this.restValue();
+    this.extremeThisRep = this.restValue();
   }
 
   reset() {
     this.phase = "TOP";
-    this.smoothedAngle = 180;
-    this.deepestThisRep = 180;
+    this.smoothedAngle = this.restValue();
+    this.extremeThisRep = this.restValue();
     this.reps = 0;
     this.lastRepWasShallow = false;
   }
@@ -211,6 +298,7 @@ export class RepCounter {
     hint: string | null;
   } {
     const cfg = EXERCISES[this.exercise];
+    const effortLow = cfg.effort === "low";
 
     // Light exponential smoothing tames per-frame landmark jitter while
     // staying responsive. The new sample is weighted 0.7 so the smoothed
@@ -224,30 +312,38 @@ export class RepCounter {
     let hint: string | null = null;
 
     if (this.phase === "TOP") {
-      // Descending: once we cross below downAngle we are in the BOTTOM phase.
-      if (a < cfg.downAngle) {
+      // From REST, entering the effort phase. For flexion exercises that
+      // means the angle drops below downAngle; for extension exercises it
+      // means the angle rises above upAngle.
+      const enteringEffort = effortLow ? a < cfg.downAngle : a > cfg.upAngle;
+      if (enteringEffort) {
         this.phase = "BOTTOM";
-        this.deepestThisRep = a;
+        this.extremeThisRep = a;
       }
     } else {
-      // In BOTTOM: keep tracking the deepest point of the descent.
-      this.deepestThisRep = Math.min(this.deepestThisRep, a);
+      // In the effort phase: track the most extreme angle reached so far.
+      this.extremeThisRep = effortLow
+        ? Math.min(this.extremeThisRep, a)
+        : Math.max(this.extremeThisRep, a);
 
-      // Ascending back above upAngle completes the rep.
-      if (a > cfg.upAngle) {
+      // Returning to REST completes the rep (mirror of the entry condition).
+      const returningToRest = effortLow ? a > cfg.upAngle : a < cfg.downAngle;
+      if (returningToRest) {
         this.reps += 1;
         repCompleted = true;
-        // Flag a shallow rep when the descent never reached target depth.
-        this.lastRepWasShallow = this.deepestThisRep > cfg.depthHintAngle;
+        // A rep is "shallow" if it never reached the target range of motion.
+        this.lastRepWasShallow = effortLow
+          ? this.extremeThisRep > cfg.targetAngle
+          : this.extremeThisRep < cfg.targetAngle;
         this.phase = "TOP";
-        this.deepestThisRep = 180;
+        this.extremeThisRep = this.restValue();
       }
     }
 
-    // Live form hint while the user is in the bottom of the movement but
-    // hasn't reached the target depth yet.
-    if (this.phase === "BOTTOM" && a > cfg.depthHintAngle) {
-      hint = cfg.hint;
+    // Live form hint while in the effort phase but short of the target ROM.
+    if (this.phase === "BOTTOM") {
+      const shortOfTarget = effortLow ? a > cfg.targetAngle : a < cfg.targetAngle;
+      if (shortOfTarget) hint = cfg.hint;
     }
 
     return { phase: this.phase, angle: a, reps: this.reps, repCompleted, hint };
