@@ -1,0 +1,17 @@
+# Keep the build context small; let the image build fresh inside Docker.
+node_modules/
+.next/
+out/
+build/
+
+# Local env (NEXT_PUBLIC_* are passed at build time via --build-arg instead)
+.env*.local
+.env
+
+# Tooling / VCS / misc
+.git/
+.gitignore
+npm-debug.log*
+.DS_Store
+*.md
+tsconfig.tsbuildinfo
