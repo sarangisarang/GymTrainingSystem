@@ -51,10 +51,19 @@ BADGES_BY_ID: dict[str, BadgeDef] = {b.id: b for b in BADGE_CATALOG}
 
 
 def _best_streak_days(db: Session, user_id: UUID) -> int:
-    """Longest run of consecutive distinct workout dates (any status)."""
+    """Longest run of consecutive distinct COMPLETED workout dates.
+
+    Consistent with the rest of the app (Report, Dashboard, AI Coach):
+    only COMPLETED workouts count toward a streak. PLANNED / IN_PROGRESS /
+    CANCELLED do not — a streak badge is a promise about training *done*,
+    not training *planned*.
+    """
     rows = (
         db.query(Workout.date)
-        .filter(Workout.user_id == str(user_id))
+        .filter(
+            Workout.user_id == str(user_id),
+            Workout.status == "COMPLETED",
+        )
         .all()
     )
     dates = sorted({r.date for r in rows})
