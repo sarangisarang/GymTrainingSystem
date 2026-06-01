@@ -117,12 +117,14 @@ def api_get_new_prs(
     current_user=Depends(get_current_user),
 ):
     """Return personal records set by this COMPLETED workout. Empty list if
-    the workout isn't COMPLETED or didn't beat any prior max."""
+    the workout isn't COMPLETED or didn't beat any prior max.
+
+    Returns 404 for both "doesn't exist" and "someone else's workout" so
+    the response doesn't act as an ownership oracle for guessed workout IDs.
+    """
     workout = get_workout(db, workout_id)
-    if not workout:
+    if not workout or str(workout.user_id) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Workout not found")
-    if str(workout.user_id) != str(current_user.id):
-        raise HTTPException(status_code=403, detail="Access denied")
     return get_new_prs_for_workout(db, current_user.id, workout_id)
 
 

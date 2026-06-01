@@ -74,8 +74,10 @@ def test_new_prs_404_for_unknown_workout(auth_client):
     assert r.status_code == 404
 
 
-def test_new_prs_403_for_other_users_workout(client):
-    # Owner creates workout, attacker tries to read its PRs
+def test_new_prs_404_for_other_users_workout_does_not_leak_ownership(client):
+    """Other user's workout must return 404, not 403 — otherwise the endpoint
+    acts as an ownership oracle (attacker can confirm a UUID maps to some user
+    by the 403 vs 404 distinction)."""
     import uuid
     owner_email = f"owner_{uuid.uuid4().hex[:8]}@example.com"
     attacker_email = f"attacker_{uuid.uuid4().hex[:8]}@example.com"
@@ -90,7 +92,14 @@ def test_new_prs_403_for_other_users_workout(client):
     _complete(client, owner_tok, wid)
 
     r = client.get(f"/workouts/{wid}/new-prs", headers=_auth(attacker_tok))
-    assert r.status_code == 403
+    assert r.status_code == 404, r.text
+    # Same response shape as a truly missing workout.
+    r_missing = client.get(
+        "/workouts/00000000-0000-0000-0000-000000000000/new-prs",
+        headers=_auth(attacker_tok),
+    )
+    assert r_missing.status_code == 404
+    assert r.json() == r_missing.json()
 
 
 # ── Status filtering ─────────────────────────────────────────────────────────
@@ -106,6 +115,76 @@ def test_new_prs_empty_for_planned_workout(auth_client):
     r = client.get(f"/workouts/{wid}/new-prs", headers=_auth(token))
     assert r.status_code == 200
     assert r.json() == []
+
+
+def test_new_prs_empty_for_in_progress_or_cancelled(auth_client):
+    """IN_PROGRESS and CANCELLED workouts must NOT trigger the celebration."""
+    client, token = auth_client
+    ex = _make_exercise(client, token, "Bench Status")
+    today = date.today().isoformat()
+
+    wid_in_prog = _log_workout(client, token, today, [{"exercise_id": ex, "weight": 100.0}])
+    r = client.patch(
+        f"/workouts/{wid_in_prog}/status",
+        json={"status": "IN_PROGRESS"},
+        headers=_auth(token),
+    )
+    assert r.status_code == 200
+    assert client.get(f"/workouts/{wid_in_prog}/new-prs", headers=_auth(token)).json() == []
+
+    wid_cancelled = _log_workout(client, token, today, [{"exercise_id": ex, "weight": 100.0}])
+    r = client.patch(
+        f"/workouts/{wid_cancelled}/status",
+        json={"status": "CANCELLED"},
+        headers=_auth(token),
+    )
+    assert r.status_code == 200
+    assert client.get(f"/workouts/{wid_cancelled}/new-prs", headers=_auth(token)).json() == []
+
+
+def test_workout_with_zero_exercises_returns_empty(auth_client):
+    """A workout with no exercises completes successfully and returns []."""
+    client, token = auth_client
+    r = client.post(
+        "/workouts/",
+        json={"workout_date": date.today().isoformat(), "notes": "empty", "exercises": []},
+        headers=_auth(token),
+    )
+    assert r.status_code == 200
+    wid = r.json()["id"]
+    _complete(client, token, wid)
+    assert client.get(f"/workouts/{wid}/new-prs", headers=_auth(token)).json() == []
+
+
+def test_multi_set_same_exercise_uses_max_within_workout(auth_client):
+    """One workout, same exercise, two different weights (80 then 110) —
+    the PR must be computed from the heavier set, not the first."""
+    client, token = auth_client
+    ex = _make_exercise(client, token, "Bench MultiSet")
+    today = date.today().isoformat()
+
+    # Two workout_exercises rows for the same exercise, different weights.
+    r = client.post(
+        "/workouts/",
+        json={
+            "workout_date": today,
+            "notes": "multi",
+            "exercises": [
+                {"exercise_id": ex, "sets": 3, "reps": 5, "weight": 80.0, "order_index": 0},
+                {"exercise_id": ex, "sets": 2, "reps": 3, "weight": 110.0, "order_index": 1},
+            ],
+        },
+        headers=_auth(token),
+    )
+    assert r.status_code == 200, r.text
+    wid = r.json()["id"]
+    _complete(client, token, wid)
+
+    prs = client.get(f"/workouts/{wid}/new-prs", headers=_auth(token)).json()
+    assert len(prs) == 1
+    assert prs[0]["weight_kg"] == 110.0  # MAX, not first
+    assert prs[0]["previous_max_kg"] is None  # first-ever
+    assert prs[0]["delta_kg"] == 110.0
 
 
 # ── PR semantics ─────────────────────────────────────────────────────────────
@@ -269,6 +348,42 @@ def test_prior_zero_weight_does_not_block_first_ever_pr(auth_client):
     assert prs[0]["weight_kg"] == 60.0
     assert prs[0]["previous_max_kg"] is None  # zero prior must NOT count
     assert prs[0]["delta_kg"] == 60.0
+
+
+def test_recomplete_does_not_shuffle_pr_timeline(auth_client):
+    """REGRESSION GUARD: re-PATCHing a workout to COMPLETED must NOT overwrite
+    completed_at. Otherwise the workout jumps forward in the (date, completed_at)
+    timeline and /new-prs returns a different answer for the same historical workout.
+
+    Discovered: completing workout A (80 kg), then completing workout B (100 kg),
+    then re-PATCHing A would push A *after* B in the timeline, making B retroactively
+    appear PRIOR to A and erasing A's first-ever PR.
+    """
+    import time
+    client, token = auth_client
+    ex = _make_exercise(client, token, "Bench Recomplete")
+    today = date.today().isoformat()
+
+    # A: 80 kg, completed first -> first-ever PR
+    a = _log_workout(client, token, today, [{"exercise_id": ex, "weight": 80.0}])
+    _complete(client, token, a)
+    time.sleep(0.01)
+    # B: 100 kg, completed after -> new PR
+    b = _log_workout(client, token, today, [{"exercise_id": ex, "weight": 100.0}])
+    _complete(client, token, b)
+
+    before = client.get(f"/workouts/{a}/new-prs", headers=_auth(token)).json()
+    assert len(before) == 1 and before[0]["weight_kg"] == 80.0
+
+    time.sleep(0.05)
+    # Re-PATCH A to COMPLETED — this used to overwrite completed_at, breaking
+    # the timeline. With the fix, A's completed_at stays put.
+    _complete(client, token, a)
+
+    after = client.get(f"/workouts/{a}/new-prs", headers=_auth(token)).json()
+    assert after == before, (
+        f"PR list for A changed after re-complete: before={before}, after={after}"
+    )
 
 
 def test_idempotent_get_does_not_change_results(auth_client):

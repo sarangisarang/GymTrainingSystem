@@ -5,9 +5,11 @@ A "new PR" is set by workout W for exercise E iff:
   - W contains at least one set of E with weight > 0
   - max(weight of E in W) > max(weight of E in every prior COMPLETED workout)
 
-"Prior" is ordered by (date, completed_at, id) — same-day workouts compare by
-completed_at; if two workouts somehow share completed_at, id breaks the tie
-deterministically. The current workout never counts as its own prior.
+"Prior" is ordered by (date, completed_at, created_at) — same-day workouts
+compare by completed_at, and if two workouts somehow share completed_at
+(e.g. legacy rows with NULL completed_at falling back to midnight) the
+creation timestamp breaks the tie temporally. The current workout never
+counts as its own prior.
 
 A first-ever set for an exercise IS a PR (previous_max_kg is None, delta is
 the full weight). Equal-weight repeats are NOT PRs (strictly greater).
@@ -63,6 +65,10 @@ def get_new_prs_for_workout(db: Session, user_id: UUID, workout_id: UUID) -> lis
     this_completed_at = workout.completed_at or datetime.combine(
         workout.date, datetime.min.time()
     )
+    # created_at is a meaningful temporal tiebreaker; the previous use of
+    # Workout.id was a lexicographic UUID compare and could re-order workouts
+    # that happen to land on the same date AND completed_at.
+    this_created_at = workout.created_at or this_completed_at
     prior_predicate = or_(
         Workout.date < workout.date,
         and_(
@@ -71,7 +77,7 @@ def get_new_prs_for_workout(db: Session, user_id: UUID, workout_id: UUID) -> lis
                 Workout.completed_at < this_completed_at,
                 and_(
                     Workout.completed_at == this_completed_at,
-                    Workout.id < workout.id,
+                    Workout.created_at < this_created_at,
                 ),
             ),
         ),

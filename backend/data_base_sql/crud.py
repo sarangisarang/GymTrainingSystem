@@ -1058,10 +1058,15 @@ def update_workout_status(db: Session, workout_id: UUID, status: str, duration_s
     workout = get_workout(db, workout_id)
     if not workout:
         return None
+    was_completed = workout.status == "COMPLETED"
     workout.status = status
     if duration_seconds is not None:
         workout.duration_seconds = duration_seconds
-    if status == "COMPLETED":
+    # Only stamp completed_at on the *transition* into COMPLETED, never on a
+    # re-PATCH of an already-completed workout. Without this guard, re-completing
+    # would shuffle the timeline and silently change /new-prs results for that
+    # workout (Issue #12 PR-detection ordering).
+    if status == "COMPLETED" and not was_completed:
         workout.completed_at = datetime.utcnow()
     db.commit()
     db.refresh(workout)

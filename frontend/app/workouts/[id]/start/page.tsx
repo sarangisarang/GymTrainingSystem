@@ -141,6 +141,15 @@ function WorkoutPlayerInner() {
 
         setWorkoutExercises(sorted);
         setExerciseMap(new Map(exercises.map((exercise) => [exercise.id, exercise])));
+
+        // Reload of an already-finished workout: jump straight to the finished
+        // view so the user doesn't see "Ready to start?" for completed work
+        // and can't accidentally re-trigger the celebration by clicking Start.
+        if (workout.status === "COMPLETED") {
+          setFinished(true);
+          setStarted(true);
+          if (workout.duration_seconds) setTotalElapsed(workout.duration_seconds);
+        }
       } catch (e: any) {
         setErr(e?.message ?? "Failed to load workout player");
       } finally {
@@ -191,6 +200,12 @@ function WorkoutPlayerInner() {
       : "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=60";
 
   function startWorkout() {
+    // Kill any in-flight confetti from a prior completion before the new
+    // training UI takes over — otherwise particles keep rendering over the
+    // fresh workout.
+    stopCelebrationRef.current?.();
+    stopCelebrationRef.current = null;
+
     setStarted(true);
     setFinished(false);
     setCurrentExerciseIndex(0);
