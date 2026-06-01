@@ -78,6 +78,7 @@ export default function Navbar() {
           <NavLink href="/workouts" label="Workouts" />
           <NavLink href="/programs" label="Programs" />
           <NavLink href="/progress" label="Progress" />
+          <NavLink href="/rep-counter" label="📷 Rep Counter" />
           <NavLink href="/coach" label="🤖 KI-Coach" />
           <NavLink href="/coach/dashboard" label="👨‍💼 Coach" />
           <NavLink href="/report" label="📄 Report" />
