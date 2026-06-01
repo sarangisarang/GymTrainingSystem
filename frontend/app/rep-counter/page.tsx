@@ -302,6 +302,17 @@ function RepCounterInner() {
         </div>
       )}
 
+      {/* Safety disclaimer — Form Feedback is basic movement guidance, NOT a
+          medical or injury-prevention tool. MediaPipe only sees body points;
+          it cannot detect pain, joint load, fatigue or weight. */}
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-200/90">
+        ⚠️ <strong>Form Feedback is in Beta.</strong> It detects basic joint-angle
+        patterns from your camera but <strong>cannot guarantee safe technique</strong>.
+        It is not medical advice and does not prevent injuries. Use light weight first,
+        and <strong>stop immediately if you feel pain, dizziness, chest pain, or unusual
+        shortness of breath</strong>.
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
         {/* Camera + skeleton overlay */}
         <div className="relative overflow-hidden rounded-3xl border border-neutral-800 bg-black">

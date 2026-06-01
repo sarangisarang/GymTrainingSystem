@@ -118,9 +118,9 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     hint: "Curl all the way up",
     form: {
       good: { min: 30, max: 60 },
-      notEnoughMsg: "Not enough bend — curl higher",
-      goodMsg: "Full curl range",
-      overMsg: "Controlled — avoid swinging",
+      notEnoughMsg: "Complete the curl range",
+      goodMsg: "Good curl range",
+      overMsg: "Move slower and controlled",
     },
   },
   // Elbow angle: top of push-up ≈ 170°, bottom ≈ 80-90°.
@@ -184,7 +184,7 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
       good: { min: 80, max: 110 },
       notEnoughMsg: "Raise to shoulder height",
       goodMsg: "Good height",
-      overMsg: "Too high — lower slightly",
+      overMsg: "Too high — keep shoulders controlled",
     },
   },
   // Elbow angle: bent behind head ≈ 60°, extended up ≈ 165°.
