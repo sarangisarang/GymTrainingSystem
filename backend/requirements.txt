@@ -38,4 +38,5 @@ httpx>=0.28
 anthropic>=0.104.0  # TODO: review — listed but not imported in code (ai_coach.py uses httpx for Gemini directly)
 reportlab>=4.5.0
 psycopg2-binary>=2.9.9  # PostgreSQL driver for SQLAlchemy (Docker/RDS); SQLite stays driver-free
+pytest>=8.0.0  # test runner — used by CI and local backend tests (tests/)
 
