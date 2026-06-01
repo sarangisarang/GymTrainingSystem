@@ -105,6 +105,67 @@ NEXT_PUBLIC_API_BASE=http://localhost:8000
 
 Frontend: `http://localhost:3000`
 
+### Docker (gesamter Stack lokal)
+
+```bash
+cp .env.docker.example .env   # Werte ausfüllen (JWT_SECRET_KEY, GEMINI_API_KEY)
+docker compose up --build
+```
+
+Backend, Frontend und PostgreSQL laufen dann gemeinsam. `docker compose down -v`
+entfernt auch das DB-Volume.
+
+---
+
+## Deployment (Render / Railway)
+
+Bei jedem Push auf `main` läuft die CI (`.github/workflows/ci.yml`); danach
+triggert `.github/workflows/deploy.yml` automatisch ein Deployment auf die
+konfigurierte Plattform. Ohne gesetzte Secrets passiert nichts (kein Fehler),
+damit der Workflow vor dem Cloud-Setup gemergt werden kann.
+
+### Option A: Render (empfohlen, Free Tier vorhanden)
+
+1. Account auf [render.com](https://render.com) anlegen und GitHub-Repo
+   verbinden.
+2. **PostgreSQL-Datenbank** erstellen (New → PostgreSQL). Den
+   **Internal Database URL** kopieren (Format `postgresql://user:pass@host/db`,
+   für SQLAlchemy ggf. auf `postgresql+psycopg2://...` umstellen).
+3. **Web Service** für das Backend erstellen (New → Web Service):
+   - Root Directory: `backend`
+   - Runtime: `Docker` (nutzt automatisch `backend/Dockerfile`)
+   - Environment Variables setzen:
+     - `DATABASE_URL` (aus Schritt 2)
+     - `JWT_SECRET_KEY` (mindestens 32 zufällige Zeichen)
+     - `GEMINI_API_KEY` (optional, sonst gibt `/ai/coach` HTTP 503 zurück)
+     - `APP_TIMEZONE` (z. B. `Europe/Berlin`)
+4. (Optional) Zweites **Web Service** für das Frontend (Root: `frontend`,
+   Runtime: Docker). Build-Arg `NEXT_PUBLIC_API_BASE` auf die öffentliche
+   Backend-URL setzen.
+5. Im Backend-Service: **Settings → Deploy Hook → Copy URL**.
+6. Im GitHub-Repo: **Settings → Secrets and variables → Actions → New**:
+   - `RENDER_DEPLOY_HOOK_URL` (Backend-Hook)
+   - `RENDER_FRONTEND_DEPLOY_HOOK_URL` (optional, Frontend-Hook)
+
+Nächster Push auf `main` löst dann das Deployment aus; den Status sieht man
+im **Actions**-Tab unter "Deploy".
+
+### Option B: Railway
+
+1. Account auf [railway.app](https://railway.app) anlegen, Projekt mit dem
+   Repo verknüpfen.
+2. PostgreSQL-Plugin hinzufügen; Railway injiziert `DATABASE_URL` automatisch.
+3. Restliche Env-Vars (`JWT_SECRET_KEY`, `GEMINI_API_KEY`, `APP_TIMEZONE`)
+   im Service-Tab setzen.
+4. Projekt-Token erstellen: **Account Settings → Tokens → New Token**.
+5. Im GitHub-Repo `RAILWAY_TOKEN` als Secret hinterlegen.
+
+### Custom Domain (optional)
+
+Beide Plattformen erlauben Custom Domains unter **Settings → Custom Domain**:
+DNS-`CNAME` auf den von Render/Railway angezeigten Wert setzen, TLS wird
+automatisch via Let's Encrypt ausgestellt.
+
 ---
 
 ## Projektstruktur
