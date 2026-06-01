@@ -1,70 +1,84 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 
 # ============================================================
-# SQLite Datenbank-Konfiguration
+# Database configuration
 # ============================================================
+#
+# The connection string is read from the DATABASE_URL environment
+# variable so the same code runs unchanged in three setups:
+#
+#   1. Local dev      → unset → falls back to a local SQLite file
+#   2. Docker Compose → postgresql://gym:gym@db:5432/gym
+#   3. AWS (RDS)      → postgresql://<user>:<pass>@<rds-host>:5432/gym
+#
+# Defaulting to SQLite keeps "git clone && run" working with zero setup,
+# while production simply injects a PostgreSQL URL via the environment.
+# ------------------------------------------------------------
 
-# Lokale SQLite-Datenbankdatei
-# Die Datei "gym.db" wird automatisch erstellt, falls sie nicht existiert.
-SQLALCHEMY_DATABASE_URL = "sqlite:///./gym.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./gym.db")
 
+# SQLite needs `check_same_thread=False` because FastAPI serves requests
+# from multiple threads and SQLite otherwise rejects cross-thread access.
+# This argument is invalid for PostgreSQL, so only pass it for SQLite.
+_connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
-# Engine erstellen
-# Für SQLite ist "check_same_thread=False" zwingend notwendig,
-# weil FastAPI mit mehreren Threads arbeitet.
+# `pool_pre_ping` transparently checks a pooled connection before handing it
+# out, which prevents "server closed the connection" errors against managed
+# databases (RDS) that drop idle connections. It is harmless for SQLite.
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    connect_args=_connect_args,
+    pool_pre_ping=True,
 )
 
 
 # ============================================================
-# Session Factory
+# Session factory
 # ============================================================
+#
+# SessionLocal produces a fresh database session per request.
+#   autocommit=False → changes are persisted only on an explicit commit()
+#   autoflush=False  → no implicit flush on every query, we control timing
+# ------------------------------------------------------------
 
-# SessionLocal erzeugt einzelne Datenbank-Sessions.
-# autocommit=False → Änderungen müssen manuell mit commit() gespeichert werden
-# autoflush=False → verhindert automatische Synchronisation bei jeder Änderung
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
 
 
 # ============================================================
-# Basismodell für alle SQLAlchemy-Modelle
+# Declarative base for all ORM models
 # ============================================================
+#
+# Every model subclasses this base, e.g.:
+#   class User(Base):
+#       __tablename__ = "users"
+# ------------------------------------------------------------
 
-# Alle Models erben von dieser Basisklasse:
-# class User(Base):
-#     __tablename__ = "users"
 Base = declarative_base()
 
 
 # ============================================================
-# FastAPI Dependency
+# FastAPI dependency
 # ============================================================
 
 def get_db():
-    """
-    Gibt eine neue Datenbank-Session zurück.
-    FastAPI erzeugt automatisch neue Sessions für jede Anfrage.
+    """Yield a database session and guarantee it is closed afterwards.
 
-    Verwendung:
-        @router.get("/beispiel")
+    FastAPI resolves this dependency once per request:
+        @router.get("/example")
         def route(db: Session = Depends(get_db)):
-            # Hier kann man sicher mit der DB arbeiten
-            result = db.query(User).all()
-            return result
+            return db.query(User).all()
 
-    Ablauf:
-    - Session wird geöffnet
-    - An die Route übergeben
-    - Nach Abschluss der Anfrage automatisch geschlossen
+    Flow: open session → hand to the route → always close on completion,
+    even if the route raises.
     """
     db = SessionLocal()
     try:
