@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Protected from "@/components/Protected";
+import { useToast } from "@/components/Toast";
 import {
   getApiBase,
   getExercises,
+  getNewPrsForWorkout,
   getWorkout,
   updateWorkoutStatus,
   type ExerciseRead,
   type WorkoutExerciseRead,
 } from "@/lib/api";
+import { fireCelebration } from "@/lib/confetti";
 
 type TimerState = "IDLE" | "RUNNING" | "PAUSED";
 
@@ -50,6 +53,61 @@ function WorkoutPlayerInner() {
   const [restTimerState, setRestTimerState] = useState<TimerState>("IDLE");
 
   const base = useMemo(() => getApiBase(), []);
+  const { toast } = useToast();
+  const completingRef = useRef(false);
+  const stopCelebrationRef = useRef<(() => void) | null>(null);
+
+  // Stop any in-flight confetti when the user navigates away mid-celebration.
+  useEffect(() => () => {
+    stopCelebrationRef.current?.();
+    stopCelebrationRef.current = null;
+  }, []);
+
+  async function completeAndCelebrate(elapsedMs: number) {
+    if (completingRef.current) return; // guard against double-click on finish
+    completingRef.current = true;
+    try {
+      try {
+        await updateWorkoutStatus(workoutId, "COMPLETED", elapsedMs);
+      } catch {
+        return;
+      }
+      let prs;
+      try {
+        prs = await getNewPrsForWorkout(workoutId);
+      } catch {
+        return;
+      }
+      if (!prs.length) return;
+
+      // Confetti and toasts are independent celebration channels: clicking a
+      // toast dismisses just that toast; confetti runs its 5-second course
+      // (or is cleared on page unmount).
+      stopCelebrationRef.current?.();
+      stopCelebrationRef.current = fireCelebration({ durationMs: 5000 });
+
+      const visible = prs.slice(0, 3);
+      visible.forEach((pr) => {
+        const delta = pr.previous_max_kg == null
+          ? `${pr.weight_kg} kg`
+          : `+${pr.delta_kg} kg`;
+        toast(`🎉 Neuer Personal Record! ${delta} ${pr.exercise_name}`, {
+          type: "success",
+          durationMs: 5000,
+        });
+      });
+      if (prs.length > visible.length) {
+        toast(`+ ${prs.length - visible.length} weitere PRs`, {
+          type: "success",
+          durationMs: 5000,
+        });
+      }
+    } finally {
+      // Releasing the guard slightly after the celebration starts is enough —
+      // we don't want it locked forever in case of partial failure.
+      setTimeout(() => { completingRef.current = false; }, 1000);
+    }
+  }
 
   function beep(freq = 880, dur = 0.15) {
     try {
@@ -227,7 +285,7 @@ function WorkoutPlayerInner() {
     setFinished(true);
     setTrainingTimerState("IDLE");
     setRestTimerState("IDLE");
-    updateWorkoutStatus(workoutId, "COMPLETED", totalElapsed).catch(() => {});
+    completeAndCelebrate(totalElapsed);
   }
 
   function skipToNextExercise() {
@@ -246,7 +304,7 @@ function WorkoutPlayerInner() {
     setFinished(true);
     setTrainingTimerState("IDLE");
     setRestTimerState("IDLE");
-    updateWorkoutStatus(workoutId, "COMPLETED", totalElapsed).catch(() => {});
+    completeAndCelebrate(totalElapsed);
   }
 
   if (loading) return <p className="muted">Loading…</p>;
