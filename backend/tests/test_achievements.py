@@ -93,10 +93,11 @@ def test_streak7_badge_awarded_after_7_consecutive_days(auth_client):
     client, token = auth_client
     ex = _make_exercise(client, token, "Bench Streak7")
     today = date.today()
-    # 7 consecutive days
+    # 7 consecutive days — each workout must be COMPLETED to count
     for offset in range(7):
         d = (today - timedelta(days=offset)).isoformat()
-        _log_workout(client, token, d, ex, 50.0)
+        wid = _log_workout(client, token, d, ex, 50.0)
+        _complete(client, token, wid)
 
     r = client.get("/achievements/", headers=_auth(token))
     data = r.json()
@@ -113,7 +114,22 @@ def test_streak7_not_awarded_with_gap(auth_client):
     today = date.today()
     for offset in [0, 1, 2, 3, 4, 5, 7]:  # missing day 6
         d = (today - timedelta(days=offset)).isoformat()
-        _log_workout(client, token, d, ex, 50.0)
+        wid = _log_workout(client, token, d, ex, 50.0)
+        _complete(client, token, wid)
+
+    data = client.get("/achievements/", headers=_auth(token)).json()
+    earned = {b["id"] for b in data["badges"] if b["earned"]}
+    assert "STREAK_7" not in earned
+
+
+def test_streak7_not_awarded_for_planned_only(auth_client):
+    """7 consecutive PLANNED (not completed) days must NOT grant the streak."""
+    client, token = auth_client
+    ex = _make_exercise(client, token, "Bench Planned")
+    today = date.today()
+    for offset in range(7):
+        d = (today - timedelta(days=offset)).isoformat()
+        _log_workout(client, token, d, ex, 50.0)  # PLANNED, never completed
 
     data = client.get("/achievements/", headers=_auth(token)).json()
     earned = {b["id"] for b in data["badges"] if b["earned"]}
@@ -179,7 +195,8 @@ def test_newly_earned_only_on_first_call(auth_client):
     today = date.today()
     for offset in range(7):
         d = (today - timedelta(days=offset)).isoformat()
-        _log_workout(client, token, d, ex, 50.0)
+        wid = _log_workout(client, token, d, ex, 50.0)
+        _complete(client, token, wid)
 
     first = client.get("/achievements/", headers=_auth(token)).json()
     assert any(b["id"] == "STREAK_7" for b in first["newly_earned"])
@@ -248,7 +265,8 @@ def test_leaderboard_opt_in_flow(auth_client):
     today = date.today()
     for offset in range(3):
         d = (today - timedelta(days=offset)).isoformat()
-        _log_workout(client, token, d, ex, 80.0)
+        wid = _log_workout(client, token, d, ex, 80.0)
+        _complete(client, token, wid)
 
     r = client.patch("/achievements/leaderboard-opt-in", json={"opt_in": True}, headers=_auth(token))
     assert r.status_code == 200
