@@ -94,3 +94,43 @@ aws rds describe-db-instances       --query 'DBInstances[].DBInstanceIdentifier'
 `force_delete = true` on the ECR repositories lets `destroy` succeed even when
 images are present. Phase 1 resources are free, so destroying/recreating the
 foundation costs nothing.
+
+## RDS PostgreSQL (#44B)
+
+`infra/rds.tf` defines an RDS PostgreSQL instance, **gated behind
+`enable_paid_resources` (off by default)**. With the flag off, `terraform plan`
+adds **no** RDS resources.
+
+When enabled it is deliberately minimal and cheap:
+
+| Setting | Value |
+|---------|-------|
+| Instance class | `db.t3.micro` (`db_instance_class`) |
+| Storage | 20 GB gp3, encrypted (`db_allocated_storage`) |
+| Availability | **Single-AZ** (`multi_az = false`) |
+| Network | **private subnets only**, `publicly_accessible = false` |
+| Access | only via the `*-db-sg` security group (app tier only) |
+| Est. cost | **~15–18 EUR/mo** (instance + 20 GB) in eu-central-1 |
+
+### Enabling it (only with explicit approval)
+
+```bash
+cd infra
+# provide a password out-of-band — never commit it:
+export TF_VAR_db_password='<a-strong-password>'
+terraform plan  -var="enable_paid_resources=true"   # review the 2 new resources
+terraform apply -var="enable_paid_resources=true"   # ONLY after approval
+```
+
+A `precondition` blocks enabling without a `db_password` of at least 8 chars.
+
+### Tear-down
+
+```bash
+terraform destroy -var="enable_paid_resources=true"   # removes the DB instance + subnet group
+# or simply set enable_paid_resources=false and apply to drop the paid resources
+aws rds describe-db-instances --query 'DBInstances[].DBInstanceIdentifier'   # confirm none left
+```
+
+`skip_final_snapshot = true` and `deletion_protection = false` keep teardown
+friction-free for this project. **No `terraform apply` has been run yet.**
