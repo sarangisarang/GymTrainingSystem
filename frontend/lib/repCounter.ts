@@ -234,8 +234,13 @@ function sideVisibility(
   landmarks: Landmark[],
   joints: readonly [number, number, number],
 ): number {
+  // IMPORTANT: some MediaPipe builds don't populate `visibility` on the
+  // normalized landmarks (it comes back undefined). Treat a missing value as
+  // "present" (1) instead of 0 — otherwise the visibility gate would reject
+  // every frame and NOTHING would count on any exercise. A landmark that is
+  // genuinely absent is caught separately by the coordinate check below.
   return (
-    joints.reduce((sum, idx) => sum + (landmarks[idx]?.visibility ?? 0), 0) /
+    joints.reduce((sum, idx) => sum + (landmarks[idx]?.visibility ?? 1), 0) /
     joints.length
   );
 }
@@ -262,13 +267,17 @@ export function measureAngle(
   const leftVis = sideVisibility(landmarks, leftIdx);
   const rightVis = sideVisibility(landmarks, rightIdx);
 
-  const MIN_VISIBILITY = 0.5;
+  // Lenient gate: only skip the frame if a side is clearly NOT visible.
+  const MIN_VISIBILITY = 0.3;
   if (Math.max(leftVis, rightVis) < MIN_VISIBILITY) return null;
 
   const useRight = rightVis > leftVis;
   const idx = useRight ? rightIdx : leftIdx;
   const [a, b, c] = idx.map((i) => landmarks[i]);
+  // Guard against landmarks that are entirely missing (off-frame): a real
+  // pose point always has coordinates, an absent one is undefined.
   if (!a || !b || !c) return null;
+  if (a.x === undefined || b.x === undefined || c.x === undefined) return null;
 
   return { angle: angleDeg(a, b, c), side: useRight ? "right" : "left" };
 }
