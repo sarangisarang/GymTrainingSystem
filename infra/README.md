@@ -44,3 +44,53 @@ terraform plan          # preview (read-only against AWS) — review before appl
 
 State (`terraform.tfstate`) is local and **gitignored** — do not commit it.
 The provider lock file (`.terraform.lock.hcl`) **is** committed for reproducible plans.
+
+## Cost guardrails
+
+> ⚠️ **No `terraform apply` has been executed for this project. No paid AWS runtime resources exist.**
+
+Target budget: **~30 EUR / month** (`monthly_budget_eur` default `30`).
+
+Every billable resource is gated behind an **off-by-default** feature flag
+(`infra/guardrails.tf`). Later phases must wrap their paid resources in
+`count = var.enable_* ? 1 : 0`, so nothing costly is created without an
+explicit opt-in.
+
+| Flag | Default | Gates | Approx. cost in eu-central-1 |
+|------|---------|-------|------------------------------|
+| `enable_paid_resources` | `false` | master switch for all billable infra | — |
+| `enable_nat_gateway` | `false` | NAT Gateway | **~32 EUR/mo** + data processing |
+| `enable_alb` | `false` | Application Load Balancer | **~18–20 EUR/mo** + LCU |
+| `enable_documentdb` | `false` *(locked)* | DocumentDB | out of scope — see below |
+
+**Other (future) resource estimates, rough:**
+
+| Resource | Approx. monthly cost |
+|----------|----------------------|
+| VPC / subnets / route tables / security groups | **0 EUR** |
+| ECR (handful of images, lifecycle-trimmed) | **~0 EUR** (500 MB free tier) |
+| RDS PostgreSQL `db.t3.micro`, Single-AZ, ~20 GB | **~15–18 EUR/mo** |
+| ECS Fargate (0.25 vCPU / 0.5 GB, 1 task 24/7) | **~9 EUR/mo** per task |
+| Secrets Manager | **~0.40 EUR/secret/mo** + API calls |
+
+Figures are approximate and exclude data transfer; always confirm against a
+fresh `terraform plan` and the AWS Pricing Calculator before enabling anything.
+
+**`enable_documentdb` is locked to `false`** by a variable validation: MongoDB
+is deferred for this budget, and if ever needed it will run externally on
+MongoDB Atlas (never DocumentDB). Setting it `true` fails `terraform validate`.
+
+### Tear-down (avoid surprise charges)
+
+```bash
+cd infra
+terraform destroy            # removes everything this config manages
+# verify nothing is left billing:
+aws ec2 describe-nat-gateways      --query 'NatGateways[].NatGatewayId'
+aws elbv2 describe-load-balancers   --query 'LoadBalancers[].LoadBalancerArn'
+aws rds describe-db-instances       --query 'DBInstances[].DBInstanceIdentifier'
+```
+
+`force_delete = true` on the ECR repositories lets `destroy` succeed even when
+images are present. Phase 1 resources are free, so destroying/recreating the
+foundation costs nothing.
