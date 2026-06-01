@@ -274,10 +274,16 @@ export function measureAngle(
   const useRight = rightVis > leftVis;
   const idx = useRight ? rightIdx : leftIdx;
   const [a, b, c] = idx.map((i) => landmarks[i]);
-  // Guard against landmarks that are entirely missing (off-frame): a real
-  // pose point always has coordinates, an absent one is undefined.
+  // Reject missing landmarks (off-frame joints come back undefined).
   if (!a || !b || !c) return null;
   if (a.x === undefined || b.x === undefined || c.x === undefined) return null;
+
+  // Coordinates are the reliable gate (more so than the optional visibility):
+  // reject a joint clearly outside the normalized [0,1] frame. A small margin
+  // keeps borderline-edge poses usable instead of dropping every frame.
+  const inFrame = (p: Landmark) =>
+    p.x >= -0.1 && p.x <= 1.1 && p.y >= -0.1 && p.y <= 1.1;
+  if (!inFrame(a) || !inFrame(b) || !inFrame(c)) return null;
 
   return { angle: angleDeg(a, b, c), side: useRight ? "right" : "left" };
 }
