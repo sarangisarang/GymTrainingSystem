@@ -81,6 +81,7 @@ export default function Navbar() {
           <NavLink href="/coach" label="🤖 KI-Coach" />
           <NavLink href="/coach/dashboard" label="👨‍💼 Coach" />
           <NavLink href="/report" label="📄 Report" />
+          <NavLink href="/leaderboard" label="🏆 Leaderboard" />
           {mounted && cartCount > 0 && (
             <Link
               href="/cart"

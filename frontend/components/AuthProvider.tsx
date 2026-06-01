@@ -16,6 +16,7 @@ export type AuthUser = {
   name?: string | null;
   created_at?: string;
   role?: "athlete" | "coach" | string;
+  leaderboard_opt_in?: boolean;
 };
 
 type AuthContextValue = {
