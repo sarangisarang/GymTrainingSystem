@@ -18,10 +18,25 @@ import Protected from "@/components/Protected";
 import {
   RepCounter,
   measureAngle,
+  evaluateForm,
   EXERCISE_LIST,
   type ExerciseId,
   type Landmark,
+  type FormFeedback,
 } from "@/lib/repCounter";
+
+// Traffic-light styles for the form-feedback card and skeleton color.
+const FORM_CARD_STYLES: Record<string, string> = {
+  good: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+  warning: "border-amber-500/40 bg-amber-500/10 text-amber-200",
+  bad: "border-red-500/40 bg-red-500/10 text-red-200",
+};
+const FORM_SKELETON_COLOR: Record<string, string> = {
+  good: "#22c55e",
+  warning: "#eab308",
+  bad: "#ef4444",
+};
+const FORM_EMOJI: Record<string, string> = { good: "🟢", warning: "🟡", bad: "🔴" };
 
 // CDN locations for the MediaPipe vision WASM bundle and the pose model.
 // Pinned to the installed @mediapipe/tasks-vision version for reproducibility.
@@ -57,6 +72,7 @@ function RepCounterInner() {
   const [phase, setPhase] = useState<"TOP" | "BOTTOM">("TOP");
   const [angle, setAngle] = useState<number | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [form, setForm] = useState<FormFeedback | null>(null);
   const [fps, setFps] = useState(0);
 
   // Keep the counter's exercise in sync when the user switches mid-session.
@@ -102,12 +118,23 @@ function RepCounterInner() {
       const { FilesetResolver, PoseLandmarker, DrawingUtils } = vision;
 
       // 2. Resolve the WASM runtime and build the pose model in VIDEO mode.
+      //    The GPU delegate is fastest but fails on some drivers / headless
+      //    setups, so fall back to the CPU delegate instead of erroring out.
       const fileset = await FilesetResolver.forVisionTasks(WASM_CDN);
-      const landmarker = await PoseLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: POSE_MODEL, delegate: "GPU" },
-        runningMode: "VIDEO",
-        numPoses: 1,
-      });
+      let landmarker;
+      try {
+        landmarker = await PoseLandmarker.createFromOptions(fileset, {
+          baseOptions: { modelAssetPath: POSE_MODEL, delegate: "GPU" },
+          runningMode: "VIDEO",
+          numPoses: 1,
+        });
+      } catch {
+        landmarker = await PoseLandmarker.createFromOptions(fileset, {
+          baseOptions: { modelAssetPath: POSE_MODEL, delegate: "CPU" },
+          runningMode: "VIDEO",
+          numPoses: 1,
+        });
+      }
       landmarkerRef.current = landmarker;
       counterRef.current = new RepCounter(exercise);
       counterRef.current.reset();
@@ -146,29 +173,36 @@ function RepCounterInner() {
         if (result.landmarks && result.landmarks.length > 0) {
           const landmarks = result.landmarks[0] as Landmark[];
 
-          // Draw the skeleton overlay on top of the mirrored video.
-          drawing.drawConnectors(
-            result.landmarks[0],
-            (PoseLandmarker as any).POSE_CONNECTIONS,
-            { color: "#6366f1", lineWidth: 3 },
-          );
-          drawing.drawLandmarks(result.landmarks[0], {
-            color: "#a5b4fc",
-            radius: 3,
-          });
-
-          // Feed the tracked joint angle into the rep counter.
+          // Feed the tracked joint angle into the rep counter + form check.
           const measured = measureAngle(landmarks, exercise);
+          let skeletonColor = "#6366f1"; // default indigo when not tracking
           if (measured && counterRef.current) {
             const out = counterRef.current.update(measured.angle);
             setAngle(out.angle);
             setPhase(out.phase);
             setHint(out.hint);
+
+            // Basic form feedback drives both the card and the skeleton color.
+            const fb = evaluateForm(out.angle, out.phase, exercise);
+            setForm(fb);
+            skeletonColor = FORM_SKELETON_COLOR[fb.status] ?? "#6366f1";
+
             if (out.repCompleted) {
               setReps(out.reps);
               beep();
             }
           }
+
+          // Draw the skeleton overlay, colored by the current form status.
+          drawing.drawConnectors(
+            result.landmarks[0],
+            (PoseLandmarker as any).POSE_CONNECTIONS,
+            { color: skeletonColor, lineWidth: 3 },
+          );
+          drawing.drawLandmarks(result.landmarks[0], {
+            color: skeletonColor,
+            radius: 3,
+          });
         }
         ctx.restore();
 
@@ -213,6 +247,7 @@ function RepCounterInner() {
     const stream = video?.srcObject as MediaStream | null;
     stream?.getTracks().forEach((t) => t.stop());
     if (video) video.srcObject = null;
+    setForm(null);
     setStatus("idle");
   }
 
@@ -328,9 +363,13 @@ function RepCounterInner() {
             </p>
           </div>
 
-          {hint && (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-center text-sm font-medium text-amber-200">
-              ⚠️ {hint}
+          {/* Form Feedback (Beta) — traffic-light status from body angles.
+              Basic range-of-motion check only; not form correction. */}
+          {status === "running" && form && (
+            <div className={`rounded-xl border p-4 text-center text-sm font-medium ${FORM_CARD_STYLES[form.status]}`}>
+              <span className="mr-1 text-xs uppercase tracking-wide opacity-70">Form (Beta)</span>
+              <br />
+              {FORM_EMOJI[form.status]} {form.message}
             </div>
           )}
 

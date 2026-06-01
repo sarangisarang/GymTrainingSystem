@@ -73,7 +73,22 @@ type ExerciseConfig = {
   // Angle the user should reach at the effort point, used for the form hint.
   targetAngle: number;
   hint: string;
+  // Optional basic form-feedback rules (Beta). Only a handful of exercises
+  // define these for now. `good` is the acceptable angle band AT the effort
+  // point; outside it the movement is flagged. This is intentionally simple:
+  // MediaPipe only sees pose landmarks — not weight, tension, foot pressure
+  // or joint strain — so this is "basic form hints", never form correction.
+  form?: {
+    good: { min: number; max: number };
+    notEnoughMsg: string; // effort=low: too shallow · effort=high: not high enough
+    goodMsg: string;
+    overMsg: string; // past the good band — usually "keep control"
+  };
 };
+
+export type FormStatus = "good" | "warning" | "bad";
+
+export type FormFeedback = { status: FormStatus; message: string };
 
 const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
   // Knee angle: standing ≈ 170°, deep squat ≈ 70-90°.
@@ -85,6 +100,12 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     effort: "low",
     targetAngle: 95,
     hint: "Go deeper into the squat",
+    form: {
+      good: { min: 70, max: 110 },
+      notEnoughMsg: "Too shallow — go deeper",
+      goodMsg: "Good squat depth",
+      overMsg: "Very deep — keep control",
+    },
   },
   // Elbow angle: arm extended ≈ 170°, fully curled ≈ 40°.
   curl: {
@@ -95,6 +116,12 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     effort: "low",
     targetAngle: 55,
     hint: "Curl all the way up",
+    form: {
+      good: { min: 30, max: 60 },
+      notEnoughMsg: "Not enough bend — curl higher",
+      goodMsg: "Full curl range",
+      overMsg: "Controlled — avoid swinging",
+    },
   },
   // Elbow angle: top of push-up ≈ 170°, bottom ≈ 80-90°.
   pushup: {
@@ -136,6 +163,12 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     effort: "high",
     targetAngle: 160,
     hint: "Press all the way overhead",
+    form: {
+      good: { min: 155, max: 180 },
+      notEnoughMsg: "Not high enough — press fully overhead",
+      goodMsg: "Full extension",
+      overMsg: "Locked out — keep control",
+    },
   },
   // Shoulder abduction (hip-shoulder-wrist): arm down ≈ 15°, raised ≈ 90°.
   // Effort is at the TOP of the raise, so effort = "high".
@@ -147,6 +180,12 @@ const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     effort: "high",
     targetAngle: 85,
     hint: "Raise your arm to shoulder height",
+    form: {
+      good: { min: 80, max: 110 },
+      notEnoughMsg: "Raise to shoulder height",
+      goodMsg: "Good height",
+      overMsg: "Too high — lower slightly",
+    },
   },
   // Elbow angle: bent behind head ≈ 60°, extended up ≈ 165°.
   // Effort is at the extension (top), so effort = "high".
@@ -232,6 +271,51 @@ export function measureAngle(
   if (!a || !b || !c) return null;
 
   return { angle: angleDeg(a, b, c), side: useRight ? "right" : "left" };
+}
+
+/**
+ * Basic real-time form feedback (Beta).
+ *
+ * Returns a traffic-light status from the joint angle while the user is in
+ * the effort phase. This is deliberately shallow: it only checks range of
+ * motion at the working point, because pose landmarks carry no information
+ * about load, tension or balance. Exercises without `form` rules return a
+ * neutral "good" so the UI never shows a misleading warning.
+ *
+ *   effort "low"  (squat/curl): angle ABOVE the good band → too shallow (bad)
+ *                               angle BELOW the good band → too deep (warning)
+ *   effort "high" (press/raise): angle BELOW the good band → not enough (bad)
+ *                                angle ABOVE the good band → overshoot (warning)
+ */
+export function evaluateForm(
+  angle: number,
+  phase: RepPhase,
+  exercise: ExerciseId,
+): FormFeedback {
+  const cfg = EXERCISES[exercise];
+
+  // No rules, or resting between reps → neutral, no nagging.
+  if (!cfg.form || phase === "TOP") {
+    return { status: "good", message: "Controlled movement" };
+  }
+
+  const { good, notEnoughMsg, goodMsg, overMsg } = cfg.form;
+
+  if (angle >= good.min && angle <= good.max) {
+    return { status: "good", message: goodMsg };
+  }
+
+  if (cfg.effort === "low") {
+    // Working at a small angle: above the band means the rep is too shallow.
+    return angle > good.max
+      ? { status: "bad", message: notEnoughMsg }
+      : { status: "warning", message: overMsg };
+  }
+
+  // effort === "high": working at a large angle; below the band is too little.
+  return angle < good.min
+    ? { status: "bad", message: notEnoughMsg }
+    : { status: "warning", message: overMsg };
 }
 
 /**
