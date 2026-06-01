@@ -14,6 +14,8 @@ crash.log
 crash.*.log
 
 # Variable files that may contain secrets / per-user overrides
+# (terraform.tfvars.example IS committed — it ends in .example, not .tfvars)
+terraform.tfvars
 *.auto.tfvars
 override.tf
 override.tf.json
