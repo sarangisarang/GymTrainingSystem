@@ -1,0 +1,60 @@
+# Local development / demo stack: PostgreSQL + FastAPI backend + Next.js frontend.
+#
+#   docker compose up --build      # build images and start the whole stack
+#   docker compose down            # stop and remove containers
+#   docker compose down -v         # also drop the database volume (fresh start)
+#
+# Frontend → http://localhost:3000   Backend → http://localhost:8000/docs
+#
+# Secrets (JWT_SECRET_KEY, GEMINI_API_KEY) come from a local .env file — copy
+# .env.docker.example to .env and fill it in. Never commit the real .env.
+
+services:
+  # ── PostgreSQL — business data ────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gym}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gym}
+      POSTGRES_DB: ${POSTGRES_DB:-gym}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Backend waits for this healthcheck before it starts (see depends_on).
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gym} -d ${POSTGRES_DB:-gym}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "5433:5432" # host 5433 (avoids clashing with a local postgres on 5432); drop in production
+
+  # ── FastAPI backend ───────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    environment:
+      # SQLAlchemy connects to the `db` service over the compose network.
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-gym}:${POSTGRES_PASSWORD:-gym}@db:5432/${POSTGRES_DB:-gym}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev_change_me}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Berlin}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  # ── Next.js frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked in at build time and used by the browser, so it must be a
+        # host-reachable URL (not the internal `backend` service name).
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:8000}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
