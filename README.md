@@ -1,5 +1,7 @@
 # GymTrainingSystem 💪
 
+[![CI](https://github.com/sarangisarang/GymTrainingSystem/actions/workflows/ci.yml/badge.svg)](https://github.com/sarangisarang/GymTrainingSystem/actions/workflows/ci.yml)
+
 Ein vollständiges **Gym-Tracking-System** mit Workout-Analyse, automatischer Trainingsprogramm-Generierung und Progress-Tracking.
 
 ---
