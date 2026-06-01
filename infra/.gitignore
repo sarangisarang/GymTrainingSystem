@@ -1,0 +1,23 @@
+# Local Terraform state (Phase 1 uses local state)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform working directory and plugins
+.terraform/
+# NOTE: .terraform.lock.hcl is intentionally NOT ignored — it pins provider
+# versions/hashes and should be committed for reproducible plans.
+
+# Plan output and crash logs
+*.tfplan
+crash.log
+crash.*.log
+
+# Variable files that may contain secrets / per-user overrides
+# (terraform.tfvars.example IS committed — it ends in .example, not .tfvars)
+terraform.tfvars
+*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
