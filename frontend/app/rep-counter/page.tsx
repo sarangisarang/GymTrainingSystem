@@ -85,6 +85,17 @@ function RepCounterInner() {
   async function start() {
     setErrorMsg(null);
     setStatus("loading");
+    // Guard: some browsers (older Safari, non-secure origins, in-app webviews)
+    // expose no camera API at all. Fail with a clear message instead of a
+    // cryptic "cannot read getUserMedia of undefined".
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setStatus("error");
+      setErrorMsg(
+        "Your browser does not support camera access. Try the latest Chrome, Edge or Firefox on a desktop, over HTTPS or localhost.",
+      );
+      return;
+    }
+
     try {
       // 1. Lazy-load the MediaPipe vision module (kept out of the main bundle).
       const vision = await import("@mediapipe/tasks-vision");
@@ -175,9 +186,23 @@ function RepCounterInner() {
       rafRef.current = requestAnimationFrame(loop);
     } catch (e: unknown) {
       setStatus("error");
-      setErrorMsg(
-        e instanceof Error ? e.message : "Could not start camera / pose model",
-      );
+      // Map the common getUserMedia failures to actionable, human messages.
+      const name = (e as { name?: string })?.name;
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setErrorMsg(
+          "Camera access was blocked. Allow the camera for this site in your browser settings and try again.",
+        );
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        setErrorMsg("No camera found. Connect a webcam and try again.");
+      } else if (name === "NotReadableError") {
+        setErrorMsg(
+          "The camera is already in use by another app. Close it and try again.",
+        );
+      } else {
+        setErrorMsg(
+          e instanceof Error ? e.message : "Could not start the camera or pose model.",
+        );
+      }
     }
   }
 
@@ -204,9 +229,17 @@ function RepCounterInner() {
       <div className="card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="h1">📷 Rep Counter</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="h1">📷 Rep Counter</h1>
+              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-300">
+                Beta
+              </span>
+            </div>
             <p className="muted mt-1">
-              Automatic rep counting with your webcam — 100% on-device, no video leaves your browser.
+              Experimental rep counting from pose landmarks. Accuracy depends on camera angle and lighting.
+            </p>
+            <p className="mt-1 text-xs text-emerald-400">
+              🔒 The camera runs locally in your browser. No video is uploaded or stored.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -241,7 +274,7 @@ function RepCounterInner() {
               The canvas overlay is mirrored to match. */}
           <video
             ref={videoRef}
-            className="h-[480px] w-full -scale-x-100 object-cover"
+            className="h-[320px] w-full -scale-x-100 object-cover sm:h-[480px]"
             playsInline
             muted
           />
