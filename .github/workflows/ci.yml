@@ -86,3 +86,30 @@ jobs:
 
       - name: Build frontend Docker image
         run: docker build -t gymtracker-frontend ./frontend
+
+  terraform-validate:
+    name: Terraform validate
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      # Static checks only — no AWS credentials, no backend, no plan/apply.
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init (no backend)
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        run: terraform validate
