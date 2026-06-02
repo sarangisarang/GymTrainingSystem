@@ -40,9 +40,10 @@ USER appuser
 # FastAPI/uvicorn listens here; docker-compose / ECS map this port.
 EXPOSE 8000
 
-# Container-level liveness probe hitting the public root route.
+# Container-level liveness probe hitting the public root route. Reads $PORT so
+# it matches the CMD (defaults to 8000 locally / in docker-compose).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/').status==200 else 1)"
+    CMD python -c "import os, urllib.request, sys; port=os.getenv('PORT','8000'); sys.exit(0 if urllib.request.urlopen(f'http://localhost:{port}/').status==200 else 1)"
 
 # 0.0.0.0 so the server is reachable from outside the container.
 # Bind to $PORT when the platform injects one (Render/Railway assign a dynamic
