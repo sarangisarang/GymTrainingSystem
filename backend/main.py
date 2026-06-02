@@ -101,15 +101,22 @@ check_startup_config()
 
 app = FastAPI(title="TEAM3 Gym API")
 
+# Local dev origins plus any extra ones supplied at runtime via ALLOWED_ORIGINS
+# (comma-separated). The regex additionally allows any Render *.onrender.com
+# deployment, so the hosted frontend works without hardcoding its random URL.
+_default_origins = [
+    "http://3.70.203.212",
+    "http://3.70.203.212:3000",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+]
+_env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://3.70.203.212",
-        "http://3.70.203.212:3000",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002",
-    ],
+    allow_origins=_default_origins + _env_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

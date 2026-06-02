@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:rep-counter": "npx tsx tests/repCounter.test.mjs"
   },
   "dependencies": {
     "@types/canvas-confetti": "^1.9.0",
