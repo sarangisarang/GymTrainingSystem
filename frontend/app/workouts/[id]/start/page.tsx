@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Protected from "@/components/Protected";
+import { useToast } from "@/components/Toast";
 import {
   getApiBase,
   getExercises,
+  getNewPrsForWorkout,
   getWorkout,
   updateWorkoutStatus,
   type ExerciseRead,
   type WorkoutExerciseRead,
 } from "@/lib/api";
+import { fireCelebration } from "@/lib/confetti";
 
 type TimerState = "IDLE" | "RUNNING" | "PAUSED";
 
@@ -50,6 +53,61 @@ function WorkoutPlayerInner() {
   const [restTimerState, setRestTimerState] = useState<TimerState>("IDLE");
 
   const base = useMemo(() => getApiBase(), []);
+  const { toast } = useToast();
+  const completingRef = useRef(false);
+  const stopCelebrationRef = useRef<(() => void) | null>(null);
+
+  // Stop any in-flight confetti when the user navigates away mid-celebration.
+  useEffect(() => () => {
+    stopCelebrationRef.current?.();
+    stopCelebrationRef.current = null;
+  }, []);
+
+  async function completeAndCelebrate(elapsedMs: number) {
+    if (completingRef.current) return; // guard against double-click on finish
+    completingRef.current = true;
+    try {
+      try {
+        await updateWorkoutStatus(workoutId, "COMPLETED", elapsedMs);
+      } catch {
+        return;
+      }
+      let prs;
+      try {
+        prs = await getNewPrsForWorkout(workoutId);
+      } catch {
+        return;
+      }
+      if (!prs.length) return;
+
+      // Confetti and toasts are independent celebration channels: clicking a
+      // toast dismisses just that toast; confetti runs its 5-second course
+      // (or is cleared on page unmount).
+      stopCelebrationRef.current?.();
+      stopCelebrationRef.current = fireCelebration({ durationMs: 5000 });
+
+      const visible = prs.slice(0, 3);
+      visible.forEach((pr) => {
+        const delta = pr.previous_max_kg == null
+          ? `${pr.weight_kg} kg`
+          : `+${pr.delta_kg} kg`;
+        toast(`🎉 Neuer Personal Record! ${delta} ${pr.exercise_name}`, {
+          type: "success",
+          durationMs: 5000,
+        });
+      });
+      if (prs.length > visible.length) {
+        toast(`+ ${prs.length - visible.length} weitere PRs`, {
+          type: "success",
+          durationMs: 5000,
+        });
+      }
+    } finally {
+      // Releasing the guard slightly after the celebration starts is enough —
+      // we don't want it locked forever in case of partial failure.
+      setTimeout(() => { completingRef.current = false; }, 1000);
+    }
+  }
 
   function beep(freq = 880, dur = 0.15) {
     try {
@@ -83,6 +141,15 @@ function WorkoutPlayerInner() {
 
         setWorkoutExercises(sorted);
         setExerciseMap(new Map(exercises.map((exercise) => [exercise.id, exercise])));
+
+        // Reload of an already-finished workout: jump straight to the finished
+        // view so the user doesn't see "Ready to start?" for completed work
+        // and can't accidentally re-trigger the celebration by clicking Start.
+        if (workout.status === "COMPLETED") {
+          setFinished(true);
+          setStarted(true);
+          if (workout.duration_seconds) setTotalElapsed(workout.duration_seconds);
+        }
       } catch (e: any) {
         setErr(e?.message ?? "Failed to load workout player");
       } finally {
@@ -133,6 +200,12 @@ function WorkoutPlayerInner() {
       : "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=60";
 
   function startWorkout() {
+    // Kill any in-flight confetti from a prior completion before the new
+    // training UI takes over — otherwise particles keep rendering over the
+    // fresh workout.
+    stopCelebrationRef.current?.();
+    stopCelebrationRef.current = null;
+
     setStarted(true);
     setFinished(false);
     setCurrentExerciseIndex(0);
@@ -227,7 +300,7 @@ function WorkoutPlayerInner() {
     setFinished(true);
     setTrainingTimerState("IDLE");
     setRestTimerState("IDLE");
-    updateWorkoutStatus(workoutId, "COMPLETED", totalElapsed).catch(() => {});
+    completeAndCelebrate(totalElapsed);
   }
 
   function skipToNextExercise() {
@@ -246,7 +319,7 @@ function WorkoutPlayerInner() {
     setFinished(true);
     setTrainingTimerState("IDLE");
     setRestTimerState("IDLE");
-    updateWorkoutStatus(workoutId, "COMPLETED", totalElapsed).catch(() => {});
+    completeAndCelebrate(totalElapsed);
   }
 
   if (loading) return <p className="muted">Loading…</p>;

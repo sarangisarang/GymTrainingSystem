@@ -580,3 +580,18 @@ export async function setLeaderboardOptIn(opt_in: boolean) {
     body: JSON.stringify({ opt_in }),
   });
 }
+
+
+// -- PR detection (Issue #12) ---------------------------------------------
+
+export type NewPR = {
+  exercise_id: string;
+  exercise_name: string;
+  weight_kg: number;
+  previous_max_kg: number | null;
+  delta_kg: number;
+};
+
+export async function getNewPrsForWorkout(workoutId: string) {
+  return apiFetch<NewPR[]>(`/workouts/${workoutId}/new-prs`, { auth: true });
+}
