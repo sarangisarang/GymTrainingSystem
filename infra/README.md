@@ -134,3 +134,21 @@ aws rds describe-db-instances --query 'DBInstances[].DBInstanceIdentifier'   # c
 
 `skip_final_snapshot = true` and `deletion_protection = false` keep teardown
 friction-free for this project. **No `terraform apply` has been run yet.**
+
+### pgvector (future RAG / Vector DB — #27 / #32)
+
+The engine version (`postgres_engine_version`, default `16`) is kept **>= 15.2**
+so the database can support the **pgvector** extension later. Terraform only
+guarantees a compatible engine — it does **not** enable the extension.
+
+Enabling pgvector is a **database schema migration**, not infrastructure, and
+will be done from the app side (Alembic / SQL), e.g.:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Rationale: RDS lives in private subnets, Terraform/CI cannot reach it to run
+SQL, and DB credentials should not pass through Terraform state. So the split is:
+**Terraform = infrastructure**, **Alembic/SQL = schema + extensions**,
+**app code = embeddings / RAG logic**.

@@ -42,6 +42,12 @@ variable "db_allocated_storage" {
   default     = 20
 }
 
+variable "postgres_engine_version" {
+  description = "RDS PostgreSQL major version. Must be >= 15.2 to support the pgvector extension; default 16. NOTE: pgvector is enabled per-database via an Alembic/SQL migration (CREATE EXTENSION vector), NOT by Terraform."
+  type        = string
+  default     = "16"
+}
+
 locals {
   rds_enabled = var.enable_paid_resources ? 1 : 0
 }
@@ -62,7 +68,7 @@ resource "aws_db_instance" "postgres" {
 
   identifier     = "${var.project_name}-postgres"
   engine         = "postgres"
-  engine_version = "16"
+  engine_version = var.postgres_engine_version
   instance_class = var.db_instance_class
 
   allocated_storage = var.db_allocated_storage
