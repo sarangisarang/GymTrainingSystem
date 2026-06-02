@@ -45,4 +45,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/').status==200 else 1)"
 
 # 0.0.0.0 so the server is reachable from outside the container.
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Bind to $PORT when the platform injects one (Render/Railway assign a dynamic
+# port); fall back to 8000 locally and in docker-compose. Shell form so the
+# variable expands at runtime.
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
