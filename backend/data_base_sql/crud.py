@@ -113,6 +113,8 @@ def create_exercise(db: Session, data: ExerciseCreate):
     db.add(new_ex)
     db.commit()
     db.refresh(new_ex)
+    from . import vector_store
+    vector_store.index_exercise(new_ex)
     return new_ex
 
 def set_exercise_image(db: Session, exercise_id: UUID, image_url: str):
@@ -156,6 +158,8 @@ def update_exercise(db: Session, exercise_id: UUID, data: ExerciseCreate):
 
     db.commit()
     db.refresh(exercise)
+    from . import vector_store
+    vector_store.index_exercise(exercise)
     return exercise
 
 
@@ -166,6 +170,8 @@ def delete_exercise(db: Session, exercise_id: UUID):
     if ex:
         db.delete(ex)
         db.commit()
+        from . import vector_store
+        vector_store.remove_exercise_from_index(exercise_id)
         return True
     return False
 
@@ -201,6 +207,8 @@ def create_workout(db: Session, user_id: UUID, data: WorkoutCreate):
 
     db.commit()
     db.refresh(workout)
+    from . import vector_store
+    vector_store.index_workout(workout, db)
     return workout
 
 def get_all_workouts_by_user(db: Session, user_id: UUID):
@@ -242,6 +250,8 @@ def update_workout(db: Session, workout_id: UUID, data: WorkoutCreate):
 
     db.commit()
     db.refresh(workout)
+    from . import vector_store
+    vector_store.index_workout(workout, db)
     return workout
 
 
@@ -255,6 +265,8 @@ def delete_workout(db: Session, workout_id: UUID):
     if workout:
         db.delete(workout)
         db.commit()
+        from . import vector_store
+        vector_store.remove_workout_from_index(workout_id)
         return True
     return False
 
@@ -1070,6 +1082,8 @@ def update_workout_status(db: Session, workout_id: UUID, status: str, duration_s
         workout.completed_at = datetime.utcnow()
     db.commit()
     db.refresh(workout)
+    from . import vector_store
+    vector_store.index_workout(workout, db)
     return workout
 
 

@@ -6,3 +6,5 @@ gym.db
 node_modules/
 .next/
 backend/.env
+chroma_db/
+backend/chroma_db/
