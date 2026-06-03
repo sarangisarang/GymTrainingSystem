@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "exercises": "Egzersizler",
+    "workouts": "Antrenmanlar",
+    "programs": "Programlar",
+    "progress": "İlerleme",
+    "repCounter": "Tekrar Sayacı (Beta)",
+    "coach": "Yapay Zekâ Koçu",
+    "coachDashboard": "Koç",
+    "report": "Rapor",
+    "leaderboard": "Lider Tablosu"
+  },
+  "auth": {
+    "login": "Giriş",
+    "register": "Kayıt ol",
+    "logout": "Çıkış"
+  },
+  "common": {
+    "language": "Dil"
+  },
+  "home": {
+    "badge": "Modül 4 Bitirme Projesi — TEAM3",
+    "subtitle": "Antrenmanını planlamak, takip etmek ve analiz etmek için full-stack web uygulaması. Modül 4 bitirme projesi olarak geliştirildi.",
+    "openDashboard": "Paneli aç →",
+    "getStarted": "Başla →",
+    "signIn": "Giriş yap",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "API uç noktaları",
+      "pages": "Uygulama sayfası",
+      "features": "Özellik",
+      "sprint": "Haftalık sprint"
+    },
+    "featuresKicker": "Uygulanan özellikler",
+    "featuresTitle": "3 haftada 12 özellik",
+    "featuresSubtitle": "Tüm özellikler yayında, test edildi ve GitHub'da belgelendi.",
+    "techKicker": "Teknoloji Yığını",
+    "techTitle": "Modern ve üretime hazır",
+    "archKicker": "Mimari",
+    "archTitle": "Sistem nasıl kurulu",
+    "ctaTitle": "Test etmeye hazır mısın?",
+    "ctaText": "Tüm kaynak kodu GitHub'da — ya da uygulamayı hemen dene.",
+    "ctaStart": "Uygulamayı başlat →",
+    "ctaRepo": "GitHub Deposu →"
+  }
+}

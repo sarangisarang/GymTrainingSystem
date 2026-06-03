@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "exercises": "エクササイズ",
+    "workouts": "ワークアウト",
+    "programs": "プログラム",
+    "progress": "進捗",
+    "repCounter": "レップカウンター（ベータ）",
+    "coach": "AI コーチ",
+    "coachDashboard": "コーチ",
+    "report": "レポート",
+    "leaderboard": "リーダーボード"
+  },
+  "auth": {
+    "login": "ログイン",
+    "register": "登録",
+    "logout": "ログアウト"
+  },
+  "common": {
+    "language": "言語"
+  },
+  "home": {
+    "badge": "モジュール4 最終プロジェクト — TEAM3",
+    "subtitle": "トレーニングの計画・記録・分析のためのフルスタック Web アプリ。モジュール4の最終プロジェクトとして開発しました。",
+    "openDashboard": "ダッシュボードを開く →",
+    "getStarted": "始める →",
+    "signIn": "ログイン",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "API エンドポイント",
+      "pages": "アプリのページ",
+      "features": "機能",
+      "sprint": "週間スプリント"
+    },
+    "featuresKicker": "実装済みの機能",
+    "featuresTitle": "3週間で12機能",
+    "featuresSubtitle": "すべての機能は稼働中で、テスト済み、GitHub に記録されています。",
+    "techKicker": "技術スタック",
+    "techTitle": "モダンで本番対応",
+    "archKicker": "アーキテクチャ",
+    "archTitle": "システムの構成",
+    "ctaTitle": "試す準備はできましたか？",
+    "ctaText": "完全なソースコードは GitHub にあります — またはアプリを直接お試しください。",
+    "ctaStart": "アプリを起動 →",
+    "ctaRepo": "GitHub リポジトリ →"
+  }
+}

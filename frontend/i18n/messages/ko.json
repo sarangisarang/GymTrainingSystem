@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "대시보드",
+    "exercises": "운동",
+    "workouts": "워크아웃",
+    "programs": "프로그램",
+    "progress": "진행 상황",
+    "repCounter": "횟수 카운터 (베타)",
+    "coach": "AI 코치",
+    "coachDashboard": "코치",
+    "report": "리포트",
+    "leaderboard": "리더보드"
+  },
+  "auth": {
+    "login": "로그인",
+    "register": "회원가입",
+    "logout": "로그아웃"
+  },
+  "common": {
+    "language": "언어"
+  },
+  "home": {
+    "badge": "모듈 4 최종 프로젝트 — TEAM3",
+    "subtitle": "운동을 계획하고 기록하며 분석하는 풀스택 웹 앱입니다. 모듈 4의 최종 프로젝트로 개발되었습니다.",
+    "openDashboard": "대시보드 열기 →",
+    "getStarted": "시작하기 →",
+    "signIn": "로그인",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "API 엔드포인트",
+      "pages": "앱 페이지",
+      "features": "기능",
+      "sprint": "주 스프린트"
+    },
+    "featuresKicker": "구현된 기능",
+    "featuresTitle": "3주 만에 12개 기능",
+    "featuresSubtitle": "모든 기능이 작동하며 테스트를 거쳐 GitHub에 문서화되어 있습니다.",
+    "techKicker": "기술 스택",
+    "techTitle": "현대적이고 프로덕션 준비 완료",
+    "archKicker": "아키텍처",
+    "archTitle": "시스템 구성 방식",
+    "ctaTitle": "테스트할 준비가 되셨나요?",
+    "ctaText": "전체 소스 코드는 GitHub에 있습니다 — 또는 앱을 바로 사용해 보세요.",
+    "ctaStart": "앱 실행 →",
+    "ctaRepo": "GitHub 저장소 →"
+  }
+}

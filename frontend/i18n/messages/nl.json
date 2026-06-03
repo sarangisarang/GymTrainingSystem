@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "exercises": "Oefeningen",
+    "workouts": "Workouts",
+    "programs": "Programma's",
+    "progress": "Voortgang",
+    "repCounter": "Reps-teller (Bèta)",
+    "coach": "AI-coach",
+    "coachDashboard": "Coach",
+    "report": "Rapport",
+    "leaderboard": "Ranglijst"
+  },
+  "auth": {
+    "login": "Inloggen",
+    "register": "Registreren",
+    "logout": "Uitloggen"
+  },
+  "common": {
+    "language": "Taal"
+  },
+  "home": {
+    "badge": "Eindproject Module 4 — TEAM3",
+    "subtitle": "Full-stack webapp om je training te plannen, te volgen en te analyseren. Gemaakt als eindproject voor Module 4.",
+    "openDashboard": "Dashboard openen →",
+    "getStarted": "Aan de slag →",
+    "signIn": "Inloggen",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "API-endpoints",
+      "pages": "App-pagina's",
+      "features": "Functies",
+      "sprint": "Weken sprint"
+    },
+    "featuresKicker": "Geïmplementeerde functies",
+    "featuresTitle": "12 functies in 3 weken",
+    "featuresSubtitle": "Alle functies zijn live, getest en gedocumenteerd op GitHub.",
+    "techKicker": "Technologie-stack",
+    "techTitle": "Modern en productieklaar",
+    "archKicker": "Architectuur",
+    "archTitle": "Hoe het systeem is opgebouwd",
+    "ctaTitle": "Klaar om te testen?",
+    "ctaText": "Volledige broncode op GitHub — of probeer de app direct.",
+    "ctaStart": "App starten →",
+    "ctaRepo": "GitHub-repository →"
+  }
+}

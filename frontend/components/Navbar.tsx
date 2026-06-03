@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { useTranslations } from "@/components/I18nProvider";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { readCart } from "@/lib/cart";
 
 function NavLink({ href, label }: { href: string; label: string }) {
@@ -25,6 +27,7 @@ function NavLink({ href, label }: { href: string; label: string }) {
 export default function Navbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const t = useTranslations();
   const [cartCount, setCartCount] = useState(0);
   const [mounted, setMounted] = useState(false);
 
@@ -40,13 +43,15 @@ export default function Navbar() {
     if (!user) {
       return (
         <div className="flex items-center gap-2">
-          <Link className="btn-ghost" href="/login">Login</Link>
-          <Link className="btn-primary" href="/register">Register</Link>
+          <LanguageSwitcher />
+          <Link className="btn-ghost" href="/login">{t("auth.login")}</Link>
+          <Link className="btn-primary" href="/register">{t("auth.register")}</Link>
         </div>
       );
     }
     return (
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <Link className="btn-ghost" href="/profile">
           👤 {user.name || user.email}
         </Link>
@@ -58,11 +63,11 @@ export default function Navbar() {
             router.push("/");
           }}
         >
-          Logout
+          {t("auth.logout")}
         </button>
       </div>
     );
-  }, [logout, router, user]);
+  }, [logout, router, user, t]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur">
@@ -73,16 +78,16 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          <NavLink href="/dashboard" label="Dashboard" />
-          <NavLink href="/exercises" label="Exercises" />
-          <NavLink href="/workouts" label="Workouts" />
-          <NavLink href="/programs" label="Programs" />
-          <NavLink href="/progress" label="Progress" />
-          <NavLink href="/rep-counter" label="📷 Rep Counter (Beta)" />
-          <NavLink href="/coach" label="🤖 KI-Coach" />
-          <NavLink href="/coach/dashboard" label="👨‍💼 Coach" />
-          <NavLink href="/report" label="📄 Report" />
-          <NavLink href="/leaderboard" label="🏆 Leaderboard" />
+          <NavLink href="/dashboard" label={t("nav.dashboard")} />
+          <NavLink href="/exercises" label={t("nav.exercises")} />
+          <NavLink href="/workouts" label={t("nav.workouts")} />
+          <NavLink href="/programs" label={t("nav.programs")} />
+          <NavLink href="/progress" label={t("nav.progress")} />
+          <NavLink href="/rep-counter" label={`📷 ${t("nav.repCounter")}`} />
+          <NavLink href="/coach" label={`🤖 ${t("nav.coach")}`} />
+          <NavLink href="/coach/dashboard" label={`👨‍💼 ${t("nav.coachDashboard")}`} />
+          <NavLink href="/report" label={`📄 ${t("nav.report")}`} />
+          <NavLink href="/leaderboard" label={`🏆 ${t("nav.leaderboard")}`} />
           {mounted && cartCount > 0 && (
             <Link
               href="/cart"
