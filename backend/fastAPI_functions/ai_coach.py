@@ -16,11 +16,14 @@ from fastAPI_functions.security import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI Coach"])
 
+# Reihenfolge = Fallback-Reihenfolge. 2.5-flash / flash-latest haben im
+# kostenlosen Kontingent zuverlässig Quota; die 2.0-Modelle laufen oft ins
+# Limit (HTTP 429) und stehen daher als Fallback hinten.
 GEMINI_MODELS = [
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
     "gemini-2.5-flash",
     "gemini-flash-latest",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
 ]
 
 SYSTEM_PROMPT = """Du bist ein erfahrener, persönlicher Fitness-Coach und Kraft-Trainer.
