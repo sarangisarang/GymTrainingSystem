@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "exercises": "Ćwiczenia",
+    "workouts": "Treningi",
+    "programs": "Programy",
+    "progress": "Postępy",
+    "repCounter": "Licznik powtórzeń (Beta)",
+    "coach": "Trener AI",
+    "coachDashboard": "Trener",
+    "report": "Raport",
+    "leaderboard": "Ranking"
+  },
+  "auth": {
+    "login": "Zaloguj się",
+    "register": "Zarejestruj się",
+    "logout": "Wyloguj się"
+  },
+  "common": {
+    "language": "Język"
+  },
+  "home": {
+    "badge": "Projekt końcowy Modułu 4 — TEAM3",
+    "subtitle": "Aplikacja webowa full-stack do planowania, śledzenia i analizy treningu. Stworzona jako projekt końcowy Modułu 4.",
+    "openDashboard": "Otwórz panel →",
+    "getStarted": "Zacznij →",
+    "signIn": "Zaloguj się",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "Punkty końcowe API",
+      "pages": "Stron aplikacji",
+      "features": "Funkcji",
+      "sprint": "Tygodnie sprintu"
+    },
+    "featuresKicker": "Wdrożone funkcje",
+    "featuresTitle": "12 funkcji w 3 tygodnie",
+    "featuresSubtitle": "Wszystkie funkcje działają, są przetestowane i udokumentowane na GitHubie.",
+    "techKicker": "Stos technologiczny",
+    "techTitle": "Nowoczesny i gotowy do produkcji",
+    "archKicker": "Architektura",
+    "archTitle": "Jak zbudowany jest system",
+    "ctaTitle": "Gotowy do testów?",
+    "ctaText": "Pełny kod źródłowy na GitHubie — albo wypróbuj aplikację od razu.",
+    "ctaStart": "Uruchom aplikację →",
+    "ctaRepo": "Repozytorium GitHub →"
+  }
+}

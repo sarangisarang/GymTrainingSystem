@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "exercises": "Übungen",
+    "workouts": "Workouts",
+    "programs": "Programme",
+    "progress": "Fortschritt",
+    "repCounter": "Rep Counter (Beta)",
+    "coach": "KI-Coach",
+    "coachDashboard": "Coach",
+    "report": "Report",
+    "leaderboard": "Bestenliste"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden"
+  },
+  "common": {
+    "language": "Sprache"
+  },
+  "home": {
+    "badge": "Modul 4 Abschlussprojekt — TEAM3",
+    "subtitle": "Full-Stack-Webanwendung zur Trainingsplanung, -verfolgung und -analyse. Entwickelt als Abschlussprojekt für Modul 4.",
+    "openDashboard": "Dashboard öffnen →",
+    "getStarted": "Jetzt starten →",
+    "signIn": "Anmelden",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "API-Endpoints",
+      "pages": "App-Seiten",
+      "features": "Features",
+      "sprint": "Wochen Sprint"
+    },
+    "featuresKicker": "Implementierte Features",
+    "featuresTitle": "12 Features in 3 Wochen",
+    "featuresSubtitle": "Alle Features sind live, getestet und in GitHub dokumentiert.",
+    "techKicker": "Technologie-Stack",
+    "techTitle": "Modern & produktionsreif",
+    "archKicker": "Architektur",
+    "archTitle": "Wie das System aufgebaut ist",
+    "ctaTitle": "Bereit zum Testen?",
+    "ctaText": "Kompletter Source-Code auf GitHub — oder App direkt ausprobieren.",
+    "ctaStart": "App starten →",
+    "ctaRepo": "GitHub Repository →"
+  }
+}

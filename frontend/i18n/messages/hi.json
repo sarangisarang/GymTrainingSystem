@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "exercises": "व्यायाम",
+    "workouts": "वर्कआउट",
+    "programs": "प्रोग्राम",
+    "progress": "प्रगति",
+    "repCounter": "रेप काउंटर (बीटा)",
+    "coach": "एआई कोच",
+    "coachDashboard": "कोच",
+    "report": "रिपोर्ट",
+    "leaderboard": "लीडरबोर्ड"
+  },
+  "auth": {
+    "login": "लॉगिन",
+    "register": "रजिस्टर",
+    "logout": "लॉगआउट"
+  },
+  "common": {
+    "language": "भाषा"
+  },
+  "home": {
+    "badge": "मॉड्यूल 4 अंतिम परियोजना — TEAM3",
+    "subtitle": "आपकी ट्रेनिंग की योजना, ट्रैकिंग और विश्लेषण के लिए फुल-स्टैक वेब ऐप। मॉड्यूल 4 की अंतिम परियोजना के रूप में बनाया गया।",
+    "openDashboard": "डैशबोर्ड खोलें →",
+    "getStarted": "शुरू करें →",
+    "signIn": "लॉगिन करें",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "API एंडपॉइंट",
+      "pages": "ऐप पेज",
+      "features": "फ़ीचर",
+      "sprint": "सप्ताह स्प्रिंट"
+    },
+    "featuresKicker": "लागू किए गए फ़ीचर",
+    "featuresTitle": "3 हफ़्तों में 12 फ़ीचर",
+    "featuresSubtitle": "सभी फ़ीचर लाइव हैं, परीक्षित हैं और GitHub पर प्रलेखित हैं।",
+    "techKicker": "तकनीक स्टैक",
+    "techTitle": "आधुनिक और प्रोडक्शन के लिए तैयार",
+    "archKicker": "आर्किटेक्चर",
+    "archTitle": "सिस्टम कैसे बना है",
+    "ctaTitle": "परीक्षण के लिए तैयार हैं?",
+    "ctaText": "पूरा सोर्स कोड GitHub पर है — या ऐप को सीधे आज़माएँ।",
+    "ctaStart": "ऐप शुरू करें →",
+    "ctaRepo": "GitHub रिपॉज़िटरी →"
+  }
+}

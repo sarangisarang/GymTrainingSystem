@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "exercises": "التمارين",
+    "workouts": "الجلسات التدريبية",
+    "programs": "البرامج",
+    "progress": "التقدم",
+    "repCounter": "عداد التكرارات (تجريبي)",
+    "coach": "مدرب الذكاء الاصطناعي",
+    "coachDashboard": "المدرب",
+    "report": "التقرير",
+    "leaderboard": "لوحة المتصدرين"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج"
+  },
+  "common": {
+    "language": "اللغة"
+  },
+  "home": {
+    "badge": "مشروع التخرج للوحدة 4 — TEAM3",
+    "subtitle": "تطبيق ويب متكامل لتخطيط تدريبك وتتبعه وتحليله. تم تطويره كمشروع نهائي للوحدة 4.",
+    "openDashboard": "فتح لوحة التحكم ←",
+    "getStarted": "ابدأ الآن ←",
+    "signIn": "تسجيل الدخول",
+    "github": "GitHub ←",
+    "stats": {
+      "endpoints": "نقاط نهاية API",
+      "pages": "صفحات التطبيق",
+      "features": "ميزات",
+      "sprint": "أسابيع العمل"
+    },
+    "featuresKicker": "الميزات المنفذة",
+    "featuresTitle": "12 ميزة في 3 أسابيع",
+    "featuresSubtitle": "جميع الميزات فعّالة ومختبرة وموثّقة على GitHub.",
+    "techKicker": "حزمة التقنيات",
+    "techTitle": "حديث وجاهز للإنتاج",
+    "archKicker": "البنية",
+    "archTitle": "كيف بُني النظام",
+    "ctaTitle": "هل أنت مستعد للتجربة؟",
+    "ctaText": "الكود المصدري الكامل على GitHub — أو جرّب التطبيق مباشرة.",
+    "ctaStart": "تشغيل التطبيق ←",
+    "ctaRepo": "مستودع GitHub ←"
+  }
+}

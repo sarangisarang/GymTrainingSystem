@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "Painel",
+    "exercises": "Exercícios",
+    "workouts": "Treinos",
+    "programs": "Programas",
+    "progress": "Progresso",
+    "repCounter": "Contador de reps (Beta)",
+    "coach": "Treinador IA",
+    "coachDashboard": "Treinador",
+    "report": "Relatório",
+    "leaderboard": "Classificação"
+  },
+  "auth": {
+    "login": "Entrar",
+    "register": "Registar",
+    "logout": "Sair"
+  },
+  "common": {
+    "language": "Idioma"
+  },
+  "home": {
+    "badge": "Projeto final do Módulo 4 — TEAM3",
+    "subtitle": "Aplicação web full-stack para planear, acompanhar e analisar o teu treino. Criada como projeto final do Módulo 4.",
+    "openDashboard": "Abrir painel →",
+    "getStarted": "Começar →",
+    "signIn": "Entrar",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "Endpoints da API",
+      "pages": "Páginas da app",
+      "features": "Funcionalidades",
+      "sprint": "Semanas de sprint"
+    },
+    "featuresKicker": "Funcionalidades implementadas",
+    "featuresTitle": "12 funcionalidades em 3 semanas",
+    "featuresSubtitle": "Todas as funcionalidades estão ativas, testadas e documentadas no GitHub.",
+    "techKicker": "Stack tecnológica",
+    "techTitle": "Moderna e pronta para produção",
+    "archKicker": "Arquitetura",
+    "archTitle": "Como o sistema é construído",
+    "ctaTitle": "Pronto para testar?",
+    "ctaText": "Código-fonte completo no GitHub — ou experimenta a app diretamente.",
+    "ctaStart": "Abrir a app →",
+    "ctaRepo": "Repositório no GitHub →"
+  }
+}

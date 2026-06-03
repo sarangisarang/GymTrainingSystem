@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { useTranslations } from "@/components/I18nProvider";
 
 const FEATURES = [
   { icon: "⏱️", title: "Live-Workout", desc: "Geführter Workout-Modus mit Trainings- & Pausentimer, Audio-Signale, Satz-Tracking.", tag: "Woche 2" },
@@ -25,8 +26,16 @@ const TOOLS = ["GitHub", "Git", "Pytest", "VS Code", "Postman"];
 
 export default function HomePage() {
   const { user, loading } = useAuth();
+  const t = useTranslations();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  const STATS = [
+    { value: "30+", label: t("home.stats.endpoints") },
+    { value: "12", label: t("home.stats.pages") },
+    { value: "12", label: t("home.stats.features") },
+    { value: "3", label: t("home.stats.sprint") },
+  ];
 
   return (
     <div className="space-y-20">
@@ -40,7 +49,7 @@ export default function HomePage() {
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm text-indigo-300 mb-6">
             <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
-            Modul 4 Abschlussprojekt — TEAM3
+            {t("home.badge")}
           </div>
 
           <h1 className="text-6xl font-extrabold tracking-tight md:text-7xl lg:text-8xl leading-none">
@@ -52,28 +61,27 @@ export default function HomePage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-xl text-neutral-400 leading-relaxed">
-            Full-stack Webanwendung zur Trainingsplanung, -verfolgung und -analyse.
-            Entwickelt als Abschlussprojekt für Modul 4.
+            {t("home.subtitle")}
           </p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             {!mounted ? null : user ? (
               <Link href="/dashboard" className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all shadow-lg shadow-indigo-600/30">
-                Dashboard öffnen →
+                {t("home.openDashboard")}
               </Link>
             ) : (
               <>
                 <Link href="/register" className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all shadow-lg shadow-indigo-600/30">
-                  Jetzt starten →
+                  {t("home.getStarted")}
                 </Link>
                 <Link href="/login" className="rounded-2xl border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 px-8 py-4 text-base font-semibold text-neutral-200 transition-all">
-                  Anmelden
+                  {t("home.signIn")}
                 </Link>
               </>
             )}
             <a href="https://github.com/sarangisarang/GymTrainingSystem" target="_blank" rel="noopener noreferrer"
               className="rounded-2xl border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 px-8 py-4 text-base font-semibold text-neutral-200 transition-all flex items-center gap-2">
-              GitHub →
+              {t("home.github")}
             </a>
           </div>
         </div>
@@ -81,12 +89,7 @@ export default function HomePage() {
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          { value: "30+", label: "API Endpoints" },
-          { value: "12", label: "App-Seiten" },
-          { value: "12", label: "Features" },
-          { value: "3", label: "Wochen Sprint" },
-        ].map((s) => (
+        {STATS.map((s) => (
           <div key={s.label} className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-8 text-center">
             <p className="text-5xl font-extrabold text-indigo-400">{s.value}</p>
             <p className="mt-2 text-sm text-neutral-500 uppercase tracking-widest">{s.label}</p>
@@ -97,9 +100,9 @@ export default function HomePage() {
       {/* ── Features ── */}
       <div>
         <div className="mb-12 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">Implementierte Features</p>
-          <h2 className="text-4xl font-extrabold text-neutral-50">12 Features in 3 Wochen</h2>
-          <p className="mt-4 text-neutral-500 text-lg">Alle Features sind live, getestet und in GitHub dokumentiert.</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">{t("home.featuresKicker")}</p>
+          <h2 className="text-4xl font-extrabold text-neutral-50">{t("home.featuresTitle")}</h2>
+          <p className="mt-4 text-neutral-500 text-lg">{t("home.featuresSubtitle")}</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -127,8 +130,8 @@ export default function HomePage() {
       {/* ── Tech Stack ── */}
       <div>
         <div className="mb-10 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">Technologie-Stack</p>
-          <h2 className="text-4xl font-extrabold text-neutral-50">Modern & Production-ready</h2>
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">{t("home.techKicker")}</p>
+          <h2 className="text-4xl font-extrabold text-neutral-50">{t("home.techTitle")}</h2>
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
@@ -157,8 +160,8 @@ export default function HomePage() {
       {/* ── Architektur ── */}
       <div className="rounded-3xl border border-neutral-800 bg-neutral-900/40 px-8 py-14 md:px-16">
         <div className="mb-10 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">Architektur</p>
-          <h2 className="text-4xl font-extrabold">Wie das System aufgebaut ist</h2>
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400 mb-3">{t("home.archKicker")}</p>
+          <h2 className="text-4xl font-extrabold">{t("home.archTitle")}</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {[
@@ -183,19 +186,19 @@ export default function HomePage() {
 
       {/* ── GitHub CTA ── */}
       <div className="relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-indigo-600/10 via-neutral-900 to-fuchsia-600/10 px-8 py-16 text-center">
-        <h2 className="text-4xl font-extrabold md:text-5xl">Bereit zum Testen?</h2>
+        <h2 className="text-4xl font-extrabold md:text-5xl">{t("home.ctaTitle")}</h2>
         <p className="mt-4 text-lg text-neutral-400">
-          Kompletter Source-Code auf GitHub — oder App direkt ausprobieren.
+          {t("home.ctaText")}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           {mounted && !user && (
             <Link href="/register" className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-10 py-4 text-base font-bold text-white transition-all shadow-xl shadow-indigo-600/30">
-              App starten →
+              {t("home.ctaStart")}
             </Link>
           )}
           <a href="https://github.com/sarangisarang/GymTrainingSystem" target="_blank" rel="noopener noreferrer"
             className="rounded-2xl border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 px-10 py-4 text-base font-semibold text-neutral-200 transition-all">
-            GitHub Repository →
+            {t("home.ctaRepo")}
           </a>
         </div>
       </div>

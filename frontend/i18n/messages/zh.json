@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "仪表板",
+    "exercises": "动作",
+    "workouts": "训练",
+    "programs": "计划",
+    "progress": "进度",
+    "repCounter": "计次器（测试版）",
+    "coach": "AI 教练",
+    "coachDashboard": "教练",
+    "report": "报告",
+    "leaderboard": "排行榜"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出"
+  },
+  "common": {
+    "language": "语言"
+  },
+  "home": {
+    "badge": "模块 4 结业项目 — TEAM3",
+    "subtitle": "用于规划、记录和分析训练的全栈 Web 应用。作为模块 4 的结业项目开发。",
+    "openDashboard": "打开仪表板 →",
+    "getStarted": "开始使用 →",
+    "signIn": "登录",
+    "github": "GitHub →",
+    "stats": {
+      "endpoints": "API 接口",
+      "pages": "应用页面",
+      "features": "功能",
+      "sprint": "周冲刺"
+    },
+    "featuresKicker": "已实现的功能",
+    "featuresTitle": "3 周内实现 12 项功能",
+    "featuresSubtitle": "所有功能均已上线、测试并在 GitHub 上记录。",
+    "techKicker": "技术栈",
+    "techTitle": "现代且可用于生产",
+    "archKicker": "架构",
+    "archTitle": "系统是如何构建的",
+    "ctaTitle": "准备好测试了吗？",
+    "ctaText": "完整源代码在 GitHub 上 — 或直接试用应用。",
+    "ctaStart": "启动应用 →",
+    "ctaRepo": "GitHub 仓库 →"
+  }
+}
