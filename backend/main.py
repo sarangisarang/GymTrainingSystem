@@ -1,5 +1,6 @@
 import os
 import logging
+from contextlib import asynccontextmanager
 from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +17,7 @@ from fastAPI_functions.ai_coach import router as ai_coach_router
 from fastAPI_functions.reports import router as reports_router
 from fastAPI_functions.coach_dashboard import router as coach_router
 from fastAPI_functions.achievements import router as achievements_router
+from fastAPI_functions.search import router as search_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -99,7 +101,31 @@ def check_startup_config() -> None:
 
 check_startup_config()
 
-app = FastAPI(title="TEAM3 Gym API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Re-index existing exercises on every startup so the semantic-search
+    collection is warm even when Render's ephemeral disk wiped chroma_db on
+    the latest deploy. Wrapped in try/except so a Chroma failure never blocks
+    boot. Using the lifespan API (not the deprecated @app.on_event) so the
+    hook also fires under `with TestClient(app) as c:` in tests."""
+    try:
+        from data_base_sql.database import SessionLocal
+        from data_base_sql.vector_store import bootstrap_exercise_index
+
+        db = SessionLocal()
+        try:
+            count = bootstrap_exercise_index(db)
+            if count:
+                logging.info("Vector index bootstrapped: %d exercises", count)
+        finally:
+            db.close()
+    except Exception as exc:
+        logging.warning("Vector index bootstrap failed: %s", exc)
+    yield
+
+
+app = FastAPI(title="TEAM3 Gym API", lifespan=lifespan)
 
 # Local dev origins plus any extra ones supplied at runtime via ALLOWED_ORIGINS
 # (comma-separated). The regex additionally allows any Render *.onrender.com
@@ -137,6 +163,7 @@ app.include_router(ai_coach_router)
 app.include_router(reports_router)
 app.include_router(coach_router)
 app.include_router(achievements_router)
+app.include_router(search_router)
 
 
 @app.get("/")
