@@ -228,6 +228,83 @@ def test_search_workouts_returns_only_my_workouts(auth_client: tuple[TestClient,
     assert not any(h["id"] == workout_id for h in other_hits), other_hits
 
 
+def test_workout_index_reflects_workout_exercise_changes(auth_client: tuple[TestClient, str]):
+    """Regression for adversarial-review finding: adding/updating/deleting a
+    WorkoutExercise via /workout-exercises must reindex the parent workout,
+    otherwise /search/workouts keeps matching by the original (now stale)
+    exercise names."""
+    client, token = auth_client
+
+    bench = client.post(
+        "/exercises/",
+        json={"name": "Bench Press", "muscle_group": "Brust"},
+        headers=_auth(token),
+    ).json()
+    squat = client.post(
+        "/exercises/",
+        json={"name": "Squat Belastung", "muscle_group": "Beine"},
+        headers=_auth(token),
+    ).json()
+
+    wr = client.post(
+        "/workouts/",
+        json={
+            "workout_date": "2026-06-03",
+            "notes": "Regression-Tag",
+            "exercises": [
+                {"exercise_id": bench["id"], "sets": 3, "reps": 8, "weight": 60, "order_index": 0}
+            ],
+        },
+        headers=_auth(token),
+    )
+    assert wr.status_code == 200, wr.text
+    workout_id = wr.json()["id"]
+
+    # Add a second exercise via /workout-exercises (not /workouts)
+    ar = client.post(
+        "/workout-exercises/",
+        json={
+            "workout_id": workout_id,
+            "exercise_id": squat["id"],
+            "sets": 4,
+            "reps": 6,
+            "weight": 100,
+            "order_index": 1,
+        },
+        headers=_auth(token),
+    )
+    assert ar.status_code == 200, ar.text
+
+    # Now search by the newly-added exercise name. Without the reindex fix,
+    # this would return [] because the workout's vector doc still says only
+    # "Bench Press".
+    sr = client.get("/search/workouts", params={"q": "Squat Belastung"}, headers=_auth(token))
+    assert sr.status_code == 200, sr.text
+    assert any(h["id"] == workout_id for h in sr.json()), sr.json()
+
+
+def test_limit_caps_result_count():
+    """A regression that hardcoded n_results=10 (or ignored `limit` entirely)
+    would slip past every other test, which all happen to use limit >= collection
+    size. Index N rows, search with limit < N, assert the response respects it.
+    """
+    for i in range(5):
+        _make_exercise_row(f"Übung-{i}", "Test", f"Beschreibung {i}")
+
+    hits = vector_store.search_exercises("Übung", limit=2)
+
+    assert len(hits) == 2
+
+
+def test_http_limit_boundaries_rejected(client: TestClient):
+    """FastAPI's Query(ge=1, le=50) must reject 0 and >50."""
+    r_low = client.get("/search/exercises", params={"q": "test", "limit": 0})
+    assert r_low.status_code == 422, r_low.text
+
+    r_high = client.get("/search/exercises", params={"q": "test", "limit": 51})
+    assert r_high.status_code == 422, r_high.text
+
+
 def test_search_workouts_reflects_update(auth_client: tuple[TestClient, str]):
     """Updating a workout's notes must reindex; the new notes should surface in
     search results, the old ones should not (after the update)."""

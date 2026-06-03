@@ -13,8 +13,10 @@ from pathlib import Path
 # Force the Chroma vector store into a fast, network-free mode for the whole
 # test session: deterministic hash embedding + ephemeral (in-memory) client.
 # Must be set BEFORE `from main import app` triggers any vector_store import.
-os.environ.setdefault("CHROMA_EMBED_MODE", "hash")
-os.environ.setdefault("CHROMA_DB_PATH", "")
+# Direct assignment (not setdefault) so a stray CHROMA_EMBED_MODE=default in
+# the host env or CI doesn't silently re-enable the ONNX network download.
+os.environ["CHROMA_EMBED_MODE"] = "hash"
+os.environ["CHROMA_DB_PATH"] = ""
 
 # Make the `backend/` directory importable (so `from main import app` works).
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -52,7 +54,12 @@ app.dependency_overrides[get_db] = _override_get_db
 
 @pytest.fixture
 def client() -> TestClient:
-    return TestClient(app)
+    # `with TestClient(app)` so the FastAPI lifespan startup event actually
+    # fires (e.g. bootstrap_exercise_index). Without the context manager,
+    # lifespan hooks are silently skipped under Starlette's TestClient, which
+    # would let CI pass while production startup is broken.
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture(autouse=True)

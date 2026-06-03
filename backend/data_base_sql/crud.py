@@ -293,6 +293,13 @@ def add_exercise_to_workout(db: Session, data: WorkoutExerciseCreate):
     db.add(new_we)
     db.commit()
     db.refresh(new_we)
+    # Reindex the parent workout so the semantic-search document reflects the
+    # new exercise list. Without this, /search/workouts keeps matching by the
+    # original (now stale) exercise names.
+    parent = get_workout(db, data.workout_id)
+    if parent is not None:
+        from . import vector_store
+        vector_store.index_workout(parent, db)
     return new_we
 
 
@@ -322,6 +329,10 @@ def update_workout_exercise(db: Session, we_id: UUID, data: WorkoutExerciseCreat
     if not we:
         return None
 
+    # Capture the original parent workout id BEFORE the update so we can
+    # reindex it even if the caller is moving this row to a different workout.
+    original_workout_id = we.workout_id
+
     we.workout_id = str(data.workout_id)
     we.exercise_id = str(data.exercise_id)
     we.sets = data.sets
@@ -333,6 +344,11 @@ def update_workout_exercise(db: Session, we_id: UUID, data: WorkoutExerciseCreat
 
     db.commit()
     db.refresh(we)
+    from . import vector_store
+    for wid in {original_workout_id, str(data.workout_id)}:
+        parent = get_workout(db, wid)
+        if parent is not None:
+            vector_store.index_workout(parent, db)
     return we
 
 
@@ -341,8 +357,13 @@ def delete_workout_exercise(db: Session, we_id: UUID):
     """ Löscht eine Übung aus einem Workout. """
     we = db.query(WorkoutExercise).filter(WorkoutExercise.id == str(we_id)).first()
     if we:
+        parent_id = we.workout_id
         db.delete(we)
         db.commit()
+        parent = get_workout(db, parent_id)
+        if parent is not None:
+            from . import vector_store
+            vector_store.index_workout(parent, db)
         return True
     return False
 
