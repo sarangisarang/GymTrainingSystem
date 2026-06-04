@@ -99,5 +99,15 @@ check("form squat shallow → bad", evaluateForm(130, "BOTTOM", "squat").status,
 check("form press not high → bad", evaluateForm(120, "BOTTOM", "shoulderpress").status, "bad");
 check("form resting → neutral good", evaluateForm(170, "TOP", "squat").status, "good");
 
+// ── setExercise resets the rep count (Issue #11) ───────────────────────────
+// Switching exercise mid-session must NOT carry the old exercise's reps over.
+const switcher = new RepCounter("squat");
+for (const a of cycle(170, 80, 2)) switcher.update(a); // log 2 squat reps
+check("setExercise: reps counted before switch", switcher.reps, 2);
+switcher.setExercise("curl");
+check("setExercise: reps reset to 0 on switch", switcher.reps, 0);
+for (const a of cycle(170, 40, 3)) switcher.update(a); // 3 curl reps from clean slate
+check("setExercise: new exercise counts from 0", switcher.reps, 3);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

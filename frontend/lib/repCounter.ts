@@ -368,12 +368,15 @@ export class RepCounter {
     return EXERCISES[this.exercise].effort === "low" ? 180 : 0;
   }
 
-  /** Switch exercise mid-session and reset the per-rep tracking state. */
+  /**
+   * Switch exercise mid-session. This starts the new exercise from a clean
+   * slate: the phase, smoothed angle AND the rep count are all reset, because a
+   * squat's reps are not a curl's. (Set `this.exercise` first so `reset()` seeds
+   * the smoother from the *new* exercise's rest angle.)
+   */
   setExercise(exercise: ExerciseId) {
     this.exercise = exercise;
-    this.phase = "TOP";
-    this.smoothedAngle = this.restValue();
-    this.extremeThisRep = this.restValue();
+    this.reset();
   }
 
   reset() {
