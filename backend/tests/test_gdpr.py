@@ -130,6 +130,19 @@ def test_export_contains_full_user_payload(auth_client: tuple[TestClient, str]):
     ):
         assert key in payload, f"missing top-level key {key}"
 
+    # The workout payload must round-trip the seed data, otherwise the Art. 15
+    # export is incomplete in a way the earlier "key exists" check wouldn't catch.
+    seed_workout = next(w for w in payload["workouts"] if w["id"] == workout_id)
+    assert seed_workout["notes"] == "test workout"
+    assert seed_workout["status"] == "PLANNED"
+    assert seed_workout["date"] == "2026-06-04"
+    seed_we = next(we for we in payload["workout_exercises"] if we["workout_id"] == workout_id)
+    assert seed_we["sets"] == 3
+    assert seed_we["reps"] == 8
+    # Decimal weights round-trip as strings (precision preserved for spreadsheets)
+    assert seed_we["weight"] == "60.00"
+    assert seed_we["order_index"] == 0
+
 
 def test_export_scoped_to_caller(client: TestClient):
     """User A's workouts must not appear in User B's export."""
@@ -237,7 +250,17 @@ def test_delete_me_cascades_owned_tables(client: TestClient):
     try:
         assert db.query(User).filter(User.id == user_id).first() is None
         assert db.query(Workout).filter(Workout.user_id == user_id).count() == 0
-        assert db.query(WorkoutExercise).count() >= 0  # nothing leaked
+        # No orphan WorkoutExercise rows whose parent workout no longer
+        # exists. Earlier this asserted `count() >= 0`, which is true by SQL
+        # definition and therefore caught nothing.
+        we_orphans = (
+            db.query(WorkoutExercise)
+            .filter(~WorkoutExercise.workout_id.in_(
+                db.query(Workout.id)
+            ))
+            .count()
+        )
+        assert we_orphans == 0
         assert db.query(UserExerciseMax).filter(UserExerciseMax.user_id == user_id).count() == 0
         assert db.query(TrainingProgram).filter(TrainingProgram.user_id == user_id).count() == 0
         # TrainingProgramItem rows for the deleted user's programs must be gone too
@@ -282,6 +305,94 @@ def test_delete_me_does_not_touch_other_users_data(client: TestClient):
     rb = client.get("/users/me/export", headers=_auth(token_b))
     assert rb.status_code == 200
     assert any(w["id"] == b_workout for w in json.loads(rb.content)["workouts"])
+
+
+def test_export_redacts_coach_counterparty(client: TestClient):
+    """DSGVO Art. 15(4): an export must not enumerate other data subjects.
+    coach_clients rows reference TWO users; we must ship only "your side" of
+    the link and a placeholder for the counterparty."""
+    _, token_a = _register_and_login(client, "Coach")
+    _, token_b = _register_and_login(client, "Athlete")
+    me_a = client.get("/users/me", headers=_auth(token_a)).json()
+    me_b = client.get("/users/me", headers=_auth(token_b)).json()
+
+    db = TestingSessionLocal()
+    try:
+        db.add(CoachClient(coach_id=me_a["id"], athlete_id=me_b["id"]))
+        db.commit()
+    finally:
+        db.close()
+
+    r = client.get("/users/me/export", headers=_auth(token_a))
+    payload = json.loads(r.content)
+    links = payload["coach_clients"]
+    assert links, "seeded link should appear in coach's export"
+    for link in links:
+        assert link["role"] in ("coach", "athlete")
+        assert link["counterparty"] == "<redacted>"
+        # The athlete's UUID must never appear in the coach's export payload.
+        flat = json.dumps(link)
+        assert me_b["id"] not in flat, (
+            f"counterparty UUID leaked into coach's export: {link}"
+        )
+
+
+def test_legacy_delete_by_id_also_cascades(auth_client: tuple[TestClient, str]):
+    """The legacy DELETE /users/{user_id} endpoint must use the same cascading
+    delete; otherwise a regression could re-introduce the orphan-row bug."""
+    client, token = auth_client
+    me = client.get("/users/me", headers=_auth(token)).json()
+
+    ex_id = _make_exercise(client, token, "LegacyEx")
+    _log_workout(client, token, "2026-06-04", ex_id)
+
+    r = client.delete(f"/users/{me['id']}", headers=_auth(token))
+    assert r.status_code == 200, r.text
+    assert r.json().get("message") == "User deleted"
+
+    db = TestingSessionLocal()
+    try:
+        assert db.query(User).filter(User.id == me["id"]).first() is None
+        assert db.query(Workout).filter(Workout.user_id == me["id"]).count() == 0
+    finally:
+        db.close()
+
+
+def test_legacy_delete_by_id_rejects_cross_user(client: TestClient):
+    """A user must not be able to delete another user's account via the
+    legacy by-id endpoint."""
+    _, token_a = _register_and_login(client, "A")
+    _, token_b = _register_and_login(client, "B")
+    me_b = client.get("/users/me", headers=_auth(token_b)).json()
+
+    r = client.delete(f"/users/{me_b['id']}", headers=_auth(token_a))
+    assert r.status_code == 403, r.text
+
+
+def test_delete_user_account_is_idempotent():
+    """Calling delete_user_account twice must return True then False, never
+    raise. This locks in the no-op contract that the HTTP path can't
+    exercise directly (the JWT is invalidated after the first call)."""
+    from data_base_sql.gdpr import delete_user_account
+    from data_base_sql.crud import create_user
+    from data_base_sql.schemas import UserCreate
+
+    db = TestingSessionLocal()
+    try:
+        user = create_user(db, UserCreate(
+            name="Idempotent",
+            email=f"idem_{uuid.uuid4().hex[:8]}@example.com",
+            password="IdempotentPass123!",
+        ))
+        uid = user.id
+
+        first = delete_user_account(db, uid)
+        second = delete_user_account(db, uid)
+
+        assert first is True
+        assert second is False
+    finally:
+        db.close()
 
 
 def test_email_reusable_after_delete(client: TestClient):
