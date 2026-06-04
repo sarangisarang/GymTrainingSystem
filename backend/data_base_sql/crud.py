@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from .models import User, Exercise, Workout, WorkoutExercise, UserExerciseMax, TrainingProgram, TrainingProgramItem, CoachClient
 from .calculations import build_program_item_metrics
-from .schemas import UserCreate, ExerciseCreate, WorkoutCreate, WorkoutExerciseCreate, UserExerciseMaxCreate, TrainingProgramGenerateRequest, NextCycleRequest
+from .schemas import UserCreate, ExerciseCreate, WorkoutCreate, WorkoutUpdate, WorkoutExerciseCreate, UserExerciseMaxCreate, TrainingProgramGenerateRequest, NextCycleRequest
 from passlib.context import CryptContext
 from fastapi import HTTPException
 import hashlib
@@ -233,12 +233,13 @@ def get_all_workouts(db: Session):
 
 
 
-def update_workout(db: Session, workout_id: UUID, data: WorkoutCreate):
+def update_workout(db: Session, workout_id: UUID, data: WorkoutUpdate):
     """
-    Aktualisiert grundlegende Workout-Daten.
+    Aktualisiert grundlegende Workout-Daten (Datum + Notizen).
 
     Wichtig:
-    - Diese Funktion ändert NICHT die WorkoutExercises!
+    - Diese Funktion ändert NICHT die WorkoutExercises! Der WorkoutUpdate-Schema
+      enthält daher bewusst kein `exercises`-Feld (siehe /workout-exercises).
     """
     workout = get_workout(db, workout_id)
     if not workout:
@@ -1101,6 +1102,11 @@ def update_workout_status(db: Session, workout_id: UUID, status: str, duration_s
     # workout (Issue #12 PR-detection ordering).
     if status == "COMPLETED" and not was_completed:
         workout.completed_at = datetime.utcnow()
+    elif status != "COMPLETED":
+        # Leaving COMPLETED (→ PLANNED/IN_PROGRESS/CANCELLED): the workout is no
+        # longer completed, so a stale completed_at would misreport it. Clear it;
+        # a later re-completion stamps a fresh timestamp via the branch above.
+        workout.completed_at = None
     db.commit()
     db.refresh(workout)
     from . import vector_store

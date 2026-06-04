@@ -9,6 +9,7 @@ from .security import get_current_user
 from data_base_sql.database import get_db
 from data_base_sql.schemas import (
     WorkoutCreate,
+    WorkoutUpdate,
     WorkoutRead,
     WorkoutStatusUpdate,
     WorkoutAnalysisRead,
@@ -146,7 +147,7 @@ def api_get_workout_analysis(
 @router.put("/{workout_id}", response_model=WorkoutRead)
 def api_update_workout(
     workout_id: UUID,
-    data: WorkoutCreate,
+    data: WorkoutUpdate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -170,9 +171,8 @@ def api_update_workout_status(
         raise HTTPException(status_code=404, detail="Workout not found")
     if str(workout.user_id) != str(current_user.id):
         raise HTTPException(status_code=403, detail="Access denied")
-    allowed = {"PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"}
-    if data.status not in allowed:
-        raise HTTPException(status_code=400, detail=f"status must be one of {allowed}")
+    # `status` is constrained to the valid set by the WorkoutStatusUpdate schema
+    # (Literal), so an invalid value is rejected as 422 before reaching here.
     return update_workout_status(db, workout_id, data.status, data.duration_seconds)
 
 

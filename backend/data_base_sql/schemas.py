@@ -104,8 +104,16 @@ class WorkoutCreate(BaseModel):
     exercises: List[WorkoutExerciseInWorkoutCreate] = Field(default_factory=list)
 
 
+class WorkoutUpdate(BaseModel):
+    """Body for PUT /workouts/{id}. Only the workout's own fields are editable
+    here — exercises are managed via the /workout-exercises endpoints, so this
+    schema deliberately omits `exercises` rather than silently ignoring it."""
+    workout_date: dt.date
+    notes: Optional[str] = None
+
+
 class WorkoutStatusUpdate(BaseModel):
-    status: str  # PLANNED | IN_PROGRESS | COMPLETED | CANCELLED
+    status: Literal["PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
     duration_seconds: Optional[int] = Field(default=None, ge=0)
 
 
