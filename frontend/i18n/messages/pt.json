@@ -65,7 +65,58 @@
     "ctaTitle": "Pronto para testar?",
     "ctaText": "Código-fonte completo no GitHub — ou experimenta a app diretamente.",
     "ctaStart": "Abrir a app →",
-    "ctaRepo": "Repositório no GitHub →"
+    "ctaRepo": "Repositório no GitHub →",
+    "weekTag": "Semana",
+    "features": {
+      "f1": {
+        "title": "Treino ao vivo",
+        "desc": "Modo de treino guiado com cronómetros de treino e descanso, sinais sonoros e registo de séries."
+      },
+      "f2": {
+        "title": "Previsão de força",
+        "desc": "Regressão linear sobre os teus dados de treino — prevê quando vais atingir um peso-alvo."
+      },
+      "f3": {
+        "title": "Treinador IA",
+        "desc": "A IA Gemini analisa as tuas últimas 10 sessões e fornece recomendações personalizadas via SSE."
+      },
+      "f4": {
+        "title": "Análise de progresso",
+        "desc": "Curva de força com destaque de PR, gráfico de barras do volume semanal e tendência do peso corporal."
+      },
+      "f5": {
+        "title": "Programas de treino",
+        "desc": "Programas de 4 semanas gerados automaticamente a partir do teu 1RM — força, hipertrofia ou resistência."
+      },
+      "f6": {
+        "title": "Relatórios PDF",
+        "desc": "Relatórios semanais e mensais gerados no servidor com reportlab — volume, novos PRs, sequência."
+      },
+      "f7": {
+        "title": "Painel do treinador",
+        "desc": "Convida atletas, vê os seus treinos e atribui programas. Acesso baseado em funções."
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "Service worker, suporte offline, instalável em Android e iOS."
+      },
+      "f9": {
+        "title": "Autenticação e segurança",
+        "desc": "Autenticação JWT, verificações de propriedade, 401/403 nos endpoints protegidos."
+      },
+      "f10": {
+        "title": "Estado do treino",
+        "desc": "PLANNED → IN_PROGRESS → COMPLETED com registo de duração e um carimbo temporal completed_at."
+      },
+      "f11": {
+        "title": "Estatísticas do painel",
+        "desc": "Apenas treinos COMPLETED: duração média, exercícios principais, tendência semanal — corretamente isolados."
+      },
+      "f12": {
+        "title": "Página de apresentação",
+        "desc": "Página inicial pronta para apresentação, com funcionalidades, stack tecnológica e visão geral da arquitetura."
+      }
+    }
   },
   "login": {
     "title": "Bem-vindo de volta",
@@ -186,7 +237,11 @@
     "send": "Enviar",
     "errorPrefix": "Erro",
     "connectionErrorPrefix": "Erro de ligação",
-    "unknownError": "Erro desconhecido"
+    "unknownError": "Erro desconhecido",
+    "confidenceLabel": "Confiança",
+    "confidenceTooltip": "Até que ponto a resposta é sustentada pelos teus dados de treino.",
+    "sourcesLabel": "Fontes",
+    "lowConfidenceWarning": "Esta resposta pode não estar totalmente sustentada pelos teus dados de treino. Analisa-a de forma crítica antes de a aplicares."
   },
   "exercises": {
     "title": "Exercícios",
@@ -466,7 +521,24 @@
     "nameUpdated": "Nome atualizado",
     "updateFailed": "Falha ao atualizar",
     "passwordChanged": "Palavra-passe alterada com sucesso",
-    "passwordChangeFailed": "Falha ao alterar a palavra-passe"
+    "passwordChangeFailed": "Falha ao alterar a palavra-passe",
+    "dataPrivacy": "Data & Privacy",
+    "dataPrivacyHint": "Download everything we have on you or delete your account. Details in the",
+    "privacyPolicy": "privacy policy",
+    "exportData": "Download my data",
+    "exportDataHint": "Saves all your workouts, programs, maxes, and badges as a JSON file.",
+    "exportButton": "Export as JSON",
+    "exporting": "Preparing…",
+    "exportDone": "Export downloaded",
+    "exportFailed": "Export failed",
+    "dangerZone": "Danger zone",
+    "deleteHint": "Account deletion is permanent. All your workouts, programs, and data are removed irreversibly.",
+    "deleteAccount": "Delete account",
+    "deleteConfirmHint": "To confirm, type your email address:",
+    "deleteAccountConfirm": "Delete account permanently",
+    "deleting": "Deleting…",
+    "deleteDone": "Your account and all data have been deleted.",
+    "deleteFailed": "Deletion failed"
   },
   "userNew": {
     "title": "Criar utilizador",
@@ -634,5 +706,11 @@
     "showAiAnswer": "Mostrar resposta da IA",
     "resolve": "Resolver",
     "resolved": "Marcado como resolvido"
+  },
+  "toast": {
+    "close": "Clica para fechar"
+  },
+  "badge": {
+    "newBadge": "Novo distintivo"
   }
 }

@@ -65,7 +65,58 @@
     "ctaTitle": "Ready to test?",
     "ctaText": "Full source code on GitHub — or try the app directly.",
     "ctaStart": "Launch app →",
-    "ctaRepo": "GitHub Repository →"
+    "ctaRepo": "GitHub Repository →",
+    "weekTag": "Week",
+    "features": {
+      "f1": {
+        "title": "Live workout",
+        "desc": "Guided workout mode with training & rest timers, audio cues and set tracking."
+      },
+      "f2": {
+        "title": "Strength forecast",
+        "desc": "Linear regression on your training data — predicts when you'll reach a target weight."
+      },
+      "f3": {
+        "title": "AI Coach",
+        "desc": "Gemini AI analyzes your last 10 sessions and delivers personalized recommendations via SSE."
+      },
+      "f4": {
+        "title": "Progress analysis",
+        "desc": "Strength curve with PR highlight, weekly volume bar chart and body-weight trend."
+      },
+      "f5": {
+        "title": "Training programs",
+        "desc": "Auto-generated 4-week programs from your 1RM — strength, hypertrophy or endurance."
+      },
+      "f6": {
+        "title": "PDF reports",
+        "desc": "Server-side weekly & monthly reports with reportlab — volume, new PRs, streak."
+      },
+      "f7": {
+        "title": "Coach dashboard",
+        "desc": "Invite athletes, view their workouts and assign programs. Role-based access."
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "Service worker, offline support, installable on Android & iOS."
+      },
+      "f9": {
+        "title": "Auth & security",
+        "desc": "JWT authentication, ownership checks, 401/403 on protected endpoints."
+      },
+      "f10": {
+        "title": "Workout status",
+        "desc": "PLANNED → IN_PROGRESS → COMPLETED with duration tracking and a completed_at timestamp."
+      },
+      "f11": {
+        "title": "Dashboard analytics",
+        "desc": "COMPLETED workouts only: avg duration, top exercises, weekly trend — correctly isolated."
+      },
+      "f12": {
+        "title": "Landing page",
+        "desc": "Presentation-ready home page with features, tech stack and architecture overview."
+      }
+    }
   },
   "login": {
     "title": "Welcome back",
@@ -186,7 +237,11 @@
     "send": "Send",
     "errorPrefix": "Error",
     "connectionErrorPrefix": "Connection error",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "confidenceLabel": "Confidence",
+    "confidenceTooltip": "How well the answer is backed by your training data.",
+    "sourcesLabel": "Sources",
+    "lowConfidenceWarning": "This answer may not be fully backed by your training data. Please review it critically before applying it."
   },
   "exercises": {
     "title": "Exercises",
@@ -651,5 +706,11 @@
     "showAiAnswer": "Show AI answer",
     "resolve": "Resolve",
     "resolved": "Marked resolved"
+  },
+  "toast": {
+    "close": "Click to close"
+  },
+  "badge": {
+    "newBadge": "New badge"
   }
 }

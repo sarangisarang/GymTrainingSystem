@@ -65,7 +65,58 @@
     "ctaTitle": "هل أنت مستعد للتجربة؟",
     "ctaText": "الكود المصدري الكامل على GitHub — أو جرّب التطبيق مباشرة.",
     "ctaStart": "تشغيل التطبيق ←",
-    "ctaRepo": "مستودع GitHub ←"
+    "ctaRepo": "مستودع GitHub ←",
+    "weekTag": "أسبوع",
+    "features": {
+      "f1": {
+        "title": "تمرين مباشر",
+        "desc": "وضع تمرين موجَّه مع مؤقّتات للتدريب والراحة، وتنبيهات صوتية، وتتبّع للمجموعات."
+      },
+      "f2": {
+        "title": "توقّع القوة",
+        "desc": "انحدار خطي على بيانات تدريبك — يتوقّع متى ستصل إلى الوزن المستهدف."
+      },
+      "f3": {
+        "title": "مدرب الذكاء الاصطناعي",
+        "desc": "يحلّل Gemini آخر 10 جلسات لديك ويقدّم توصيات مخصصة عبر SSE."
+      },
+      "f4": {
+        "title": "تحليل التقدم",
+        "desc": "منحنى القوة مع إبراز الرقم القياسي، ومخطّط أعمدة للحجم الأسبوعي، واتجاه وزن الجسم."
+      },
+      "f5": {
+        "title": "برامج التدريب",
+        "desc": "برامج لأربعة أسابيع تُنشأ تلقائيًا من 1RM — قوة أو تضخيم أو تحمّل."
+      },
+      "f6": {
+        "title": "تقارير PDF",
+        "desc": "تقارير أسبوعية وشهرية من جهة الخادم باستخدام reportlab — الحجم، الأرقام القياسية الجديدة، السلسلة."
+      },
+      "f7": {
+        "title": "لوحة تحكم المدرب",
+        "desc": "ادعُ الرياضيين، وشاهد تمارينهم، وأسنِد إليهم البرامج. وصول قائم على الأدوار."
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "عامل خدمة، ودعم للعمل دون اتصال، وقابلية التثبيت على Android و iOS."
+      },
+      "f9": {
+        "title": "المصادقة والأمان",
+        "desc": "مصادقة JWT، وفحوصات الملكية، و401/403 على نقاط النهاية المحمية."
+      },
+      "f10": {
+        "title": "حالة التمرين",
+        "desc": "PLANNED ← IN_PROGRESS ← COMPLETED مع تتبّع المدة وطابع زمني completed_at."
+      },
+      "f11": {
+        "title": "تحليلات لوحة التحكم",
+        "desc": "الجلسات COMPLETED فقط: متوسط المدة، أبرز التمارين، الاتجاه الأسبوعي — معزولة بدقة."
+      },
+      "f12": {
+        "title": "صفحة الهبوط",
+        "desc": "صفحة رئيسية جاهزة للعرض مع الميزات وحزمة التقنيات ونظرة عامة على البنية."
+      }
+    }
   },
   "login": {
     "title": "مرحبًا بعودتك",
@@ -186,7 +237,11 @@
     "send": "إرسال",
     "errorPrefix": "خطأ",
     "connectionErrorPrefix": "خطأ في الاتصال",
-    "unknownError": "خطأ غير معروف"
+    "unknownError": "خطأ غير معروف",
+    "confidenceLabel": "الثقة",
+    "confidenceTooltip": "مدى استناد الإجابة إلى بيانات تدريبك.",
+    "sourcesLabel": "المصادر",
+    "lowConfidenceWarning": "قد لا تكون هذه الإجابة مستندة بالكامل إلى بيانات تدريبك. يُرجى مراجعتها بعين ناقدة قبل تطبيقها."
   },
   "exercises": {
     "title": "التمارين",
@@ -466,7 +521,24 @@
     "nameUpdated": "تم تحديث الاسم",
     "updateFailed": "تعذّر التحديث",
     "passwordChanged": "تم تغيير كلمة المرور بنجاح",
-    "passwordChangeFailed": "تعذّر تغيير كلمة المرور"
+    "passwordChangeFailed": "تعذّر تغيير كلمة المرور",
+    "dataPrivacy": "Data & Privacy",
+    "dataPrivacyHint": "Download everything we have on you or delete your account. Details in the",
+    "privacyPolicy": "privacy policy",
+    "exportData": "Download my data",
+    "exportDataHint": "Saves all your workouts, programs, maxes, and badges as a JSON file.",
+    "exportButton": "Export as JSON",
+    "exporting": "Preparing…",
+    "exportDone": "Export downloaded",
+    "exportFailed": "Export failed",
+    "dangerZone": "Danger zone",
+    "deleteHint": "Account deletion is permanent. All your workouts, programs, and data are removed irreversibly.",
+    "deleteAccount": "Delete account",
+    "deleteConfirmHint": "To confirm, type your email address:",
+    "deleteAccountConfirm": "Delete account permanently",
+    "deleting": "Deleting…",
+    "deleteDone": "Your account and all data have been deleted.",
+    "deleteFailed": "Deletion failed"
   },
   "userNew": {
     "title": "إنشاء مستخدم",
@@ -634,5 +706,11 @@
     "showAiAnswer": "عرض إجابة الذكاء الاصطناعي",
     "resolve": "حلّ الطلب",
     "resolved": "تم وضع علامة كمحلول"
+  },
+  "toast": {
+    "close": "انقر للإغلاق"
+  },
+  "badge": {
+    "newBadge": "وسام جديد"
   }
 }

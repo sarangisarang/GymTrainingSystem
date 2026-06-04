@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useTranslations } from "@/components/I18nProvider";
 
 type ToastType = "success" | "error" | "info";
 
@@ -25,6 +26,7 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue>({ toast: () => {} });
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const translate = useTranslations();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const counter = useRef(0);
   const timers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
@@ -74,7 +76,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={t.id}
             type="button"
             onClick={() => dismiss(t.id)}
-            title="Klicken zum Schließen"
+            title={translate("toast.close")}
             className={[
               "rounded-xl px-4 py-4 min-h-[48px] text-sm font-medium shadow-lg pointer-events-auto text-left cursor-pointer",
               "max-w-full break-words sm:max-w-sm",
