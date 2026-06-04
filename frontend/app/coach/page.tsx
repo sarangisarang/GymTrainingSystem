@@ -4,13 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import Protected from "@/components/Protected";
 import { getApiBase, getToken } from "@/lib/api";
 
+type CoachSource = { tag: string; label: string };
+
+type CoachMeta = {
+  confidence: number;
+  sources: CoachSource[];
+  low_confidence: boolean;
+  warnings: string[];
+};
+
 type Message = {
   role: "user" | "assistant";
   content: string;
   streaming?: boolean;
+  meta?: CoachMeta;
 };
 
 const STORAGE_KEY = "gym_coach_messages";
+
+// Server emits a trailing SSE line `data: @@@META{json}` with the validated
+// confidence + cited sources. Kept in sync with backend ai_coach.py.
+const META_SENTINEL = "@@@META";
 
 function loadMessages(): Message[] {
   if (typeof window === "undefined") return [];
@@ -116,6 +130,7 @@ function CoachInner() {
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let fullText = "";
+      let meta: CoachMeta | undefined;
 
       if (!reader) throw new Error("No response body");
 
@@ -130,7 +145,21 @@ function CoachInner() {
           if (!line.startsWith("data: ")) continue;
           const data = line.slice(6);
           if (data === "[DONE]") break;
-          fullText += data;
+          if (data.startsWith(META_SENTINEL)) {
+            try {
+              meta = JSON.parse(data.slice(META_SENTINEL.length));
+            } catch {}
+            continue;
+          }
+          // Prose chunks are JSON-encoded by the server so embedded newlines
+          // survive SSE framing; decode back to the original text.
+          let piece: string;
+          try {
+            piece = JSON.parse(data);
+          } catch {
+            piece = data;
+          }
+          fullText += piece;
           setMessages((prev) =>
             prev.map((m, i) =>
               i === prev.length - 1
@@ -143,7 +172,7 @@ function CoachInner() {
 
       setMessages((prev) =>
         prev.map((m, i) =>
-          i === prev.length - 1 ? { ...m, streaming: false } : m
+          i === prev.length - 1 ? { ...m, streaming: false, meta } : m
         )
       );
     } catch (e: unknown) {
@@ -234,6 +263,9 @@ function CoachInner() {
               }`}
             >
               <MessageContent content={msg.content} streaming={msg.streaming} />
+              {msg.role === "assistant" && !msg.streaming && msg.meta && (
+                <CoachMetaFooter meta={msg.meta} />
+              )}
             </div>
           </div>
         ))}
@@ -304,5 +336,48 @@ function MessageContent({
         <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-indigo-400" />
       )}
     </>
+  );
+}
+
+function CoachMetaFooter({ meta }: { meta: CoachMeta }) {
+  const { confidence, sources, low_confidence } = meta;
+
+  const tone =
+    confidence >= 75
+      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+      : confidence >= 50
+        ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+        : "border-red-500/40 bg-red-500/10 text-red-300";
+
+  return (
+    <div className="mt-3 space-y-2 border-t border-neutral-800 pt-2.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}
+          title="Wie stark die Antwort durch deine Trainingsdaten gedeckt ist."
+        >
+          🎯 Konfidenz: {confidence}%
+        </span>
+        {sources.length > 0 && (
+          <span className="text-xs text-neutral-500">
+            Quellen:{" "}
+            {sources.map((s, i) => (
+              <span key={s.tag}>
+                <span className="text-neutral-400">
+                  {s.tag} · {s.label}
+                </span>
+                {i < sources.length - 1 ? ", " : ""}
+              </span>
+            ))}
+          </span>
+        )}
+      </div>
+      {low_confidence && (
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-300/90">
+          ⚠️ Diese Antwort ist möglicherweise nicht vollständig durch deine
+          Trainingsdaten gedeckt. Bitte kritisch prüfen, bevor du sie umsetzt.
+        </p>
+      )}
+    </div>
   );
 }
