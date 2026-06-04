@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { useTranslations } from "@/components/I18nProvider";
 
 function passwordStrength(pw: string): "weak" | "ok" | "strong" | null {
   if (!pw) return null;
@@ -12,16 +13,17 @@ function passwordStrength(pw: string): "weak" | "ok" | "strong" | null {
   return "strong";
 }
 
-const PERKS = [
-  { icon: "⏱️", text: "Live workout sessions with timers" },
-  { icon: "🤖", text: "AI coach powered by Gemini" },
-  { icon: "📈", text: "Strength & volume analytics" },
-  { icon: "📄", text: "Weekly PDF reports" },
-];
-
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
+  const t = useTranslations();
+
+  const PERKS = [
+    { icon: "⏱️", text: t("register.perkTimers") },
+    { icon: "🤖", text: t("register.perkCoach") },
+    { icon: "📈", text: t("register.perkAnalytics") },
+    { icon: "📄", text: t("register.perkReports") },
+  ];
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,13 +40,13 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password !== confirm) { setError("Passwords do not match"); return; }
+    if (password !== confirm) { setError(t("register.mismatch")); return; }
     setLoading(true);
     try {
       await register(name, email, password);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(err instanceof Error ? err.message : t("register.failed"));
     } finally {
       setLoading(false);
     }
@@ -63,10 +65,10 @@ export default function RegisterPage() {
               <span className="text-lg font-bold text-white">Gym Tracker</span>
             </div>
             <h2 className="text-3xl font-extrabold text-white leading-tight">
-              Your personal<br />training system.
+              {t("register.brandTitle")}
             </h2>
             <p className="mt-3 text-indigo-200 text-sm">
-              Everything you need to train smarter, track progress and reach your goals.
+              {t("register.brandSubtitle")}
             </p>
           </div>
           <div className="relative space-y-4">
@@ -82,8 +84,8 @@ export default function RegisterPage() {
         {/* Right panel — form */}
         <div className="bg-neutral-950 p-8 md:p-10">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-neutral-50">Create your account</h1>
-            <p className="mt-1 text-sm text-neutral-500">Free — no credit card required.</p>
+            <h1 className="text-2xl font-bold text-neutral-50">{t("register.title")}</h1>
+            <p className="mt-1 text-sm text-neutral-500">{t("register.subtitle")}</p>
           </div>
 
           {error && (
@@ -95,21 +97,21 @@ export default function RegisterPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider" htmlFor="reg-name">
-                Full name
+                {t("register.fullName")}
               </label>
               <input
                 id="reg-name"
                 className="input mt-1.5 w-full"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
+                placeholder={t("register.fullNamePlaceholder")}
                 required
               />
             </div>
 
             <div>
               <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider" htmlFor="reg-email">
-                Email address
+                {t("register.email")}
               </label>
               <input
                 id="reg-email"
@@ -124,7 +126,7 @@ export default function RegisterPage() {
 
             <div>
               <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider" htmlFor="reg-password">
-                Password
+                {t("register.password")}
               </label>
               <input
                 id="reg-password"
@@ -132,7 +134,7 @@ export default function RegisterPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
+                placeholder={t("register.passwordPlaceholder")}
                 minLength={8}
                 required
               />
@@ -150,7 +152,7 @@ export default function RegisterPage() {
                     strength === "weak" ? "text-red-400" :
                     strength === "ok" ? "text-yellow-400" : "text-emerald-400"
                   }`}>
-                    {strength === "weak" ? "Too short" : strength === "ok" ? "OK" : "Strong"}
+                    {strength === "weak" ? t("register.strengthWeak") : strength === "ok" ? t("register.strengthOk") : t("register.strengthStrong")}
                   </span>
                 </div>
               )}
@@ -158,7 +160,7 @@ export default function RegisterPage() {
 
             <div>
               <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider" htmlFor="reg-confirm">
-                Confirm password
+                {t("register.confirm")}
               </label>
               <div className="relative mt-1.5">
                 <input
@@ -178,7 +180,7 @@ export default function RegisterPage() {
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-sm">✗</span>
                 )}
               </div>
-              {pwMismatch && <p className="mt-1 text-xs text-red-400">Passwords do not match</p>}
+              {pwMismatch && <p className="mt-1 text-xs text-red-400">{t("register.mismatch")}</p>}
             </div>
 
             <button
@@ -189,16 +191,16 @@ export default function RegisterPage() {
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Creating account…
+                  {t("register.submitting")}
                 </span>
-              ) : "Create account →"}
+              ) : t("register.submit")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-neutral-600">
-            Already have an account?{" "}
+            {t("register.haveAccount")}{" "}
             <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
-              Sign in
+              {t("register.signIn")}
             </Link>
           </p>
         </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Protected from "@/components/Protected";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "@/components/I18nProvider";
 import { deleteWorkout, getWorkouts, type WorkoutRead } from "@/lib/api";
 
 const PAGE_SIZE = 10;
@@ -16,11 +17,12 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status?: string | null }) {
+  const t = useTranslations();
   const s = status ?? "PLANNED";
   const cls = STATUS_STYLES[s] ?? STATUS_STYLES.PLANNED;
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {s}
+      {t(`status.${s}`)}
     </span>
   );
 }
@@ -49,6 +51,7 @@ function Skeleton() {
 
 function WorkoutsInner() {
   const { toast } = useToast();
+  const t = useTranslations();
   const [workouts, setWorkouts] = useState<WorkoutRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -68,7 +71,7 @@ function WorkoutsInner() {
       }
       setHasMore(batch.length === PAGE_SIZE);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Failed to load workouts");
+      setErr(e instanceof Error ? e.message : t("workouts.loadError"));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -81,13 +84,13 @@ function WorkoutsInner() {
   }, []);
 
   async function onDelete(id: string) {
-    if (!confirm("Delete this workout?")) return;
+    if (!confirm(t("workouts.deleteConfirm"))) return;
     try {
       await deleteWorkout(id);
-      toast("Workout deleted", "success");
+      toast(t("workouts.deleted"), "success");
       load();
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Failed to delete", "error");
+      toast(e instanceof Error ? e.message : t("workouts.deleteFailed"), "error");
     }
   }
 
@@ -96,12 +99,12 @@ function WorkoutsInner() {
       <div className="card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="h1">Workouts</h1>
-            <p className="muted mt-2">Your saved workouts.</p>
+            <h1 className="h1">{t("workouts.title")}</h1>
+            <p className="muted mt-2">{t("workouts.subtitle")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link className="btn-primary" href="/cart">+ New workout</Link>
-            <button type="button" className="btn-ghost" onClick={() => load()}>Refresh</button>
+            <Link className="btn-primary" href="/cart">{t("workouts.newWorkout")}</Link>
+            <button type="button" className="btn-ghost" onClick={() => load()}>{t("common.refresh")}</button>
           </div>
         </div>
       </div>
@@ -114,8 +117,8 @@ function WorkoutsInner() {
         <Skeleton />
       ) : workouts.length === 0 ? (
         <div className="card p-6 text-center">
-          <p className="muted">No workouts yet.</p>
-          <Link href="/cart" className="btn-primary mt-4 inline-block">Start your first workout</Link>
+          <p className="muted">{t("workouts.noWorkouts")}</p>
+          <Link href="/cart" className="btn-primary mt-4 inline-block">{t("workouts.startFirst")}</Link>
         </div>
       ) : (
         <>
@@ -126,19 +129,19 @@ function WorkoutsInner() {
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link href={`/workouts/${w.id}`} className="font-medium hover:underline">
-                        {new Date(w.date).toLocaleDateString()} — {w.workout_exercises?.length ?? 0} exercise{w.workout_exercises?.length !== 1 ? "s" : ""}
+                        {new Date(w.date).toLocaleDateString()} — {w.workout_exercises?.length ?? 0} {t("common.exercises")}
                       </Link>
                       <StatusBadge status={w.status} />
                     </div>
-                    {w.notes ? <p className="muted mt-1 text-sm">{w.notes}</p> : <p className="muted mt-1 text-sm">No notes</p>}
+                    {w.notes ? <p className="muted mt-1 text-sm">{w.notes}</p> : <p className="muted mt-1 text-sm">{t("workouts.noNotes")}</p>}
                     {w.duration_seconds ? (
                       <p className="muted mt-0.5 text-xs">{formatDuration(w.duration_seconds)}</p>
                     ) : null}
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <Link className="btn-primary" href={`/workouts/${w.id}/start`}>Start</Link>
-                    <Link className="btn-ghost" href={`/workouts/${w.id}`}>View</Link>
-                    <button type="button" className="btn-ghost" onClick={() => onDelete(w.id)}>Delete</button>
+                    <Link className="btn-primary" href={`/workouts/${w.id}/start`}>{t("workouts.start")}</Link>
+                    <Link className="btn-ghost" href={`/workouts/${w.id}`}>{t("workouts.view")}</Link>
+                    <button type="button" className="btn-ghost" onClick={() => onDelete(w.id)}>{t("workouts.delete")}</button>
                   </div>
                 </div>
               </div>
@@ -153,7 +156,7 @@ function WorkoutsInner() {
                 disabled={loadingMore}
                 onClick={() => load(workouts.length, false)}
               >
-                {loadingMore ? "Loading…" : "Load more"}
+                {loadingMore ? t("workouts.loading") : t("workouts.loadMore")}
               </button>
             </div>
           )}

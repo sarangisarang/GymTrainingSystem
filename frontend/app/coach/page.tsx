@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Protected from "@/components/Protected";
+import { useTranslations } from "@/components/I18nProvider";
 import { getApiBase, getToken } from "@/lib/api";
 
 type Message = {
@@ -27,15 +28,6 @@ function saveMessages(msgs: Message[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 }
 
-const SUGGESTED_QUESTIONS = [
-  "Wie ist mein Trainingsfortschritt in den letzten Wochen?",
-  "Welche Muskeln vernachlässige ich?",
-  "Warum stagniere ich beim Bankdrücken?",
-  "Wie viel Volumen mache ich pro Woche?",
-  "Bin ich übertrainiert?",
-  "Was soll ich als nächstes verbessern?",
-];
-
 export default function CoachPage() {
   return (
     <Protected>
@@ -45,11 +37,15 @@ export default function CoachPage() {
 }
 
 function CoachInner() {
+  const t = useTranslations();
   const INITIAL_MESSAGE: Message = {
     role: "assistant",
-    content:
-      "Hallo! Ich bin dein persönlicher KI-Trainer 💪\n\nIch analysiere deine Trainingsdaten und gebe dir konkrete, personalisierte Empfehlungen. Stell mir eine Frage über dein Training!",
+    content: t("coach.initialMessage"),
   };
+  const SUGGESTED_QUESTIONS = [
+    t("coach.q1"), t("coach.q2"), t("coach.q3"),
+    t("coach.q4"), t("coach.q5"), t("coach.q6"),
+  ];
 
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = loadMessages();
@@ -106,7 +102,7 @@ function CoachInner() {
         setMessages((prev) =>
           prev.map((m, i) =>
             i === prev.length - 1
-              ? { role: "assistant", content: `⚠️ Fehler: ${detail}`, streaming: false }
+              ? { role: "assistant", content: `⚠️ ${t("coach.errorPrefix")}: ${detail}`, streaming: false }
               : m
           )
         );
@@ -152,7 +148,7 @@ function CoachInner() {
           i === prev.length - 1
             ? {
                 role: "assistant",
-                content: `⚠️ Verbindungsfehler: ${e instanceof Error ? e.message : "Unbekannter Fehler"}`,
+                content: `⚠️ ${t("coach.connectionErrorPrefix")}: ${e instanceof Error ? e.message : t("coach.unknownError")}`,
                 streaming: false,
               }
             : m
@@ -180,9 +176,9 @@ function CoachInner() {
             🤖
           </div>
           <div>
-            <h1 className="h1">KI-Coach</h1>
+            <h1 className="h1">{t("coach.title")}</h1>
             <p className="muted mt-0.5">
-              Personalisierte Empfehlungen basierend auf deinen Trainingsdaten
+              {t("coach.subtitle")}
             </p>
           </div>
         </div>
@@ -194,7 +190,7 @@ function CoachInner() {
             setMessages([INITIAL_MESSAGE]);
           }}
         >
-          Chat löschen
+          {t("coach.clearChat")}
         </button>
       </div>
 
@@ -263,7 +259,7 @@ function CoachInner() {
           ref={textareaRef}
           className="flex-1 resize-none bg-transparent text-sm text-neutral-100 placeholder-neutral-500 outline-none"
           rows={2}
-          placeholder="Frag deinen KI-Coach… (Enter zum Senden, Shift+Enter für neue Zeile)"
+          placeholder={t("coach.inputPlaceholder")}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -275,7 +271,7 @@ function CoachInner() {
           onClick={() => sendMessage(input)}
           disabled={!input.trim() || loading}
         >
-          {loading ? "…" : "Senden"}
+          {loading ? "…" : t("coach.send")}
         </button>
       </div>
     </div>

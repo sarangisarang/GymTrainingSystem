@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Protected from "@/components/Protected";
 import { useAuth } from "@/components/AuthProvider";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   getExercises,
   getWorkouts,
@@ -50,17 +51,19 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status?: string | null }) {
+  const t = useTranslations();
   const s = status ?? "PLANNED";
   const cls = STATUS_STYLES[s] ?? STATUS_STYLES.PLANNED;
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {s}
+      {t(`status.${s}`)}
     </span>
   );
 }
 
 function DashboardInner() {
   const { user } = useAuth();
+  const t = useTranslations();
   const [exCount, setExCount] = useState(0);
   const [recentWorkouts, setRecentWorkouts] = useState<WorkoutRead[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -89,7 +92,7 @@ function DashboardInner() {
         setStats(st);
         setAnalytics(an);
       } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : "Failed to load dashboard");
+        setErr(e instanceof Error ? e.message : t("dashboard.loadError"));
       } finally {
         setLoading(false);
       }
@@ -105,8 +108,8 @@ function DashboardInner() {
     <div className="space-y-8">
       {/* Header */}
       <div className="card p-6">
-        <h1 className="h1">Dashboard</h1>
-        <p className="muted mt-2">Welcome back, {user?.name || user?.email}.</p>
+        <h1 className="h1">{t("dashboard.title")}</h1>
+        <p className="muted mt-2">{t("dashboard.welcome")}, {user?.name || user?.email}.</p>
         {err && (
           <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
             {err}
@@ -116,14 +119,14 @@ function DashboardInner() {
 
       {/* Activity stats (all workouts — streak, count) */}
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-        <StatCard icon="🔥" label="Current streak" value={`${stats?.current_streak ?? 0}`} sub={`best: ${stats?.best_streak ?? 0} days`} />
-        <StatCard icon="📅" label="This week" value={`${stats?.workouts_this_week ?? 0}`} sub={`total: ${stats?.total_workouts ?? 0} workouts`} />
-        <StatCard icon="💪" label="Top muscle" value={stats?.favorite_muscle_group ?? "—"} sub={`${exCount} exercises`} />
+        <StatCard icon="🔥" label={t("dashboard.statStreak")} value={`${stats?.current_streak ?? 0}`} sub={`${t("dashboard.best")}: ${stats?.best_streak ?? 0} ${t("common.days")}`} />
+        <StatCard icon="📅" label={t("dashboard.statWeek")} value={`${stats?.workouts_this_week ?? 0}`} sub={`${t("dashboard.total")}: ${stats?.total_workouts ?? 0} ${t("common.workouts")}`} />
+        <StatCard icon="💪" label={t("dashboard.statMuscle")} value={stats?.favorite_muscle_group ?? "—"} sub={`${exCount} ${t("common.exercises")}`} />
         <StatCard
           icon="⏱"
-          label="Avg duration"
-          value={analytics?.avg_duration_min != null ? `${analytics.avg_duration_min} min` : "—"}
-          sub="completed only"
+          label={t("dashboard.statDuration")}
+          value={analytics?.avg_duration_min != null ? `${analytics.avg_duration_min} ${t("common.min")}` : "—"}
+          sub={t("dashboard.completedOnly")}
           highlight
         />
       </div>
@@ -131,20 +134,20 @@ function DashboardInner() {
       {/* Completed-only performance strip */}
       <div className="grid gap-4 sm:grid-cols-3">
         <PerfCard
-          label="Completed workouts"
+          label={t("dashboard.perfCompleted")}
           value={analytics?.completed_count ?? 0}
-          unit="sessions"
+          unit={t("dashboard.sessions")}
         />
         <PerfCard
-          label="This week's volume"
+          label={t("dashboard.perfWeekVolume")}
           value={analytics?.weekly_volume_kg.toLocaleString() ?? "0"}
-          unit="kg"
+          unit={t("common.kg")}
         />
         <PerfCard
-          label="All-time volume"
+          label={t("dashboard.perfAllVolume")}
           value={stats ? parseFloat(stats.total_volume_kg).toLocaleString() : "0"}
-          unit="kg"
-          sub="all workouts"
+          unit={t("common.kg")}
+          sub={t("dashboard.allWorkouts")}
         />
       </div>
 
@@ -152,7 +155,7 @@ function DashboardInner() {
       {trend.length > 0 && (
         <div className="card p-6">
           <h2 className="mb-4 font-semibold text-neutral-200">
-            Weekly volume — completed workouts
+            {t("dashboard.weeklyVolumeTitle")}
           </h2>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={trend} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
@@ -172,7 +175,7 @@ function DashboardInner() {
               <Tooltip
                 contentStyle={{ background: "#171717", border: "1px solid #404040", borderRadius: 10 }}
                 labelStyle={{ color: "#a3a3a3", fontSize: 12 }}
-                formatter={(v: number) => [`${v.toLocaleString()} kg`, "Volume"]}
+                formatter={(v: number) => [`${v.toLocaleString()} ${t("common.kg")}`, t("dashboard.volume")]}
               />
               <Bar dataKey="volume_kg" radius={[4, 4, 0, 0]}>
                 {trend.map((entry, i) => (
@@ -184,7 +187,7 @@ function DashboardInner() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          <p className="mt-2 text-xs text-neutral-600">Last {trend.length} week{trend.length !== 1 ? "s" : ""} with completed workouts · peak highlighted</p>
+          <p className="mt-2 text-xs text-neutral-600">{t("dashboard.last")} {trend.length} {t("dashboard.weeksCompletedPeak")}</p>
         </div>
       )}
 
@@ -192,7 +195,7 @@ function DashboardInner() {
       {analytics && analytics.top_exercises.length > 0 && (
         <div className="card p-6">
           <h2 className="mb-4 font-semibold text-neutral-200">
-            Top exercises by volume — completed
+            {t("dashboard.topExercisesTitle")}
           </h2>
           <div className="space-y-3">
             {analytics.top_exercises.map((ex, i) => {
@@ -204,7 +207,7 @@ function DashboardInner() {
                       <span className="text-xs text-neutral-600">#{i + 1}</span>
                       {ex.name}
                     </span>
-                    <span className="font-mono text-neutral-400">{ex.volume_kg.toLocaleString()} kg</span>
+                    <span className="font-mono text-neutral-400">{ex.volume_kg.toLocaleString()} {t("common.kg")}</span>
                   </div>
                   <meter
                     value={pct}
@@ -222,39 +225,39 @@ function DashboardInner() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/exercises" className="card p-5 hover:border-indigo-500/50 transition-colors">
           <div className="text-2xl">🏋️</div>
-          <h2 className="mt-3 font-semibold">Exercises</h2>
-          <p className="muted mt-1 text-sm">Browse and manage exercises</p>
+          <h2 className="mt-3 font-semibold">{t("dashboard.qaExercises")}</h2>
+          <p className="muted mt-1 text-sm">{t("dashboard.qaExercisesSub")}</p>
         </Link>
         <Link href="/cart" className="card p-5 hover:border-indigo-500/50 transition-colors">
           <div className="text-2xl">🧺</div>
-          <h2 className="mt-3 font-semibold">New Workout</h2>
-          <p className="muted mt-1 text-sm">{cartCount > 0 ? `${cartCount} exercises in cart` : "Build a workout"}</p>
+          <h2 className="mt-3 font-semibold">{t("dashboard.qaNewWorkout")}</h2>
+          <p className="muted mt-1 text-sm">{cartCount > 0 ? `${cartCount} ${t("dashboard.exercisesInCart")}` : t("dashboard.qaBuildWorkout")}</p>
         </Link>
         <Link href="/programs" className="card p-5 hover:border-indigo-500/50 transition-colors">
           <div className="text-2xl">📊</div>
-          <h2 className="mt-3 font-semibold">Programs</h2>
-          <p className="muted mt-1 text-sm">Training programs from 1RM</p>
+          <h2 className="mt-3 font-semibold">{t("dashboard.qaPrograms")}</h2>
+          <p className="muted mt-1 text-sm">{t("dashboard.qaProgramsSub")}</p>
         </Link>
         <Link href="/progress" className="card p-5 hover:border-indigo-500/50 transition-colors">
           <div className="text-2xl">📈</div>
-          <h2 className="mt-3 font-semibold">Progress</h2>
-          <p className="muted mt-1 text-sm">Strength & volume charts</p>
+          <h2 className="mt-3 font-semibold">{t("dashboard.qaProgress")}</h2>
+          <p className="muted mt-1 text-sm">{t("dashboard.qaProgressSub")}</p>
         </Link>
       </div>
 
       {/* Recent workouts */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold">Recent Workouts</h2>
+          <h2 className="font-semibold">{t("dashboard.recentTitle")}</h2>
           <Link href="/workouts" className="text-sm text-indigo-400 hover:text-indigo-300">
-            View all
+            {t("dashboard.viewAll")}
           </Link>
         </div>
         {recentWorkouts.length === 0 ? (
           <div className="card p-6 text-center">
-            <p className="muted">No workouts yet.</p>
+            <p className="muted">{t("dashboard.noWorkouts")}</p>
             <Link href="/cart" className="btn-primary mt-4 inline-block">
-              Start your first workout
+              {t("dashboard.startFirst")}
             </Link>
           </div>
         ) : (
@@ -277,9 +280,9 @@ function DashboardInner() {
                         <StatusBadge status={w.status} />
                       </div>
                       <p className="muted text-sm">
-                        {w.workout_exercises.length} exercise{w.workout_exercises.length !== 1 ? "s" : ""}
-                        {w.duration_seconds ? ` · ${Math.round(w.duration_seconds / 60)} min` : ""}
-                        {vol > 0 ? ` · ${vol.toLocaleString()} kg` : ""}
+                        {w.workout_exercises.length} {t("common.exercises")}
+                        {w.duration_seconds ? ` · ${Math.round(w.duration_seconds / 60)} ${t("common.min")}` : ""}
+                        {vol > 0 ? ` · ${vol.toLocaleString()} ${t("common.kg")}` : ""}
                       </p>
                     </div>
                   </div>
