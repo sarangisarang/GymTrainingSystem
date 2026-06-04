@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Protected from "@/components/Protected";
+import { useTranslations } from "@/components/I18nProvider";
 import { getUsers, type UserRead } from "@/lib/api";
 
 export default function UsersPage() {
@@ -14,6 +15,7 @@ export default function UsersPage() {
 }
 
 function UsersInner() {
+  const t = useTranslations();
   const [users, setUsers] = useState<UserRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -26,7 +28,7 @@ function UsersInner() {
         const data = await getUsers();
         setUsers(data);
       } catch (e: any) {
-        setErr(e?.message ?? "Failed to load users");
+        setErr(e?.message ?? t("users.loadError"));
       } finally {
         setLoading(false);
       }
@@ -38,10 +40,10 @@ function UsersInner() {
       <div className="card p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="h1">Users</h1>
-            <p className="muted mt-2">Admin-style list of all users.</p>
+            <h1 className="h1">{t("users.title")}</h1>
+            <p className="muted mt-2">{t("users.subtitle")}</p>
           </div>
-          <Link className="btn-ghost" href="/dashboard">Back</Link>
+          <Link className="btn-ghost" href="/dashboard">{t("users.back")}</Link>
         </div>
       </div>
 
@@ -52,19 +54,19 @@ function UsersInner() {
       )}
 
       {loading ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t("users.loading")}</p>
       ) : users.length === 0 ? (
         <div className="card p-6">
-          <p className="muted">No users found.</p>
+          <p className="muted">{t("users.noUsers")}</p>
         </div>
       ) : (
         <div className="card overflow-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-neutral-400">
               <tr>
-                <th className="px-5 py-3">Name</th>
-                <th className="px-5 py-3">Email</th>
-                <th className="px-5 py-3">Created</th>
+                <th className="px-5 py-3">{t("users.colName")}</th>
+                <th className="px-5 py-3">{t("users.colEmail")}</th>
+                <th className="px-5 py-3">{t("users.colCreated")}</th>
               </tr>
             </thead>
             <tbody>

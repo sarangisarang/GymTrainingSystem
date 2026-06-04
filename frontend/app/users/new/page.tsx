@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createUser } from "@/lib/api";
 import { setSelectedUser } from "@/lib/storage";
+import { useTranslations } from "@/components/I18nProvider";
 
 export default function NewUserPage() {
+  const t = useTranslations();
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,7 +30,7 @@ export default function NewUserPage() {
 
       router.push("/workouts");
     } catch (e: any) {
-      setErr(e?.message ?? "Failed to create user");
+      setErr(e?.message ?? t("userNew.createFailed"));
     } finally {
       setLoading(false);
     }
@@ -37,37 +39,37 @@ export default function NewUserPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="h1">Create user</h1>
-        <Link className="btn-ghost" href="/users">Back</Link>
+        <h1 className="h1">{t("userNew.title")}</h1>
+        <Link className="btn-ghost" href="/users">{t("userNew.back")}</Link>
       </div>
 
       <form onSubmit={onSubmit} className="card p-6 space-y-4">
         {err && <p className="text-sm text-red-600">{err}</p>}
 
         <div>
-          <label className="label">Name</label>
+          <label className="label">{t("leaderboard.colName")}</label>
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
 
         <div>
-          <label className="label">Email</label>
+          <label className="label">{t("login.email")}</label>
           <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
 
         <div>
-          <label className="label">Password</label>
+          <label className="label">{t("login.password")}</label>
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           <p className="mt-1 text-xs text-zinc-500">
-            Your FastAPI backend hashes the password with bcrypt (passlib) server-side.
+            {t("userNew.passwordHint")}
           </p>
         </div>
 
         <div className="flex gap-2">
           <button className="btn-primary" type="submit" disabled={loading}>
-            {loading ? "Creating…" : "Create"}
+            {loading ? t("userNew.creating") : t("userNew.create")}
           </button>
           <button className="btn-ghost" type="button" onClick={() => router.push("/users")}>
-            Cancel
+            {t("userNew.cancel")}
           </button>
         </div>
       </form>

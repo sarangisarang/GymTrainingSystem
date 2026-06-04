@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createExercise } from "@/lib/api";
 import Protected from "@/components/Protected";
+import { useTranslations } from "@/components/I18nProvider";
 
 const MUSCLE_GROUPS = ["Chest", "Back", "Shoulders", "Arms", "Core", "Legs", "Glutes", "Cardio"];
 
@@ -17,6 +18,7 @@ export default function NewExercisePage() {
 }
 
 function NewExerciseInner() {
+  const t = useTranslations();
   const router = useRouter();
   const [name, setName] = useState("");
   const [muscleGroup, setMuscleGroup] = useState(MUSCLE_GROUPS[0]);
@@ -36,7 +38,7 @@ function NewExerciseInner() {
       });
       router.push("/exercises");
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Failed to create exercise");
+      setErr(e instanceof Error ? e.message : t("exerciseNew.createFailed"));
     } finally {
       setLoading(false);
     }
@@ -45,8 +47,8 @@ function NewExerciseInner() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="h1">Create exercise</h1>
-        <Link className="btn-ghost" href="/exercises">Back</Link>
+        <h1 className="h1">{t("exerciseNew.title")}</h1>
+        <Link className="btn-ghost" href="/exercises">{t("exerciseNew.back")}</Link>
       </div>
 
       <form onSubmit={onSubmit} className="card p-6 space-y-4">
@@ -55,19 +57,19 @@ function NewExerciseInner() {
         )}
 
         <div>
-          <label className="label" htmlFor="exercise-name">Name</label>
+          <label className="label" htmlFor="exercise-name">{t("exerciseNew.name")}</label>
           <input
             id="exercise-name"
             className="input mt-2"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Bench Press"
+            placeholder={t("exerciseNew.namePlaceholder")}
             required
           />
         </div>
 
         <div>
-          <label className="label" htmlFor="muscle-group">Muscle group</label>
+          <label className="label" htmlFor="muscle-group">{t("exercises.muscleGroup")}</label>
           <select
             id="muscle-group"
             className="input mt-2"
@@ -76,28 +78,28 @@ function NewExerciseInner() {
             required
           >
             {MUSCLE_GROUPS.map((g) => (
-              <option key={g} value={g}>{g}</option>
+              <option key={g} value={g}>{t(`muscle.${g}`)}</option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="label" htmlFor="description">Description (optional)</label>
+          <label className="label" htmlFor="description">{t("exerciseNew.descriptionLabel")}</label>
           <textarea
             id="description"
             className="input min-h-[90px]"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe the exercise, muscles worked, tips..."
+            placeholder={t("exerciseNew.descriptionPlaceholder")}
           />
         </div>
 
         <div className="flex gap-2">
           <button className="btn-primary" type="submit" disabled={loading}>
-            {loading ? "Creating…" : "Create"}
+            {loading ? t("exerciseNew.creating") : t("exerciseNew.create")}
           </button>
           <button type="button" className="btn-ghost" onClick={() => router.push("/exercises")}>
-            Cancel
+            {t("exerciseNew.cancel")}
           </button>
         </div>
       </form>

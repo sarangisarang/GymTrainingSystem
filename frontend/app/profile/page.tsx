@@ -5,6 +5,7 @@ import Link from "next/link";
 import Protected from "@/components/Protected";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   updateProfile,
   changePassword,
@@ -26,6 +27,7 @@ export default function ProfilePage() {
 function ProfileInner() {
   const { user, refreshMe } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations();
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.name || "");
@@ -54,12 +56,12 @@ function ProfileInner() {
       await refreshMe();
       toast(
         !user.leaderboard_opt_in
-          ? "Du bist jetzt im Leaderboard sichtbar"
-          : "Du bist aus dem Leaderboard entfernt",
+          ? t("profile.nowVisible")
+          : t("profile.removedFromLeaderboard"),
         "success",
       );
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Fehler beim Speichern", "error");
+      toast(e instanceof Error ? e.message : t("profile.saveFailed"), "error");
     } finally {
       setOptInSaving(false);
     }
@@ -70,10 +72,10 @@ function ProfileInner() {
     try {
       await updateProfile({ name: name.trim() || null });
       await refreshMe();
-      toast("Name updated", "success");
+      toast(t("profile.nameUpdated"), "success");
       setEditing(false);
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Failed to update", "error");
+      toast(e instanceof Error ? e.message : t("profile.updateFailed"), "error");
     } finally {
       setNameSaving(false);
     }
@@ -82,18 +84,18 @@ function ProfileInner() {
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast("Passwords do not match", "error");
+      toast(t("register.mismatch"), "error");
       return;
     }
     setPwSaving(true);
     try {
       await changePassword({ old_password: oldPassword, new_password: newPassword });
-      toast("Password changed successfully", "success");
+      toast(t("profile.passwordChanged"), "success");
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Failed to change password", "error");
+      toast(e instanceof Error ? e.message : t("profile.passwordChangeFailed"), "error");
     } finally {
       setPwSaving(false);
     }
@@ -109,20 +111,20 @@ function ProfileInner() {
   return (
     <div className="space-y-6">
       <div className="card p-6">
-        <h1 className="h1">Profile</h1>
-        <p className="muted mt-2">Manage your account details.</p>
+        <h1 className="h1">{t("profile.title")}</h1>
+        <p className="muted mt-2">{t("profile.subtitle")}</p>
       </div>
 
       <div className="card p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Account</h2>
+          <h2 className="font-semibold">{t("profile.account")}</h2>
           {!editing && (
             <button
               type="button"
               className="btn-ghost text-sm"
               onClick={() => { setName(user?.name || ""); setEditing(true); }}
             >
-              Edit name
+              {t("profile.editName")}
             </button>
           )}
         </div>
@@ -130,34 +132,34 @@ function ProfileInner() {
         {editing ? (
           <div className="space-y-3">
             <div>
-              <label className="label" htmlFor="edit-name">Name</label>
+              <label className="label" htmlFor="edit-name">{t("profile.name")}</label>
               <input
                 id="edit-name"
                 className="input mt-2"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                placeholder={t("profile.namePlaceholder")}
               />
             </div>
             <div className="flex gap-2">
               <button type="button" className="btn-primary" onClick={saveName} disabled={nameSaving}>
-                {nameSaving ? "Saving…" : "Save"}
+                {nameSaving ? t("profile.saving") : t("profile.save")}
               </button>
-              <button type="button" className="btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+              <button type="button" className="btn-ghost" onClick={() => setEditing(false)}>{t("profile.cancel")}</button>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
             <div>
-              <p className="muted text-xs">Name</p>
+              <p className="muted text-xs">{t("profile.name")}</p>
               <p className="mt-1 font-medium">{user?.name || "—"}</p>
             </div>
             <div>
-              <p className="muted text-xs">Email</p>
+              <p className="muted text-xs">{t("profile.email")}</p>
               <p className="mt-1 font-medium">{user?.email}</p>
             </div>
             <div>
-              <p className="muted text-xs">Member since</p>
+              <p className="muted text-xs">{t("profile.memberSince")}</p>
               <p className="mt-1 text-sm text-neutral-300">
                 {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
               </p>
@@ -168,14 +170,14 @@ function ProfileInner() {
 
       {challenge && (
         <div className="card p-6">
-          <h2 className="font-semibold mb-1">Wochen-Challenge · {challenge.week}</h2>
+          <h2 className="font-semibold mb-1">{t("profile.weeklyChallenge")} · {challenge.week}</h2>
           <p className="muted text-sm mb-4">{challenge.label}</p>
           <div className="mb-2 flex items-end justify-between">
             <p className="text-2xl font-bold text-indigo-400">
-              {challenge.current_kg.toLocaleString("de-DE")} kg
+              {challenge.current_kg.toLocaleString("de-DE")} {t("common.kg")}
             </p>
             <p className="muted text-sm">
-              Ziel: {challenge.target_kg.toLocaleString("de-DE")} kg
+              {t("profile.goal")}: {challenge.target_kg.toLocaleString("de-DE")} {t("common.kg")}
             </p>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-neutral-800">
@@ -185,7 +187,7 @@ function ProfileInner() {
             />
           </div>
           {challenge.completed && (
-            <p className="mt-3 text-sm font-medium text-emerald-400">Challenge geschafft! 🎉</p>
+            <p className="mt-3 text-sm font-medium text-emerald-400">{t("profile.challengeDone")} 🎉</p>
           )}
         </div>
       )}
@@ -193,7 +195,7 @@ function ProfileInner() {
       {achievements && (
         <div className="card p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold">Badges</h2>
+            <h2 className="font-semibold">{t("profile.badges")}</h2>
             <p className="muted text-xs">
               {achievements.badges.filter((b) => b.earned).length}/{achievements.badges.length}
             </p>
@@ -213,7 +215,7 @@ function ProfileInner() {
                 <p className="mt-1 text-xs text-neutral-400">{b.description}</p>
                 {b.earned && b.earned_at && (
                   <p className="mt-2 text-xs text-indigo-300">
-                    erhalten {new Date(b.earned_at).toLocaleDateString("de-DE")}
+                    {t("profile.earnedOn")} {new Date(b.earned_at).toLocaleDateString("de-DE")}
                   </p>
                 )}
               </div>
@@ -225,19 +227,20 @@ function ProfileInner() {
       <div className="card p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-semibold">Leaderboard</h2>
+            <h2 className="font-semibold">{t("profile.leaderboard")}</h2>
             <p className="muted mt-1 text-sm">
-              Opt-in: dein Name + bester Streak werden im{" "}
+              {t("profile.optInPrefix")}{" "}
               <Link href="/leaderboard" className="text-indigo-400 hover:underline">
-                Leaderboard
+                {t("profile.leaderboard")}
               </Link>{" "}
-              für andere Nutzer sichtbar.
+              {t("profile.optInSuffix")}
             </p>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={!!user?.leaderboard_opt_in}
+            aria-label={t("profile.toggleLeaderboard")}
             disabled={optInSaving}
             onClick={toggleOptIn}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
@@ -254,10 +257,10 @@ function ProfileInner() {
       </div>
 
       <div className="card p-6">
-        <h2 className="font-semibold mb-4">Change password</h2>
+        <h2 className="font-semibold mb-4">{t("profile.changePassword")}</h2>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
-            <label className="label" htmlFor="old-password">Current password</label>
+            <label className="label" htmlFor="old-password">{t("profile.currentPassword")}</label>
             <input
               id="old-password"
               className="input mt-2"
@@ -268,7 +271,7 @@ function ProfileInner() {
             />
           </div>
           <div>
-            <label className="label" htmlFor="new-password">New password</label>
+            <label className="label" htmlFor="new-password">{t("profile.newPassword")}</label>
             <input
               id="new-password"
               className="input mt-2"
@@ -296,13 +299,13 @@ function ProfileInner() {
                   strength === "ok" && "text-yellow-400",
                   strength === "strong" && "text-emerald-400",
                 ].filter(Boolean).join(" ")}>
-                  {strength === "weak" ? "Too short" : strength === "ok" ? "OK" : "Strong"}
+                  {strength === "weak" ? t("register.strengthWeak") : strength === "ok" ? t("register.strengthOk") : t("register.strengthStrong")}
                 </span>
               </div>
             )}
           </div>
           <div>
-            <label className="label" htmlFor="confirm-password">Confirm new password</label>
+            <label className="label" htmlFor="confirm-password">{t("profile.confirmNewPassword")}</label>
             <input
               id="confirm-password"
               className={["input mt-2", pwMismatch ? "border-red-500/60 focus:ring-red-500/40" : ""].join(" ")}
@@ -311,14 +314,14 @@ function ProfileInner() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
-            {pwMismatch && <p className="mt-1 text-xs text-red-400">Passwords do not match</p>}
+            {pwMismatch && <p className="mt-1 text-xs text-red-400">{t("register.mismatch")}</p>}
           </div>
           <button
             className="btn-primary"
             type="submit"
             disabled={pwSaving || pwMismatch}
           >
-            {pwSaving ? "Saving…" : "Change password"}
+            {pwSaving ? t("profile.saving") : t("profile.changePassword")}
           </button>
         </form>
       </div>
