@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Protected from "@/components/Protected";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   getApiBase,
   getExercises,
@@ -27,6 +28,7 @@ export default function WorkoutStartPage() {
 }
 
 function WorkoutPlayerInner() {
+  const t = useTranslations();
   const params = useParams<{ id: string }>();
   const workoutId = params.id;
 
@@ -91,13 +93,13 @@ function WorkoutPlayerInner() {
         const delta = pr.previous_max_kg == null
           ? `${pr.weight_kg} kg`
           : `+${pr.delta_kg} kg`;
-        toast(`🎉 Neuer Personal Record! ${delta} ${pr.exercise_name}`, {
+        toast(`🎉 ${t("workoutPlayer.newPr")} ${delta} ${pr.exercise_name}`, {
           type: "success",
           durationMs: 5000,
         });
       });
       if (prs.length > visible.length) {
-        toast(`+ ${prs.length - visible.length} weitere PRs`, {
+        toast(`+ ${prs.length - visible.length} ${t("workoutPlayer.morePrs")}`, {
           type: "success",
           durationMs: 5000,
         });
@@ -151,7 +153,7 @@ function WorkoutPlayerInner() {
           if (workout.duration_seconds) setTotalElapsed(workout.duration_seconds);
         }
       } catch (e: any) {
-        setErr(e?.message ?? "Failed to load workout player");
+        setErr(e?.message ?? t("workoutPlayer.loadError"));
       } finally {
         setLoading(false);
       }
@@ -322,7 +324,7 @@ function WorkoutPlayerInner() {
     completeAndCelebrate(totalElapsed);
   }
 
-  if (loading) return <p className="muted">Loading…</p>;
+  if (loading) return <p className="muted">{t("workouts.loading")}</p>;
 
   if (err) {
     return (
@@ -331,7 +333,7 @@ function WorkoutPlayerInner() {
             {err}
           </div>
           <Link className="btn-ghost" href={`/workouts/${workoutId}`}>
-            Back
+            {t("workoutPlayer.back")}
           </Link>
         </div>
     );
@@ -340,7 +342,7 @@ function WorkoutPlayerInner() {
   if (!workoutExercises.length) {
     return (
         <div className="card p-6">
-          <p className="muted">No exercises found for this workout.</p>
+          <p className="muted">{t("workoutPlayer.noExercises")}</p>
         </div>
     );
   }
@@ -352,18 +354,17 @@ function WorkoutPlayerInner() {
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-600/20 text-4xl">
               ▶
             </div>
-            <h1 className="h1">Ready to start?</h1>
+            <h1 className="h1">{t("workoutPlayer.readyTitle")}</h1>
             <p className="muted mt-3">
-              This workout has {workoutExercises.length} exercises.
-              Press start to open the guided workout player with two timers:
-              one for active training and one for rest.
+              {t("workoutPlayer.readyCountPrefix")} {workoutExercises.length} {t("common.exercises")}.
+              {" "}{t("workoutPlayer.readyBody")}
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button className="btn-primary" type="button" onClick={startWorkout}>
-                Start workout
+                {t("workoutPlayer.startWorkout")}
               </button>
               <Link className="btn-ghost" href={`/workouts/${workoutId}`}>
-                Back to details
+                {t("workoutPlayer.backToDetails")}
               </Link>
             </div>
           </div>
@@ -378,20 +379,20 @@ function WorkoutPlayerInner() {
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-600/20 text-4xl">
               ✓
             </div>
-            <h1 className="h1">Workout finished</h1>
-            <p className="muted mt-3">Total time: {formatSeconds(totalElapsed)}</p>
+            <h1 className="h1">{t("workoutPlayer.finishedTitle")}</h1>
+            <p className="muted mt-3">{t("workoutPlayer.totalTime")}: {formatSeconds(totalElapsed)}</p>
 
             <div className="mt-2 text-sm text-neutral-400">
-              <p>Training timer tracked active exercise time.</p>
-              <p>Rest timer tracked rest/pause time separately.</p>
+              <p>{t("workoutPlayer.finishedTrainingNote")}</p>
+              <p>{t("workoutPlayer.finishedRestNote")}</p>
             </div>
 
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button className="btn-primary" type="button" onClick={startWorkout}>
-                Restart workout
+                {t("workoutPlayer.restartWorkout")}
               </button>
               <Link className="btn-ghost" href={`/workouts/${workoutId}`}>
-                Back to details
+                {t("workoutPlayer.backToDetails")}
               </Link>
             </div>
           </div>
@@ -413,22 +414,22 @@ function WorkoutPlayerInner() {
 
   const recommendedLeft = Math.max(recommended - restElapsed, 0);
   const overLimitBy = Math.max(restElapsed - limit, 0);
-  const restStatusText = getRestStatusText(restElapsed, recommended, limit);
+  const restStatusText = getRestStatusText(t, restElapsed, recommended, limit);
 
   return (
       <div className="space-y-6">
         <div className="card p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="h1">Workout player</h1>
+              <h1 className="h1">{t("workoutPlayer.title")}</h1>
               <p className="muted mt-2">
-                Exercise {currentExerciseIndex + 1} of {workoutExercises.length} • Set {currentSet} of {current.sets}
+                {t("workoutPlayer.exerciseLabel")} {currentExerciseIndex + 1} {t("workoutPlayer.of")} {workoutExercises.length} • {t("workoutPlayer.setLabel")} {currentSet} {t("workoutPlayer.of")} {current.sets}
               </p>
             </div>
 
             <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 px-4 py-3 text-right">
               <div className="text-xs uppercase tracking-wide text-neutral-500">
-                Total workout time
+                {t("workoutPlayer.totalWorkoutTime")}
               </div>
               <div className="text-xl font-semibold text-neutral-100">
                 {formatSeconds(totalElapsed)}
@@ -442,24 +443,24 @@ function WorkoutPlayerInner() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
                 src={currentImage}
-                alt={currentExercise?.name || "Exercise image"}
+                alt={currentExercise?.name || t("workoutPlayer.exerciseImageAlt")}
                 className="h-[360px] w-full object-cover"
             />
 
             <div className="space-y-4 p-6">
               <div>
                 <h2 className="text-2xl font-semibold">
-                  {currentExercise?.name || "Exercise"}
+                  {currentExercise?.name || t("workoutPlayer.exerciseFallback")}
                 </h2>
                 <p className="muted mt-2">
-                  {currentExercise?.muscle_group || "Unknown muscle group"}
+                  {currentExercise?.muscle_group || t("workoutPlayer.unknownMuscleGroup")}
                 </p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <MiniCard label="Sets" value={`${currentSet} / ${current.sets}`} />
-                <MiniCard label="Reps" value={current.reps} />
-                <MiniCard label="Weight" value={current.weight ?? "Bodyweight"} />
+                <MiniCard label={t("workoutPlayer.sets")} value={`${currentSet} / ${current.sets}`} />
+                <MiniCard label={t("workoutPlayer.reps")} value={current.reps} />
+                <MiniCard label={t("workoutPlayer.weight")} value={current.weight ?? t("workoutPlayer.bodyweight")} />
               </div>
             </div>
           </div>
@@ -467,20 +468,20 @@ function WorkoutPlayerInner() {
           <div className="space-y-6">
             <div className={`rounded-3xl border p-6 transition ${trainingColorClasses}`}>
               <div className="text-xs uppercase tracking-wide opacity-80">
-                Training timer
+                {t("workoutPlayer.trainingTimer")}
               </div>
               <div className="mt-3 text-5xl font-bold tabular-nums">
                 {formatSeconds(trainingElapsed)}
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <MiniCard label="Exercise" value={currentExercise?.name || "Exercise"} muted />
-                <MiniCard label="Status" value={trainingTimerState} muted />
+                <MiniCard label={t("workoutPlayer.exerciseLabel")} value={currentExercise?.name || t("workoutPlayer.exerciseFallback")} muted />
+                <MiniCard label={t("workoutPlayer.status")} value={t(`workoutPlayer.timerState.${trainingTimerState}`)} muted />
               </div>
 
               <div className="mt-4 flex flex-wrap gap-3">
                 <button className="btn-primary" type="button" onClick={startTraining}>
-                  Start training
+                  {t("workoutPlayer.startTraining")}
                 </button>
                 <button
                     className="btn-ghost"
@@ -488,7 +489,7 @@ function WorkoutPlayerInner() {
                     onClick={pauseTraining}
                     disabled={trainingTimerState !== "RUNNING"}
                 >
-                  Pause training
+                  {t("workoutPlayer.pauseTraining")}
                 </button>
                 <button
                     className="btn-ghost"
@@ -496,51 +497,51 @@ function WorkoutPlayerInner() {
                     onClick={resumeTraining}
                     disabled={trainingTimerState !== "PAUSED"}
                 >
-                  Resume training
+                  {t("workoutPlayer.resumeTraining")}
                 </button>
                 <button className="btn-ghost" type="button" onClick={resetTraining}>
-                  Reset training
+                  {t("workoutPlayer.resetTraining")}
                 </button>
               </div>
             </div>
 
             <div className={`rounded-3xl border p-6 transition ${restColorClasses}`}>
-              <div className="text-xs uppercase tracking-wide opacity-80">Rest timer</div>
+              <div className="text-xs uppercase tracking-wide opacity-80">{t("workoutPlayer.restTimer")}</div>
               <div className="mt-3 text-5xl font-bold tabular-nums">
                 {formatSeconds(restElapsed)}
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <MiniCard label="Recommended active rest" value={`${recommended}s`} muted />
-                <MiniCard label="Limit" value={`${limit}s`} muted />
+                <MiniCard label={t("workoutPlayer.recommendedActiveRest")} value={`${recommended}s`} muted />
+                <MiniCard label={t("workoutPlayer.limit")} value={`${limit}s`} muted />
               </div>
 
               <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
-                <p className="font-semibold text-neutral-100">Mode</p>
+                <p className="font-semibold text-neutral-100">{t("workoutPlayer.mode")}</p>
                 <p className="mt-1 text-neutral-300">
-                  White muscle fiber / explosive strength focus
+                  {t("workoutPlayer.modeDescription")}
                 </p>
               </div>
 
               <div className="mt-4 space-y-1 text-sm opacity-90">
                 <p>
-                  Status: <span className="font-semibold">{restStatusText}</span>
+                  {t("workoutPlayer.status")}: <span className="font-semibold">{restStatusText}</span>
                 </p>
                 <p>
-                  Remaining to recommended rest:{" "}
+                  {t("workoutPlayer.remainingToRecommended")}:{" "}
                   <span className="font-semibold">{recommendedLeft}s</span>
                 </p>
                 <p>
-                  Above limit: <span className="font-semibold">{overLimitBy}s</span>
+                  {t("workoutPlayer.aboveLimit")}: <span className="font-semibold">{overLimitBy}s</span>
                 </p>
                 <p>
-                  Timer state: <span className="font-semibold">{restTimerState}</span>
+                  {t("workoutPlayer.timerStateLabel")}: <span className="font-semibold">{t(`workoutPlayer.timerState.${restTimerState}`)}</span>
                 </p>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-3">
                 <button className="btn-primary" type="button" onClick={startRest}>
-                  Start rest
+                  {t("workoutPlayer.startRest")}
                 </button>
                 <button
                     className="btn-ghost"
@@ -548,7 +549,7 @@ function WorkoutPlayerInner() {
                     onClick={pauseRest}
                     disabled={restTimerState !== "RUNNING"}
                 >
-                  Pause rest
+                  {t("workoutPlayer.pauseRest")}
                 </button>
                 <button
                     className="btn-ghost"
@@ -556,10 +557,10 @@ function WorkoutPlayerInner() {
                     onClick={resumeRest}
                     disabled={restTimerState !== "PAUSED"}
                 >
-                  Resume rest
+                  {t("workoutPlayer.resumeRest")}
                 </button>
                 <button className="btn-ghost" type="button" onClick={resetRest}>
-                  Reset rest
+                  {t("workoutPlayer.resetRest")}
                 </button>
               </div>
             </div>
@@ -571,28 +572,27 @@ function WorkoutPlayerInner() {
                   type="button"
                   onClick={finishCurrentSet}
                   disabled={restTimerState === "RUNNING"}
-                  title={restTimerState === "RUNNING" ? "Warte auf das Ende der Pause" : ""}
+                  title={restTimerState === "RUNNING" ? t("workoutPlayer.waitForRestEnd") : ""}
                 >
-                  {restTimerState === "RUNNING" ? "⏳ Pause läuft…" : "✓ Satz abgeschlossen"}
+                  {restTimerState === "RUNNING" ? `⏳ ${t("workoutPlayer.restRunning")}` : `✓ ${t("workoutPlayer.setCompleted")}`}
                 </button>
                 <button className="btn-ghost" type="button" onClick={skipToNextExercise}>
-                  Next exercise
+                  {t("workoutPlayer.nextExercise")}
                 </button>
                 <Link className="btn-ghost" href={`/workouts/${workoutId}`}>
-                  Exit
+                  {t("workoutPlayer.exit")}
                 </Link>
               </div>
             </div>
 
             <div className="card p-6 text-sm text-neutral-300">
-              <p className="font-semibold text-neutral-100">So funktioniert es:</p>
+              <p className="font-semibold text-neutral-100">{t("workoutPlayer.howItWorks")}</p>
               <ul className="mt-2 list-disc space-y-1 pl-5">
-                <li><strong>Training-Timer:</strong> Zählt die aktive Zeit während der Übung.</li>
-                <li><strong>Pausen-Timer:</strong> Zählt die Erholungszeit zwischen den Sätzen.</li>
+                <li><strong>{t("workoutPlayer.trainingTimer")}:</strong> {t("workoutPlayer.howTrainingTimer")}</li>
+                <li><strong>{t("workoutPlayer.restTimer")}:</strong> {t("workoutPlayer.howRestTimer")}</li>
               </ul>
               <p className="mt-3">
-                Nach jedem Satz startet die Pause automatisch. Beim nächsten Satz
-                werden beide Timer zurückgesetzt.
+                {t("workoutPlayer.howResetNote")}
               </p>
             </div>
           </div>
@@ -624,14 +624,19 @@ function MiniCard({
   );
 }
 
-function getRestStatusText(elapsed: number, recommended: number, limit: number) {
+function getRestStatusText(
+    t: (key: string) => string,
+    elapsed: number,
+    recommended: number,
+    limit: number,
+) {
   if (elapsed <= recommended) {
-    return "Recommended active rest";
+    return t("workoutPlayer.recommendedActiveRest");
   }
   if (elapsed <= limit) {
-    return "Above recommended rest";
+    return t("workoutPlayer.aboveRecommendedRest");
   }
-  return "Rest limit exceeded";
+  return t("workoutPlayer.restLimitExceeded");
 }
 
 function timerColor(elapsed: number, recommended: number, limit: number) {

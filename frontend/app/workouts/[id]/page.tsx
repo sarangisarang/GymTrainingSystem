@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Protected from "@/components/Protected";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   getApiBase,
   getExercises,
@@ -44,6 +45,7 @@ function WorkoutDetailInner() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const { toast } = useToast();
+  const t = useTranslations();
 
   const [workout, setWorkout] = useState<WorkoutRead | null>(null);
   const [exercises, setExercises] = useState<ExerciseRead[]>([]);
@@ -72,7 +74,7 @@ function WorkoutDetailInner() {
       const data = await getWorkoutAnalysis(id, payloadWeight);
       setAnalysis(data);
     } catch (e: unknown) {
-      setAnalysisErr(e instanceof Error ? e.message : "Failed to calculate workout analysis");
+      setAnalysisErr(e instanceof Error ? e.message : t("workoutDetail.analysisError"));
     } finally {
       setAnalysisLoading(false);
     }
@@ -86,7 +88,7 @@ function WorkoutDetailInner() {
       setWorkout(w);
       setExercises(ex);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Failed to load workout");
+      setErr(e instanceof Error ? e.message : t("workoutDetail.loadError"));
     } finally {
       setLoading(false);
     }
@@ -118,9 +120,9 @@ function WorkoutDetailInner() {
       });
       setWorkout(updated);
       setEditing(false);
-      toast("Workout updated", "success");
+      toast(t("workoutDetail.updated"), "success");
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Failed to update", "error");
+      toast(e instanceof Error ? e.message : t("workoutDetail.updateFailed"), "error");
     } finally {
       setEditSaving(false);
     }
@@ -144,7 +146,7 @@ function WorkoutDetailInner() {
     return (
       <div className="space-y-4">
         <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">{err}</div>
-        <Link className="btn-ghost" href="/workouts">Back</Link>
+        <Link className="btn-ghost" href="/workouts">{t("workoutDetail.back")}</Link>
       </div>
     );
   }
@@ -156,13 +158,13 @@ function WorkoutDetailInner() {
       <div className="card p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="h1">Workout</h1>
+            <h1 className="h1">{t("workoutDetail.title")}</h1>
             <p className="muted mt-2">
-              {new Date(workout.date).toLocaleDateString()} • {sortedExercises.length} exercises
+              {new Date(workout.date).toLocaleDateString()} • {sortedExercises.length} {t("common.exercises")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link className="btn-primary" data-testid="start-workout" href={`/workouts/${workout.id}/start`}>Start workout</Link>
+            <Link className="btn-primary" data-testid="start-workout" href={`/workouts/${workout.id}/start`}>{t("workoutDetail.startWorkout")}</Link>
             <button
               type="button"
               className="btn-ghost"
@@ -172,9 +174,9 @@ function WorkoutDetailInner() {
                 setEditing(true);
               }}
             >
-              Edit
+              {t("workoutDetail.edit")}
             </button>
-            <Link className="btn-ghost" href="/workouts">Back</Link>
+            <Link className="btn-ghost" href="/workouts">{t("workoutDetail.back")}</Link>
           </div>
         </div>
       </div>
@@ -182,10 +184,10 @@ function WorkoutDetailInner() {
       {/* Inline edit form */}
       {editing && (
         <div className="card p-6 space-y-4">
-          <h2 className="font-semibold">Edit workout</h2>
+          <h2 className="font-semibold">{t("workoutDetail.editWorkout")}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="label" htmlFor="edit-date">Date</label>
+              <label className="label" htmlFor="edit-date">{t("workoutDetail.date")}</label>
               <input
                 id="edit-date"
                 className="input mt-2"
@@ -195,43 +197,43 @@ function WorkoutDetailInner() {
               />
             </div>
             <div>
-              <label className="label" htmlFor="edit-notes">Notes</label>
+              <label className="label" htmlFor="edit-notes">{t("workoutDetail.notes")}</label>
               <input
                 id="edit-notes"
                 className="input mt-2"
                 value={editNotes}
                 onChange={(e) => setEditNotes(e.target.value)}
-                placeholder="Leg day, felt strong…"
+                placeholder={t("workoutDetail.notesPlaceholder")}
               />
             </div>
           </div>
           <div className="flex gap-2">
             <button type="button" className="btn-primary" onClick={saveEdit} disabled={editSaving}>
-              {editSaving ? "Saving…" : "Save"}
+              {editSaving ? t("workoutDetail.saving") : t("workoutDetail.save")}
             </button>
-            <button type="button" className="btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+            <button type="button" className="btn-ghost" onClick={() => setEditing(false)}>{t("workoutDetail.cancel")}</button>
           </div>
         </div>
       )}
 
       <div className="card space-y-2 p-6">
         {workout.created_at ? (
-          <p className="muted"><span className="text-neutral-200">Created:</span> {new Date(workout.created_at).toLocaleString()}</p>
+          <p className="muted"><span className="text-neutral-200">{t("workoutDetail.created")}</span> {new Date(workout.created_at).toLocaleString()}</p>
         ) : null}
-        {workout.notes ? <p className="muted">{workout.notes}</p> : <p className="muted">No notes</p>}
+        {workout.notes ? <p className="muted">{workout.notes}</p> : <p className="muted">{t("workouts.noNotes")}</p>}
       </div>
 
       <div className="card p-6 space-y-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="h2">Workout analysis</h2>
+            <h2 className="h2">{t("workoutDetail.analysisTitle")}</h2>
             <p className="muted mt-2">
-              Estimated volume, duration, calories and fat usage based on sets, reps, weight, rest and tempo heuristics.
+              {t("workoutDetail.analysisSubtitle")}
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <div>
-              <label className="label" htmlFor="body-weight">Body weight (kg)</label>
+              <label className="label" htmlFor="body-weight">{t("workoutDetail.bodyWeight")}</label>
               <input
                 id="body-weight"
                 className="input mt-2 w-36"
@@ -243,7 +245,7 @@ function WorkoutDetailInner() {
               />
             </div>
             <button type="button" className="btn-ghost" onClick={() => loadAnalysis(bodyWeightKg)} disabled={analysisLoading}>
-              {analysisLoading ? "Calculating…" : "Recalculate"}
+              {analysisLoading ? t("workoutDetail.calculating") : t("workoutDetail.recalculate")}
             </button>
           </div>
         </div>
@@ -255,33 +257,33 @@ function WorkoutDetailInner() {
         {analysis ? (
           <>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <Stat label="Detected goal" value={analysis.goal} />
-              <Stat label="Total volume" value={`${formatNum(analysis.total_volume_kg)} kg`} />
-              <Stat label="Estimated duration" value={formatSeconds(analysis.estimated_total_seconds)} />
-              <Stat label="Estimated calories" value={analysis.estimated_calories_kcal != null ? `${formatNum(analysis.estimated_calories_kcal)} kcal` : "Need body weight"} />
-              <Stat label="Fat energy" value={analysis.fat_energy_share != null ? `${formatNum(Number(analysis.fat_energy_share) * 100)}%` : "-"} />
-              <Stat label="Estimated fat" value={analysis.estimated_fat_burned_grams != null ? `${formatNum(analysis.estimated_fat_burned_grams)} g` : "Need body weight"} />
-              <Stat label="Average weight / rep" value={`${formatNum(analysis.average_weight_per_rep_kg)} kg`} />
-              <Stat label="MET estimate" value={analysis.met_value != null ? formatNum(analysis.met_value) : "-"} />
+              <Stat label={t("workoutDetail.detectedGoal")} value={analysis.goal} />
+              <Stat label={t("workoutDetail.totalVolume")} value={`${formatNum(analysis.total_volume_kg)} ${t("common.kg")}`} />
+              <Stat label={t("workoutDetail.estimatedDuration")} value={formatSeconds(analysis.estimated_total_seconds)} />
+              <Stat label={t("workoutDetail.estimatedCalories")} value={analysis.estimated_calories_kcal != null ? `${formatNum(analysis.estimated_calories_kcal)} ${t("workoutDetail.kcal")}` : t("workoutDetail.needBodyWeight")} />
+              <Stat label={t("workoutDetail.fatEnergy")} value={analysis.fat_energy_share != null ? `${formatNum(Number(analysis.fat_energy_share) * 100)}%` : "-"} />
+              <Stat label={t("workoutDetail.estimatedFat")} value={analysis.estimated_fat_burned_grams != null ? `${formatNum(analysis.estimated_fat_burned_grams)} ${t("workoutDetail.grams")}` : t("workoutDetail.needBodyWeight")} />
+              <Stat label={t("workoutDetail.averageWeightPerRep")} value={`${formatNum(analysis.average_weight_per_rep_kg)} ${t("common.kg")}`} />
+              <Stat label={t("workoutDetail.metEstimate")} value={analysis.met_value != null ? formatNum(analysis.met_value) : "-"} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-4">
-                <div className="text-xs uppercase tracking-wide text-neutral-500">Tempo formula</div>
+                <div className="text-xs uppercase tracking-wide text-neutral-500">{t("workoutDetail.tempoFormula")}</div>
                 <div className="mt-2 text-sm text-neutral-200">
-                  {analysis.concentric_seconds}s up • {analysis.pause_seconds}s pause • {analysis.eccentric_seconds}s down
+                  {analysis.concentric_seconds}s {t("workoutDetail.tempoUp")} • {analysis.pause_seconds}s {t("workoutDetail.tempoPause")} • {analysis.eccentric_seconds}s {t("workoutDetail.tempoDown")}
                 </div>
               </div>
               <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-4">
-                <div className="text-xs uppercase tracking-wide text-neutral-500">Rest structure</div>
+                <div className="text-xs uppercase tracking-wide text-neutral-500">{t("workoutDetail.restStructure")}</div>
                 <div className="mt-2 text-sm text-neutral-200">
-                  Recommended {analysis.recommended_rest_seconds}s • Estimated total rest {formatSeconds(analysis.estimated_rest_seconds)}
+                  {t("workoutDetail.restRecommended")} {analysis.recommended_rest_seconds}s • {t("workoutDetail.restEstimatedTotal")} {formatSeconds(analysis.estimated_rest_seconds)}
                 </div>
               </div>
               <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-4">
-                <div className="text-xs uppercase tracking-wide text-neutral-500">Training density</div>
+                <div className="text-xs uppercase tracking-wide text-neutral-500">{t("workoutDetail.trainingDensity")}</div>
                 <div className="mt-2 text-sm text-neutral-200">
-                  {analysis.total_sets} sets • {analysis.total_reps} reps • {analysis.total_exercises} exercises
+                  {analysis.total_sets} {t("workoutDetail.setsLabel")} • {analysis.total_reps} {t("workoutDetail.repsLabel")} • {analysis.total_exercises} {t("common.exercises")}
                 </div>
               </div>
             </div>
@@ -290,9 +292,9 @@ function WorkoutDetailInner() {
       </div>
 
       <div className="card p-6">
-        <h2 className="h2">Exercises</h2>
+        <h2 className="h2">{t("common.exercises")}</h2>
         {!sortedExercises.length ? (
-          <p className="muted mt-2">No exercises recorded.</p>
+          <p className="muted mt-2">{t("workoutDetail.noExercisesRecorded")}</p>
         ) : (
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {sortedExercises.map((we, index) => {
@@ -306,21 +308,21 @@ function WorkoutDetailInner() {
               return (
                 <div key={we.id} className="overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900/70">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imageUrl} alt={exercise?.name || `Exercise ${index + 1}`} className="h-48 w-full object-cover" />
+                  <img src={imageUrl} alt={exercise?.name || `${t("workoutDetail.exerciseFallback")} ${index + 1}`} className="h-48 w-full object-cover" />
                   <div className="space-y-3 p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-lg font-semibold">{exercise?.name || `Exercise ${index + 1}`}</h3>
-                        <p className="muted mt-1">{exercise?.muscle_group || "Unknown group"}</p>
+                        <h3 className="text-lg font-semibold">{exercise?.name || `${t("workoutDetail.exerciseFallback")} ${index + 1}`}</h3>
+                        <p className="muted mt-1">{exercise?.muscle_group ? t(`muscle.${exercise.muscle_group}`) : t("workoutDetail.unknownGroup")}</p>
                       </div>
                       <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs text-neutral-300">#{index + 1}</span>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <Stat label="Sets" value={we.sets} />
-                      <Stat label="Reps" value={we.reps} />
-                      <Stat label="Weight" value={we.weight ?? "-"} />
-                      <Stat label="Rest" value={`${we.rest_seconds}s / ${we.rest_limit_seconds}s`} />
+                      <Stat label={t("workoutDetail.sets")} value={we.sets} />
+                      <Stat label={t("workoutDetail.reps")} value={we.reps} />
+                      <Stat label={t("workoutDetail.weight")} value={we.weight ?? "-"} />
+                      <Stat label={t("workoutDetail.rest")} value={`${we.rest_seconds}s / ${we.rest_limit_seconds}s`} />
                     </div>
                   </div>
                 </div>

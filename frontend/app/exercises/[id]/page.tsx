@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Protected from "@/components/Protected";
+import { useTranslations } from "@/components/I18nProvider";
 import { getExercise, getExerciseHistory, type ExerciseRead, type ExerciseHistoryEntry } from "@/lib/api";
 
 export default function ExerciseDetailPage() {
@@ -15,6 +16,7 @@ export default function ExerciseDetailPage() {
 }
 
 function ExerciseDetail() {
+  const t = useTranslations();
   const { id } = useParams<{ id: string }>();
   const [exercise, setExercise] = useState<ExerciseRead | null>(null);
   const [history, setHistory] = useState<ExerciseHistoryEntry[]>([]);
@@ -30,7 +32,7 @@ function ExerciseDetail() {
         setExercise(ex);
         setHistory(hist);
       } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : "Failed to load");
+        setErr(e instanceof Error ? e.message : t("exerciseDetail.loadError"));
       } finally {
         setLoading(false);
       }
@@ -49,7 +51,7 @@ function ExerciseDetail() {
     return (
       <div className="card p-6 text-center">
         <p className="text-red-400">{err}</p>
-        <Link href="/exercises" className="btn-ghost mt-4 inline-block">Back to exercises</Link>
+        <Link href="/exercises" className="btn-ghost mt-4 inline-block">{t("exerciseDetail.backToExercises")}</Link>
       </div>
     );
   }
@@ -78,7 +80,7 @@ function ExerciseDetail() {
             />
           )}
           <div className="flex-1">
-            <p className="text-xs font-medium uppercase tracking-wider text-indigo-400">{exercise.muscle_group}</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-indigo-400">{t(`muscle.${exercise.muscle_group}`)}</p>
             <h1 className="h1 mt-1">{exercise.name}</h1>
             {exercise.description && <p className="muted mt-2">{exercise.description}</p>}
           </div>
@@ -89,41 +91,41 @@ function ExerciseDetail() {
       {history.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="card p-5">
-            <p className="muted text-xs">Personal Record</p>
+            <p className="muted text-xs">{t("exerciseDetail.personalRecord")}</p>
             <p className="mt-1 text-2xl font-semibold">
-              {maxWeightEntry?.weight ? `${maxWeightEntry.weight} kg` : "—"}
+              {maxWeightEntry?.weight ? `${maxWeightEntry.weight} ${t("common.kg")}` : "—"}
             </p>
             {maxWeightEntry && <p className="muted text-xs mt-1">{maxWeightEntry.date}</p>}
           </div>
           <div className="card p-5">
-            <p className="muted text-xs">Total sessions</p>
+            <p className="muted text-xs">{t("exerciseDetail.totalSessions")}</p>
             <p className="mt-1 text-2xl font-semibold">{history.length}</p>
           </div>
           <div className="card p-5">
-            <p className="muted text-xs">Total volume</p>
-            <p className="mt-1 text-2xl font-semibold">{totalVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</p>
+            <p className="muted text-xs">{t("exerciseDetail.totalVolume")}</p>
+            <p className="mt-1 text-2xl font-semibold">{totalVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })} {t("common.kg")}</p>
           </div>
         </div>
       )}
 
       {/* History table */}
       <div>
-        <h2 className="mb-3 font-semibold">History</h2>
+        <h2 className="mb-3 font-semibold">{t("exerciseDetail.history")}</h2>
         {history.length === 0 ? (
           <div className="card p-6 text-center">
-            <p className="muted">This exercise hasn't been logged in any workout yet.</p>
-            <Link href="/cart" className="btn-primary mt-4 inline-block">Start a workout</Link>
+            <p className="muted">{t("exerciseDetail.noHistory")}</p>
+            <Link href="/cart" className="btn-primary mt-4 inline-block">{t("exerciseDetail.startWorkout")}</Link>
           </div>
         ) : (
           <div className="card overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-neutral-800 text-left">
-                  <th className="px-4 py-3 text-neutral-400 font-medium">Date</th>
-                  <th className="px-4 py-3 text-neutral-400 font-medium">Sets</th>
-                  <th className="px-4 py-3 text-neutral-400 font-medium">Reps</th>
-                  <th className="px-4 py-3 text-neutral-400 font-medium">Weight</th>
-                  <th className="px-4 py-3 text-neutral-400 font-medium">Volume</th>
+                  <th className="px-4 py-3 text-neutral-400 font-medium">{t("report.colDate")}</th>
+                  <th className="px-4 py-3 text-neutral-400 font-medium">{t("report.colSets")}</th>
+                  <th className="px-4 py-3 text-neutral-400 font-medium">{t("programs.colReps")}</th>
+                  <th className="px-4 py-3 text-neutral-400 font-medium">{t("programs.colWeight")}</th>
+                  <th className="px-4 py-3 text-neutral-400 font-medium">{t("report.colVolume")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -140,13 +142,13 @@ function ExerciseDetail() {
                       <td className="px-4 py-3">
                         {entry.date}
                         {isPR && (
-                          <span className="ml-2 rounded-full bg-indigo-600 px-1.5 py-0.5 text-xs text-white">PR</span>
+                          <span className="ml-2 rounded-full bg-indigo-600 px-1.5 py-0.5 text-xs text-white">{t("exerciseDetail.prBadge")}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">{entry.sets}</td>
                       <td className="px-4 py-3">{entry.reps}</td>
-                      <td className="px-4 py-3">{entry.weight ? `${entry.weight} kg` : "—"}</td>
-                      <td className="px-4 py-3">{parseFloat(entry.volume_kg).toLocaleString()} kg</td>
+                      <td className="px-4 py-3">{entry.weight ? `${entry.weight} ${t("common.kg")}` : "—"}</td>
+                      <td className="px-4 py-3">{parseFloat(entry.volume_kg).toLocaleString()} {t("common.kg")}</td>
                     </tr>
                   );
                 })}
@@ -156,7 +158,7 @@ function ExerciseDetail() {
         )}
       </div>
 
-      <Link href="/exercises" className="btn-ghost inline-block">← Back to exercises</Link>
+      <Link href="/exercises" className="btn-ghost inline-block">{t("exerciseDetail.backToExercisesArrow")}</Link>
     </div>
   );
 }

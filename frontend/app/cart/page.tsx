@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { clearCart, readCart, removeFromCart, writeCart, type CartItem } from "@/lib/cart";
 import { createWorkout, getApiBase } from "@/lib/api";
+import { useTranslations } from "@/components/I18nProvider";
 
 export default function CartPage() {
   return (
@@ -24,6 +25,7 @@ function toNum(x: unknown): number | null {
 
 function CartInner() {
   const router = useRouter();
+  const t = useTranslations();
   const { user } = useAuth();
   const { toast } = useToast();
   const base = useMemo(() => getApiBase(), []);
@@ -52,7 +54,7 @@ function CartInner() {
   async function onCreateWorkout() {
     if (!user?.id) return;
     if (items.length === 0) {
-      toast("Your cart is empty", "error");
+      toast(t("cart.emptyToast"), "error");
       return;
     }
     setLoading(true);
@@ -74,10 +76,10 @@ function CartInner() {
       const created = await createWorkout(payload);
       clearCart();
       setItems([]);
-      toast("Workout created!", "success");
+      toast(t("cart.createdToast"), "success");
       router.push(`/workouts/${created.id}`);
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Failed to create workout", "error");
+      toast(e instanceof Error ? e.message : t("cart.createError"), "error");
     } finally {
       setLoading(false);
     }
@@ -86,14 +88,14 @@ function CartInner() {
   return (
     <div className="space-y-6">
       <div className="card p-6">
-        <h1 className="h1">Cart</h1>
-        <p className="muted mt-2">Adjust sets, reps, weight and rest timing, then create your workout.</p>
+        <h1 className="h1">{t("cart.title")}</h1>
+        <p className="muted mt-2">{t("cart.subtitle")}</p>
       </div>
 
       {items.length === 0 ? (
         <div className="card p-6 text-center">
-          <p className="muted">Your cart is empty.</p>
-          <a href="/exercises" className="btn-primary mt-4 inline-block">Browse exercises</a>
+          <p className="muted">{t("cart.empty")}</p>
+          <a href="/exercises" className="btn-primary mt-4 inline-block">{t("cart.browseExercises")}</a>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -108,13 +110,13 @@ function CartInner() {
                       <img src={img(it.imageUrl)} alt={it.name} className="h-16 w-20 rounded-xl object-cover" />
                       <div>
                         <p className="font-semibold">{it.name}</p>
-                        <p className="muted">{it.muscleGroup}</p>
+                        <p className="muted">{it.muscleGroup ? t(`muscle.${it.muscleGroup}`) : ""}</p>
                       </div>
                     </div>
 
                     <div className="flex flex-1 flex-wrap gap-3 md:justify-end">
                       <div>
-                        <label className="label" htmlFor={`sets-${eid}`}>Sets</label>
+                        <label className="label" htmlFor={`sets-${eid}`}>{t("cart.sets")}</label>
                         <input
                           id={`sets-${eid}`}
                           className="input mt-2 w-24"
@@ -125,7 +127,7 @@ function CartInner() {
                         />
                       </div>
                       <div>
-                        <label className="label" htmlFor={`reps-${eid}`}>Reps</label>
+                        <label className="label" htmlFor={`reps-${eid}`}>{t("cart.reps")}</label>
                         <input
                           id={`reps-${eid}`}
                           className="input mt-2 w-24"
@@ -136,7 +138,7 @@ function CartInner() {
                         />
                       </div>
                       <div>
-                        <label className="label" htmlFor={`weight-${eid}`}>Weight</label>
+                        <label className="label" htmlFor={`weight-${eid}`}>{t("cart.weight")}</label>
                         <input
                           id={`weight-${eid}`}
                           className="input mt-2 w-28"
@@ -144,7 +146,7 @@ function CartInner() {
                           step="0.25"
                           value={it.weight ?? ""}
                           onChange={(e) => updateItem(eid, { weight: e.target.value === "" ? null : Number(e.target.value) })}
-                          placeholder="kg"
+                          placeholder={t("common.kg")}
                         />
                       </div>
                       <button
@@ -155,14 +157,14 @@ function CartInner() {
                           setItems(readCart());
                         }}
                       >
-                        Remove
+                        {t("workouts.delete")}
                       </button>
                     </div>
                   </div>
 
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div>
-                      <label className="label" htmlFor={`rest-${eid}`}>Recommended rest (sec)</label>
+                      <label className="label" htmlFor={`rest-${eid}`}>{t("cart.recommendedRest")}</label>
                       <input
                         id={`rest-${eid}`}
                         className="input mt-2"
@@ -174,7 +176,7 @@ function CartInner() {
                       />
                     </div>
                     <div>
-                      <label className="label" htmlFor={`rest-limit-${eid}`}>Rest limit (sec)</label>
+                      <label className="label" htmlFor={`rest-limit-${eid}`}>{t("cart.restLimit")}</label>
                       <input
                         id={`rest-limit-${eid}`}
                         className="input mt-2"
@@ -187,7 +189,7 @@ function CartInner() {
                     </div>
                     <div className="md:col-span-2">
                       <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 text-sm text-neutral-300">
-                        Timer: green → recommended rest, yellow → near limit, red → over limit.
+                        {t("cart.timerHint")}
                       </div>
                     </div>
                   </div>
@@ -199,10 +201,10 @@ function CartInner() {
       )}
 
       <div className="card p-6">
-        <h2 className="h2">Workout details</h2>
+        <h2 className="h2">{t("cart.workoutDetails")}</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label className="label" htmlFor="workout-date">Date</label>
+            <label className="label" htmlFor="workout-date">{t("report.colDate")}</label>
             <input
               id="workout-date"
               className="input mt-2"
@@ -212,13 +214,13 @@ function CartInner() {
             />
           </div>
           <div>
-            <label className="label" htmlFor="workout-notes">Notes (optional)</label>
+            <label className="label" htmlFor="workout-notes">{t("cart.notesOptional")}</label>
             <input
               id="workout-notes"
               className="input mt-2"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Leg day, felt strong…"
+              placeholder={t("cart.notesPlaceholder")}
             />
           </div>
         </div>
@@ -230,7 +232,7 @@ function CartInner() {
             disabled={loading || items.length === 0}
             onClick={onCreateWorkout}
           >
-            {loading ? "Creating…" : "Create workout"}
+            {loading ? t("cart.creating") : t("cart.createWorkout")}
           </button>
           <button
             className="btn-ghost"
@@ -238,7 +240,7 @@ function CartInner() {
             disabled={items.length === 0}
             onClick={() => { clearCart(); setItems([]); }}
           >
-            Clear cart
+            {t("cart.clearCart")}
           </button>
         </div>
       </div>
