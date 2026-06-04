@@ -2,6 +2,7 @@
 // document — but honest about what is stored, why, and how users can exercise
 // their DSGVO rights (export + deletion are linked back to the profile page).
 import Link from "next/link";
+import LocaleNotice from "./LocaleNotice";
 
 export const metadata = {
   title: "Datenschutz · Gym Tracker",
@@ -12,6 +13,7 @@ export const metadata = {
 export default function DatenschutzPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <LocaleNotice />
       <div className="card p-6">
         <h1 className="h1">Datenschutzerklärung</h1>
         <p className="muted mt-2">

@@ -15,8 +15,9 @@ Tables that get exported AND wiped on delete (everything user-owned):
   - user_achievements           (FK user_id)
   - coach_clients               (FK coach_id OR athlete_id, both sides)
 
-Tables that get exported but NOT wiped (shared catalogue, owned by no user):
-  - exercises                   never touched on a personal delete
+Tables that are NEITHER exported nor wiped on a personal request:
+  - exercises                   global catalogue, contains no personal data
+                                (DSGVO Art. 20 only covers personal data)
 
 Vector-store side effects:
   - Drop every workout the deleted user owned (per-user metadata filter).
@@ -35,7 +36,6 @@ from sqlalchemy.orm import Session
 
 from .models import (
     CoachClient,
-    Exercise,
     TrainingProgram,
     TrainingProgramItem,
     User,
