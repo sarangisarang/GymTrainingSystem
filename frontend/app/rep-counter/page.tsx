@@ -15,6 +15,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Protected from "@/components/Protected";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   RepCounter,
   measureAngle,
@@ -54,6 +55,7 @@ export default function RepCounterPage() {
 }
 
 function RepCounterInner() {
+  const t = useTranslations();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -106,9 +108,7 @@ function RepCounterInner() {
     // cryptic "cannot read getUserMedia of undefined".
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setStatus("error");
-      setErrorMsg(
-        "Your browser does not support camera access. Try the latest Chrome, Edge or Firefox on a desktop, over HTTPS or localhost.",
-      );
+      setErrorMsg(t("repCounter.noCameraSupport"));
       return;
     }
 
@@ -223,18 +223,14 @@ function RepCounterInner() {
       // Map the common getUserMedia failures to actionable, human messages.
       const name = (e as { name?: string })?.name;
       if (name === "NotAllowedError" || name === "SecurityError") {
-        setErrorMsg(
-          "Camera access was blocked. Allow the camera for this site in your browser settings and try again.",
-        );
+        setErrorMsg(t("repCounter.cameraBlocked"));
       } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-        setErrorMsg("No camera found. Connect a webcam and try again.");
+        setErrorMsg(t("repCounter.noCameraFound"));
       } else if (name === "NotReadableError") {
-        setErrorMsg(
-          "The camera is already in use by another app. Close it and try again.",
-        );
+        setErrorMsg(t("repCounter.cameraInUse"));
       } else {
         setErrorMsg(
-          e instanceof Error ? e.message : "Could not start the camera or pose model.",
+          e instanceof Error ? e.message : t("repCounter.startFailed"),
         );
       }
     }
@@ -265,16 +261,16 @@ function RepCounterInner() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="h1">📷 Rep Counter</h1>
+              <h1 className="h1">📷 {t("repCounter.title")}</h1>
               <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-300">
-                Beta
+                {t("repCounter.beta")}
               </span>
             </div>
             <p className="muted mt-1">
-              Experimental rep counting from pose landmarks. Accuracy depends on camera angle and lighting.
+              {t("repCounter.subtitle")}
             </p>
             <p className="mt-1 text-xs text-emerald-400">
-              🔒 The camera runs locally in your browser. No video is uploaded or stored.
+              🔒 {t("repCounter.privacy")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -289,7 +285,7 @@ function RepCounterInner() {
                     : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
                 }`}
               >
-                {ex.label}
+                {t(`repCounter.ex.${ex.id}`)}
               </button>
             ))}
           </div>
@@ -306,11 +302,7 @@ function RepCounterInner() {
           medical or injury-prevention tool. MediaPipe only sees body points;
           it cannot detect pain, joint load, fatigue or weight. */}
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-200/90">
-        ⚠️ <strong>Form Feedback is in Beta.</strong> It detects basic joint-angle
-        patterns from your camera but <strong>cannot guarantee safe technique</strong>.
-        It is not medical advice and does not prevent injuries. Use light weight first,
-        and <strong>stop immediately if you feel pain, dizziness, chest pain, or unusual
-        shortness of breath</strong>.
+        ⚠️ <strong>{t("repCounter.safetyLead")}</strong> {t("repCounter.safetyMid")} <strong>{t("repCounter.safetyStop")}</strong>.
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
@@ -333,14 +325,14 @@ function RepCounterInner() {
           {status === "idle" && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/60">
               <button type="button" className="btn-primary" onClick={start}>
-                ▶ Start camera
+                ▶ {t("repCounter.startCamera")}
               </button>
             </div>
           )}
           {status === "loading" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 text-neutral-200">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
-              <p className="text-sm">Loading pose model…</p>
+              <p className="text-sm">{t("repCounter.loadingModel")}</p>
             </div>
           )}
         </div>
@@ -348,19 +340,19 @@ function RepCounterInner() {
         {/* Live stats */}
         <div className="space-y-4">
           <div className="card p-6 text-center">
-            <p className="muted text-xs uppercase tracking-wide">Reps</p>
+            <p className="muted text-xs uppercase tracking-wide">{t("repCounter.reps")}</p>
             <p className="mt-1 text-7xl font-bold tabular-nums text-indigo-400">{reps}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="card p-4 text-center">
-              <p className="muted text-xs">Phase</p>
+              <p className="muted text-xs">{t("repCounter.phase")}</p>
               <p className={`mt-1 text-lg font-semibold ${phase === "BOTTOM" ? "text-amber-400" : "text-emerald-400"}`}>
                 {phase}
               </p>
             </div>
             <div className="card p-4 text-center">
-              <p className="muted text-xs">Angle</p>
+              <p className="muted text-xs">{t("repCounter.angle")}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums">
                 {angle != null ? `${Math.round(angle)}°` : "—"}
               </p>
@@ -368,9 +360,9 @@ function RepCounterInner() {
           </div>
 
           <div className="card p-4 text-center">
-            <p className="muted text-xs">Camera FPS</p>
+            <p className="muted text-xs">{t("repCounter.cameraFps")}</p>
             <p className={`mt-1 text-lg font-semibold tabular-nums ${fpsOk ? "text-emerald-400" : "text-amber-400"}`}>
-              {fps} {fps > 0 && (fpsOk ? "✓" : "(low)")}
+              {fps} {fps > 0 && (fpsOk ? "✓" : t("repCounter.low"))}
             </p>
           </div>
 
@@ -378,7 +370,7 @@ function RepCounterInner() {
               Basic range-of-motion check only; not form correction. */}
           {status === "running" && form && (
             <div className={`rounded-xl border p-4 text-center text-sm font-medium ${FORM_CARD_STYLES[form.status]}`}>
-              <span className="mr-1 text-xs uppercase tracking-wide opacity-70">Form (Beta)</span>
+              <span className="mr-1 text-xs uppercase tracking-wide opacity-70">{t("repCounter.formBeta")}</span>
               <br />
               {FORM_EMOJI[form.status]} {form.message}
             </div>
@@ -387,7 +379,7 @@ function RepCounterInner() {
           <div className="flex gap-3">
             {status === "running" ? (
               <button type="button" className="btn-ghost flex-1" onClick={stop}>
-                ⏹ Stop
+                ⏹ {t("repCounter.stop")}
               </button>
             ) : (
               <button
@@ -396,7 +388,7 @@ function RepCounterInner() {
                 onClick={start}
                 disabled={status === "loading"}
               >
-                ▶ Start
+                ▶ {t("repCounter.start")}
               </button>
             )}
             <button
@@ -407,16 +399,16 @@ function RepCounterInner() {
                 setReps(0);
               }}
             >
-              Reset
+              {t("repCounter.reset")}
             </button>
           </div>
 
           <div className="card p-4 text-sm text-neutral-400">
-            <p className="font-semibold text-neutral-200">Tips</p>
+            <p className="font-semibold text-neutral-200">{t("repCounter.tips")}</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>Stand so your full body (or arm) is in frame, side-on.</li>
-              <li>Good lighting keeps tracking above 15 FPS.</li>
-              <li>The counter auto-picks your more visible side.</li>
+              <li>{t("repCounter.tip1")}</li>
+              <li>{t("repCounter.tip2")}</li>
+              <li>{t("repCounter.tip3")}</li>
             </ul>
           </div>
         </div>
