@@ -65,7 +65,58 @@
     "ctaTitle": "Готові протестувати?",
     "ctaText": "Повний вихідний код на GitHub — або спробуйте застосунок одразу.",
     "ctaStart": "Запустити застосунок →",
-    "ctaRepo": "Репозиторій на GitHub →"
+    "ctaRepo": "Репозиторій на GitHub →",
+    "weekTag": "Тиждень",
+    "features": {
+      "f1": {
+        "title": "Живе тренування",
+        "desc": "Режим керованого тренування з таймерами роботи й відпочинку, звуковими сигналами та відстеженням підходів."
+      },
+      "f2": {
+        "title": "Прогноз сили",
+        "desc": "Лінійна регресія на ваших даних про тренування — прогнозує, коли ви досягнете цільової ваги."
+      },
+      "f3": {
+        "title": "ШІ-тренер",
+        "desc": "Gemini AI аналізує ваші останні 10 сесій і надає персональні рекомендації через SSE."
+      },
+      "f4": {
+        "title": "Аналіз прогресу",
+        "desc": "Крива сили з виділеним PR, стовпчикова діаграма тижневого обсягу та динаміка ваги тіла."
+      },
+      "f5": {
+        "title": "Програми тренувань",
+        "desc": "Автоматично згенеровані 4-тижневі програми на основі вашого 1RM — сила, гіпертрофія чи витривалість."
+      },
+      "f6": {
+        "title": "PDF-звіти",
+        "desc": "Тижневі та місячні звіти на сервері з reportlab — обсяг, нові PR, серія."
+      },
+      "f7": {
+        "title": "Панель тренера",
+        "desc": "Запрошуйте атлетів, переглядайте їхні тренування та призначайте програми. Доступ за ролями."
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "Service worker, офлайн-підтримка, встановлення на Android та iOS."
+      },
+      "f9": {
+        "title": "Автентифікація й безпека",
+        "desc": "JWT-автентифікація, перевірка власності, 401/403 на захищених ендпоінтах."
+      },
+      "f10": {
+        "title": "Статус тренування",
+        "desc": "PLANNED → IN_PROGRESS → COMPLETED з відстеженням тривалості й позначкою часу completed_at."
+      },
+      "f11": {
+        "title": "Аналітика панелі",
+        "desc": "Лише COMPLETED тренування: середня тривалість, топ-вправи, тижнева динаміка — коректно ізольовано."
+      },
+      "f12": {
+        "title": "Лендінг",
+        "desc": "Готова до презентації головна сторінка з функціями, технологічним стеком і оглядом архітектури."
+      }
+    }
   },
   "login": {
     "title": "З поверненням",
@@ -186,7 +237,11 @@
     "send": "Надіслати",
     "errorPrefix": "Помилка",
     "connectionErrorPrefix": "Помилка з'єднання",
-    "unknownError": "Невідома помилка"
+    "unknownError": "Невідома помилка",
+    "confidenceLabel": "Впевненість",
+    "confidenceTooltip": "Наскільки добре відповідь підкріплена вашими даними про тренування.",
+    "sourcesLabel": "Джерела",
+    "lowConfidenceWarning": "Ця відповідь може бути не повністю підкріплена вашими даними про тренування. Перш ніж застосовувати її, поставтеся до неї критично."
   },
   "exercises": {
     "title": "Вправи",
@@ -466,7 +521,24 @@
     "nameUpdated": "Ім’я оновлено",
     "updateFailed": "Не вдалося оновити",
     "passwordChanged": "Пароль успішно змінено",
-    "passwordChangeFailed": "Не вдалося змінити пароль"
+    "passwordChangeFailed": "Не вдалося змінити пароль",
+    "dataPrivacy": "Data & Privacy",
+    "dataPrivacyHint": "Download everything we have on you or delete your account. Details in the",
+    "privacyPolicy": "privacy policy",
+    "exportData": "Download my data",
+    "exportDataHint": "Saves all your workouts, programs, maxes, and badges as a JSON file.",
+    "exportButton": "Export as JSON",
+    "exporting": "Preparing…",
+    "exportDone": "Export downloaded",
+    "exportFailed": "Export failed",
+    "dangerZone": "Danger zone",
+    "deleteHint": "Account deletion is permanent. All your workouts, programs, and data are removed irreversibly.",
+    "deleteAccount": "Delete account",
+    "deleteConfirmHint": "To confirm, type your email address:",
+    "deleteAccountConfirm": "Delete account permanently",
+    "deleting": "Deleting…",
+    "deleteDone": "Your account and all data have been deleted.",
+    "deleteFailed": "Deletion failed"
   },
   "userNew": {
     "title": "Створити користувача",
@@ -634,5 +706,11 @@
     "showAiAnswer": "Показати відповідь ШІ",
     "resolve": "Вирішити",
     "resolved": "Позначено як вирішене"
+  },
+  "toast": {
+    "close": "Натисніть, щоб закрити"
+  },
+  "badge": {
+    "newBadge": "Новий значок"
   }
 }

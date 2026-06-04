@@ -374,6 +374,7 @@ function MessageContent({
 }
 
 function CoachMetaFooter({ meta }: { meta: CoachMeta }) {
+  const t = useTranslations();
   const { confidence, sources, low_confidence } = meta;
 
   const tone =
@@ -388,13 +389,13 @@ function CoachMetaFooter({ meta }: { meta: CoachMeta }) {
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}
-          title="Wie stark die Antwort durch deine Trainingsdaten gedeckt ist."
+          title={t("coach.confidenceTooltip")}
         >
-          🎯 Konfidenz: {confidence}%
+          🎯 {t("coach.confidenceLabel")}: {confidence}%
         </span>
         {sources.length > 0 && (
           <span className="text-xs text-neutral-500">
-            Quellen:{" "}
+            {t("coach.sourcesLabel")}:{" "}
             {sources.map((s, i) => (
               <span key={s.tag}>
                 <span className="text-neutral-400">
@@ -408,8 +409,7 @@ function CoachMetaFooter({ meta }: { meta: CoachMeta }) {
       </div>
       {low_confidence && (
         <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-300/90">
-          ⚠️ Diese Antwort ist möglicherweise nicht vollständig durch deine
-          Trainingsdaten gedeckt. Bitte kritisch prüfen, bevor du sie umsetzt.
+          ⚠️ {t("coach.lowConfidenceWarning")}
         </p>
       )}
     </div>

@@ -65,7 +65,58 @@
     "ctaTitle": "परीक्षण के लिए तैयार हैं?",
     "ctaText": "पूरा सोर्स कोड GitHub पर है — या ऐप को सीधे आज़माएँ।",
     "ctaStart": "ऐप शुरू करें →",
-    "ctaRepo": "GitHub रिपॉज़िटरी →"
+    "ctaRepo": "GitHub रिपॉज़िटरी →",
+    "weekTag": "सप्ताह",
+    "features": {
+      "f1": {
+        "title": "लाइव वर्कआउट",
+        "desc": "ट्रेनिंग और रेस्ट टाइमर, ऑडियो संकेतों और सेट ट्रैकिंग के साथ गाइडेड वर्कआउट मोड।"
+      },
+      "f2": {
+        "title": "स्ट्रेंथ पूर्वानुमान",
+        "desc": "आपके ट्रेनिंग डेटा पर लीनियर रिग्रेशन — पूर्वानुमान लगाता है कि आप लक्ष्य वज़न तक कब पहुंचेंगे।"
+      },
+      "f3": {
+        "title": "एआई कोच",
+        "desc": "Gemini AI आपके पिछले 10 सेशन का विश्लेषण करता है और SSE के ज़रिए व्यक्तिगत सिफारिशें देता है।"
+      },
+      "f4": {
+        "title": "प्रगति विश्लेषण",
+        "desc": "PR हाइलाइट के साथ स्ट्रेंथ कर्व, साप्ताहिक वॉल्यूम बार चार्ट और बॉडी-वेट ट्रेंड।"
+      },
+      "f5": {
+        "title": "ट्रेनिंग प्रोग्राम",
+        "desc": "आपके 1RM से अपने आप बनने वाले 4-सप्ताह के प्रोग्राम — स्ट्रेंथ, हाइपरट्रॉफी या एंड्योरेंस।"
+      },
+      "f6": {
+        "title": "PDF रिपोर्ट",
+        "desc": "reportlab से सर्वर-साइड साप्ताहिक और मासिक रिपोर्ट — वॉल्यूम, नए PR, स्ट्रीक।"
+      },
+      "f7": {
+        "title": "कोच डैशबोर्ड",
+        "desc": "एथलीटों को आमंत्रित करें, उनके वर्कआउट देखें और प्रोग्राम असाइन करें। भूमिका-आधारित एक्सेस।"
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "सर्विस वर्कर, ऑफ़लाइन सपोर्ट, Android और iOS पर इंस्टॉल करने योग्य।"
+      },
+      "f9": {
+        "title": "ऑथ और सुरक्षा",
+        "desc": "JWT प्रमाणीकरण, स्वामित्व जांच, सुरक्षित एंडपॉइंट पर 401/403।"
+      },
+      "f10": {
+        "title": "वर्कआउट स्थिति",
+        "desc": "PLANNED → IN_PROGRESS → COMPLETED, अवधि ट्रैकिंग और completed_at टाइमस्टैम्प के साथ।"
+      },
+      "f11": {
+        "title": "डैशबोर्ड एनालिटिक्स",
+        "desc": "केवल COMPLETED वर्कआउट: औसत अवधि, शीर्ष व्यायाम, साप्ताहिक ट्रेंड — सही तरह से अलग किए गए।"
+      },
+      "f12": {
+        "title": "लैंडिंग पेज",
+        "desc": "फ़ीचर, तकनीक स्टैक और आर्किटेक्चर अवलोकन के साथ प्रेज़ेंटेशन-तैयार होम पेज।"
+      }
+    }
   },
   "login": {
     "title": "वापसी पर स्वागत है",
@@ -186,7 +237,11 @@
     "send": "भेजें",
     "errorPrefix": "त्रुटि",
     "connectionErrorPrefix": "कनेक्शन त्रुटि",
-    "unknownError": "अज्ञात त्रुटि"
+    "unknownError": "अज्ञात त्रुटि",
+    "confidenceLabel": "कॉन्फिडेंस",
+    "confidenceTooltip": "जवाब आपके ट्रेनिंग डेटा से कितनी अच्छी तरह समर्थित है।",
+    "sourcesLabel": "स्रोत",
+    "lowConfidenceWarning": "हो सकता है यह जवाब आपके ट्रेनिंग डेटा से पूरी तरह समर्थित न हो। इसे अमल में लाने से पहले कृपया आलोचनात्मक रूप से जांच लें।"
   },
   "exercises": {
     "title": "व्यायाम",
@@ -466,7 +521,24 @@
     "nameUpdated": "नाम अपडेट हुआ",
     "updateFailed": "अपडेट करने में विफल",
     "passwordChanged": "पासवर्ड सफलतापूर्वक बदला गया",
-    "passwordChangeFailed": "पासवर्ड बदलने में विफल"
+    "passwordChangeFailed": "पासवर्ड बदलने में विफल",
+    "dataPrivacy": "Data & Privacy",
+    "dataPrivacyHint": "Download everything we have on you or delete your account. Details in the",
+    "privacyPolicy": "privacy policy",
+    "exportData": "Download my data",
+    "exportDataHint": "Saves all your workouts, programs, maxes, and badges as a JSON file.",
+    "exportButton": "Export as JSON",
+    "exporting": "Preparing…",
+    "exportDone": "Export downloaded",
+    "exportFailed": "Export failed",
+    "dangerZone": "Danger zone",
+    "deleteHint": "Account deletion is permanent. All your workouts, programs, and data are removed irreversibly.",
+    "deleteAccount": "Delete account",
+    "deleteConfirmHint": "To confirm, type your email address:",
+    "deleteAccountConfirm": "Delete account permanently",
+    "deleting": "Deleting…",
+    "deleteDone": "Your account and all data have been deleted.",
+    "deleteFailed": "Deletion failed"
   },
   "userNew": {
     "title": "यूज़र बनाएं",
@@ -634,5 +706,11 @@
     "showAiAnswer": "एआई जवाब दिखाएं",
     "resolve": "हल करें",
     "resolved": "हल किया गया"
+  },
+  "toast": {
+    "close": "बंद करने के लिए क्लिक करें"
+  },
+  "badge": {
+    "newBadge": "नया बैज"
   }
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "@/components/I18nProvider";
 import { getAchievements } from "@/lib/api";
 
 /**
@@ -15,6 +16,7 @@ import { getAchievements } from "@/lib/api";
 export default function BadgeWatcher() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations();
   const checkedFor = useRef<string | null>(null);
 
   useEffect(() => {
@@ -26,13 +28,13 @@ export default function BadgeWatcher() {
       try {
         const res = await getAchievements();
         for (const badge of res.newly_earned) {
-          toast(`${badge.icon} Neues Badge: ${badge.name}`, "success");
+          toast(`${badge.icon} ${t("badge.newBadge")}: ${badge.name}`, "success");
         }
       } catch {
         // silent — no badge state is non-critical
       }
     })();
-  }, [user, loading, toast]);
+  }, [user, loading, toast, t]);
 
   return null;
 }

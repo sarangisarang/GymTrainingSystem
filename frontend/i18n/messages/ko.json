@@ -65,7 +65,58 @@
     "ctaTitle": "테스트할 준비가 되셨나요?",
     "ctaText": "전체 소스 코드는 GitHub에 있습니다 — 또는 앱을 바로 사용해 보세요.",
     "ctaStart": "앱 실행 →",
-    "ctaRepo": "GitHub 저장소 →"
+    "ctaRepo": "GitHub 저장소 →",
+    "weekTag": "주",
+    "features": {
+      "f1": {
+        "title": "실시간 운동",
+        "desc": "운동 및 휴식 타이머, 음성 안내, 세트 추적을 제공하는 가이드 운동 모드입니다."
+      },
+      "f2": {
+        "title": "근력 예측",
+        "desc": "운동 데이터에 대한 선형 회귀로 목표 중량 도달 시점을 예측합니다."
+      },
+      "f3": {
+        "title": "AI 코치",
+        "desc": "Gemini AI가 최근 10회 세션을 분석하여 SSE로 맞춤형 추천을 전달합니다."
+      },
+      "f4": {
+        "title": "진행 상황 분석",
+        "desc": "PR을 강조한 근력 곡선, 주간 볼륨 막대 차트, 체중 추이를 제공합니다."
+      },
+      "f5": {
+        "title": "트레이닝 프로그램",
+        "desc": "1RM 기반으로 자동 생성되는 4주 프로그램 — 근력, 근비대 또는 지구력."
+      },
+      "f6": {
+        "title": "PDF 리포트",
+        "desc": "reportlab으로 서버에서 생성하는 주간 및 월간 리포트 — 볼륨, 새 PR, 연속 기록."
+      },
+      "f7": {
+        "title": "코치 대시보드",
+        "desc": "회원을 초대하고 운동을 확인하며 프로그램을 배정합니다. 역할 기반 접근 제어."
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "서비스 워커, 오프라인 지원, Android 및 iOS에 설치 가능."
+      },
+      "f9": {
+        "title": "인증 및 보안",
+        "desc": "JWT 인증, 소유권 확인, 보호된 엔드포인트의 401/403 처리."
+      },
+      "f10": {
+        "title": "운동 상태",
+        "desc": "PLANNED → IN_PROGRESS → COMPLETED, 소요 시간 추적 및 completed_at 타임스탬프 포함."
+      },
+      "f11": {
+        "title": "대시보드 분석",
+        "desc": "COMPLETED 운동만 집계: 평균 시간, 상위 운동, 주간 추세 — 정확하게 분리됨."
+      },
+      "f12": {
+        "title": "랜딩 페이지",
+        "desc": "기능, 기술 스택, 아키텍처 개요를 담은 발표용 홈 페이지입니다."
+      }
+    }
   },
   "login": {
     "title": "다시 오신 것을 환영합니다",
@@ -186,7 +237,11 @@
     "send": "보내기",
     "errorPrefix": "오류",
     "connectionErrorPrefix": "연결 오류",
-    "unknownError": "알 수 없는 오류"
+    "unknownError": "알 수 없는 오류",
+    "confidenceLabel": "신뢰도",
+    "confidenceTooltip": "답변이 회원님의 운동 데이터에 의해 얼마나 뒷받침되는지를 나타냅니다.",
+    "sourcesLabel": "출처",
+    "lowConfidenceWarning": "이 답변은 회원님의 운동 데이터로 충분히 뒷받침되지 않을 수 있습니다. 적용하기 전에 비판적으로 검토해 주세요."
   },
   "exercises": {
     "title": "운동",
@@ -466,7 +521,24 @@
     "nameUpdated": "이름이 변경되었습니다",
     "updateFailed": "업데이트에 실패했습니다",
     "passwordChanged": "비밀번호가 변경되었습니다",
-    "passwordChangeFailed": "비밀번호 변경에 실패했습니다"
+    "passwordChangeFailed": "비밀번호 변경에 실패했습니다",
+    "dataPrivacy": "Data & Privacy",
+    "dataPrivacyHint": "Download everything we have on you or delete your account. Details in the",
+    "privacyPolicy": "privacy policy",
+    "exportData": "Download my data",
+    "exportDataHint": "Saves all your workouts, programs, maxes, and badges as a JSON file.",
+    "exportButton": "Export as JSON",
+    "exporting": "Preparing…",
+    "exportDone": "Export downloaded",
+    "exportFailed": "Export failed",
+    "dangerZone": "Danger zone",
+    "deleteHint": "Account deletion is permanent. All your workouts, programs, and data are removed irreversibly.",
+    "deleteAccount": "Delete account",
+    "deleteConfirmHint": "To confirm, type your email address:",
+    "deleteAccountConfirm": "Delete account permanently",
+    "deleting": "Deleting…",
+    "deleteDone": "Your account and all data have been deleted.",
+    "deleteFailed": "Deletion failed"
   },
   "userNew": {
     "title": "사용자 생성",
@@ -634,5 +706,11 @@
     "showAiAnswer": "AI 답변 보기",
     "resolve": "해결",
     "resolved": "해결됨으로 표시"
+  },
+  "toast": {
+    "close": "클릭하여 닫기"
+  },
+  "badge": {
+    "newBadge": "새 배지"
   }
 }

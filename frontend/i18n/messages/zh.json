@@ -65,7 +65,58 @@
     "ctaTitle": "准备好测试了吗？",
     "ctaText": "完整源代码在 GitHub 上 — 或直接试用应用。",
     "ctaStart": "启动应用 →",
-    "ctaRepo": "GitHub 仓库 →"
+    "ctaRepo": "GitHub 仓库 →",
+    "weekTag": "周",
+    "features": {
+      "f1": {
+        "title": "实时训练",
+        "desc": "引导式训练模式，配有训练与休息计时器、语音提示和组数记录。"
+      },
+      "f2": {
+        "title": "力量预测",
+        "desc": "对你的训练数据进行线性回归——预测你何时能达到目标重量。"
+      },
+      "f3": {
+        "title": "AI 教练",
+        "desc": "Gemini AI 分析你最近 10 次训练，并通过 SSE 提供个性化建议。"
+      },
+      "f4": {
+        "title": "进度分析",
+        "desc": "突出显示 PR 的力量曲线、每周训练量柱状图和体重趋势。"
+      },
+      "f5": {
+        "title": "训练计划",
+        "desc": "根据你的 1RM 自动生成 4 周计划——力量、增肌或耐力。"
+      },
+      "f6": {
+        "title": "PDF 报告",
+        "desc": "服务器端使用 reportlab 生成每周与每月报告——训练量、新 PR、连续天数。"
+      },
+      "f7": {
+        "title": "教练面板",
+        "desc": "邀请学员、查看其训练并分配计划。基于角色的访问控制。"
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "Service worker、离线支持，可在 Android 与 iOS 上安装。"
+      },
+      "f9": {
+        "title": "认证与安全",
+        "desc": "JWT 认证、所有权校验，受保护接口返回 401/403。"
+      },
+      "f10": {
+        "title": "训练状态",
+        "desc": "PLANNED → IN_PROGRESS → COMPLETED，带时长记录和 completed_at 时间戳。"
+      },
+      "f11": {
+        "title": "仪表板分析",
+        "desc": "仅限 COMPLETED 训练：平均时长、热门动作、每周趋势——已正确隔离。"
+      },
+      "f12": {
+        "title": "落地页",
+        "desc": "可用于演示的首页，包含功能、技术栈和架构概览。"
+      }
+    }
   },
   "login": {
     "title": "欢迎回来",
@@ -186,7 +237,11 @@
     "send": "发送",
     "errorPrefix": "错误",
     "connectionErrorPrefix": "连接错误",
-    "unknownError": "未知错误"
+    "unknownError": "未知错误",
+    "confidenceLabel": "置信度",
+    "confidenceTooltip": "该回答有多大程度得到你训练数据的支持。",
+    "sourcesLabel": "来源",
+    "lowConfidenceWarning": "此回答可能未完全得到你训练数据的支持。在采纳前请审慎判断。"
   },
   "exercises": {
     "title": "动作",
@@ -466,7 +521,24 @@
     "nameUpdated": "姓名已更新",
     "updateFailed": "更新失败",
     "passwordChanged": "密码修改成功",
-    "passwordChangeFailed": "修改密码失败"
+    "passwordChangeFailed": "修改密码失败",
+    "dataPrivacy": "Data & Privacy",
+    "dataPrivacyHint": "Download everything we have on you or delete your account. Details in the",
+    "privacyPolicy": "privacy policy",
+    "exportData": "Download my data",
+    "exportDataHint": "Saves all your workouts, programs, maxes, and badges as a JSON file.",
+    "exportButton": "Export as JSON",
+    "exporting": "Preparing…",
+    "exportDone": "Export downloaded",
+    "exportFailed": "Export failed",
+    "dangerZone": "Danger zone",
+    "deleteHint": "Account deletion is permanent. All your workouts, programs, and data are removed irreversibly.",
+    "deleteAccount": "Delete account",
+    "deleteConfirmHint": "To confirm, type your email address:",
+    "deleteAccountConfirm": "Delete account permanently",
+    "deleting": "Deleting…",
+    "deleteDone": "Your account and all data have been deleted.",
+    "deleteFailed": "Deletion failed"
   },
   "userNew": {
     "title": "创建用户",
@@ -634,5 +706,11 @@
     "showAiAnswer": "查看 AI 回答",
     "resolve": "标记已解决",
     "resolved": "已标记为解决"
+  },
+  "toast": {
+    "close": "点击关闭"
+  },
+  "badge": {
+    "newBadge": "新徽章"
   }
 }

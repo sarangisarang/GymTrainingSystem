@@ -65,7 +65,58 @@
     "ctaTitle": "Bereit zum Testen?",
     "ctaText": "Kompletter Source-Code auf GitHub — oder App direkt ausprobieren.",
     "ctaStart": "App starten →",
-    "ctaRepo": "GitHub Repository →"
+    "ctaRepo": "GitHub Repository →",
+    "weekTag": "Woche",
+    "features": {
+      "f1": {
+        "title": "Live-Workout",
+        "desc": "Geführter Workout-Modus mit Trainings- und Pausen-Timern, Audiosignalen und Satz-Tracking."
+      },
+      "f2": {
+        "title": "Kraftprognose",
+        "desc": "Lineare Regression auf deinen Trainingsdaten — sagt voraus, wann du ein Zielgewicht erreichst."
+      },
+      "f3": {
+        "title": "KI-Coach",
+        "desc": "Gemini analysiert deine letzten 10 Sessions und liefert personalisierte Empfehlungen per SSE."
+      },
+      "f4": {
+        "title": "Fortschrittsanalyse",
+        "desc": "Kraftkurve mit PR-Hervorhebung, wöchentliches Volumen-Balkendiagramm und Körpergewichts-Trend."
+      },
+      "f5": {
+        "title": "Trainingsprogramme",
+        "desc": "Automatisch generierte 4-Wochen-Programme aus deinem 1RM — Kraft, Hypertrophie oder Ausdauer."
+      },
+      "f6": {
+        "title": "PDF-Berichte",
+        "desc": "Server-seitige Wochen- und Monatsberichte mit reportlab — Volumen, neue PRs, Streak."
+      },
+      "f7": {
+        "title": "Coach-Dashboard",
+        "desc": "Athleten einladen, ihre Workouts einsehen und Programme zuweisen. Rollenbasierter Zugriff."
+      },
+      "f8": {
+        "title": "PWA",
+        "desc": "Service Worker, Offline-Unterstützung, installierbar auf Android und iOS."
+      },
+      "f9": {
+        "title": "Auth & Sicherheit",
+        "desc": "JWT-Authentifizierung, Eigentümerprüfungen, 401/403 bei geschützten Endpunkten."
+      },
+      "f10": {
+        "title": "Workout-Status",
+        "desc": "PLANNED → IN_PROGRESS → COMPLETED mit Dauer-Tracking und einem completed_at-Zeitstempel."
+      },
+      "f11": {
+        "title": "Dashboard-Analysen",
+        "desc": "Nur COMPLETED-Workouts: durchschnittliche Dauer, Top-Übungen, Wochentrend — sauber isoliert."
+      },
+      "f12": {
+        "title": "Landingpage",
+        "desc": "Präsentationsfertige Startseite mit Features, Tech-Stack und Architektur-Überblick."
+      }
+    }
   },
   "login": {
     "title": "Willkommen zurück",
@@ -186,7 +237,11 @@
     "send": "Senden",
     "errorPrefix": "Fehler",
     "connectionErrorPrefix": "Verbindungsfehler",
-    "unknownError": "Unbekannter Fehler"
+    "unknownError": "Unbekannter Fehler",
+    "confidenceLabel": "Konfidenz",
+    "confidenceTooltip": "Wie gut die Antwort durch deine Trainingsdaten gestützt ist.",
+    "sourcesLabel": "Quellen",
+    "lowConfidenceWarning": "Diese Antwort ist möglicherweise nicht vollständig durch deine Trainingsdaten gestützt. Bitte prüfe sie kritisch, bevor du sie anwendest."
   },
   "exercises": {
     "title": "Übungen",
@@ -651,5 +706,11 @@
     "showAiAnswer": "KI-Antwort anzeigen",
     "resolve": "Erledigen",
     "resolved": "Als erledigt markiert"
+  },
+  "toast": {
+    "close": "Zum Schließen klicken"
+  },
+  "badge": {
+    "newBadge": "Neues Abzeichen"
   }
 }

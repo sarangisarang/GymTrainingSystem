@@ -5,19 +5,20 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { useTranslations } from "@/components/I18nProvider";
 
+// Titles/descriptions live in i18n (home.features.*); week tag drives the badge color.
 const FEATURES = [
-  { icon: "⏱️", title: "Live-Workout", desc: "Geführter Workout-Modus mit Trainings- & Pausentimer, Audio-Signale, Satz-Tracking.", tag: "Woche 2" },
-  { icon: "🔮", title: "Kraft-Prognose", desc: "Lineare Regression auf Trainingsdaten — prognostiziert das Erreichen des Zielgewichts.", tag: "Woche 2" },
-  { icon: "🤖", title: "KI-Coach", desc: "Gemini AI analysiert die letzten 10 Einheiten und liefert personalisierte Empfehlungen per SSE.", tag: "Woche 2" },
-  { icon: "📈", title: "Fortschrittsanalyse", desc: "Kraftkurve mit PR-Highlight, wöchentliches Volumen-Balkendiagramm, Körpergewichtstrend.", tag: "Woche 2" },
-  { icon: "📊", title: "Trainingsprogramme", desc: "Automatisch generierte 4-Wochen-Programme aus dem 1RM — Kraft, Hypertrophie oder Ausdauer.", tag: "Woche 2" },
-  { icon: "📄", title: "PDF-Berichte", desc: "Serverseitige Wochen- & Monatsberichte mit reportlab — Volumen, neue PRs, Streak.", tag: "Woche 2" },
-  { icon: "👨‍💼", title: "Coach-Dashboard", desc: "Athleten einladen, Workouts einsehen, Programme zuweisen. Rollenbasierter Zugriff.", tag: "Woche 3" },
-  { icon: "📱", title: "PWA", desc: "Service Worker, Offline-Unterstützung, auf Android & iOS installierbar.", tag: "Woche 2" },
-  { icon: "🔐", title: "Auth & Sicherheit", desc: "JWT-Authentifizierung, Eigentumscheck, 401/403 bei geschützten Endpoints.", tag: "Woche 1" },
-  { icon: "📋", title: "Workout-Status", desc: "PLANNED → IN_PROGRESS → COMPLETED mit Dauer-Tracking und completed_at Zeitstempel.", tag: "Woche 3" },
-  { icon: "🏠", title: "Dashboard-Analytics", desc: "Nur COMPLETED-Workouts: Ø Dauer, Top-Übungen, Wochentrend — korrekt isoliert.", tag: "Woche 3" },
-  { icon: "🌐", title: "Landing Page", desc: "Präsentationsfertige Startseite mit Features, Tech-Stack und Architekturübersicht.", tag: "Woche 3" },
+  { icon: "⏱️", key: "f1", week: 2 },
+  { icon: "🔮", key: "f2", week: 2 },
+  { icon: "🤖", key: "f3", week: 2 },
+  { icon: "📈", key: "f4", week: 2 },
+  { icon: "📊", key: "f5", week: 2 },
+  { icon: "📄", key: "f6", week: 2 },
+  { icon: "👨‍💼", key: "f7", week: 3 },
+  { icon: "📱", key: "f8", week: 2 },
+  { icon: "🔐", key: "f9", week: 1 },
+  { icon: "📋", key: "f10", week: 3 },
+  { icon: "🏠", key: "f11", week: 3 },
+  { icon: "🌐", key: "f12", week: 3 },
 ];
 
 const BACKEND = ["FastAPI", "SQLAlchemy", "PostgreSQL", "MongoDB (Logs)", "JWT (python-jose)", "Argon2 (passlib)", "Pydantic v2", "reportlab", "httpx (Gemini SSE)", "uvicorn"];
@@ -107,20 +108,20 @@ export default function HomePage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
-            <div key={f.title}
+            <div key={f.key}
               className="group relative overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 p-5 hover:border-indigo-500/50 transition-all duration-300">
               <div className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full bg-indigo-600/5 blur-xl group-hover:bg-indigo-600/10 transition-all" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-2xl">{f.icon}</span>
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    f.tag === "Woche 1" ? "bg-neutral-800 text-neutral-400" :
-                    f.tag === "Woche 2" ? "bg-blue-500/15 text-blue-400 border border-blue-500/20" :
+                    f.week === 1 ? "bg-neutral-800 text-neutral-400" :
+                    f.week === 2 ? "bg-blue-500/15 text-blue-400 border border-blue-500/20" :
                     "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20"
-                  }`}>{f.tag}</span>
+                  }`}>{t("home.weekTag")} {f.week}</span>
                 </div>
-                <h3 className="font-bold text-neutral-100 text-sm mb-1">{f.title}</h3>
-                <p className="text-xs text-neutral-500 leading-relaxed">{f.desc}</p>
+                <h3 className="font-bold text-neutral-100 text-sm mb-1">{t(`home.features.${f.key}.title`)}</h3>
+                <p className="text-xs text-neutral-500 leading-relaxed">{t(`home.features.${f.key}.desc`)}</p>
               </div>
             </div>
           ))}
