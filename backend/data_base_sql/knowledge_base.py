@@ -1,0 +1,70 @@
+"""Curated fitness knowledge base for Retrieval-Augmented Generation (Issue #32).
+
+A small, hand-written set of evidence-based fitness facts (training, muscles,
+nutrition, recovery). These are indexed into a vector collection and retrieved
+as context for the KI-Coach so its advice is grounded in real domain knowledge
+instead of being free-form.
+
+Written in German (the project's primary language); the multilingual coach
+translates the final answer into the user's language.
+"""
+from __future__ import annotations
+
+KNOWLEDGE: list[dict[str, str]] = [
+    {"id": "kb-progressive-overload", "topic": "Training",
+     "text": "Progressive Überlastung ist das wichtigste Prinzip für Muskel- und Kraftaufbau: Steigere über die Zeit schrittweise Gewicht, Wiederholungen oder Sätze. Ohne stetige Steigerung stagniert der Fortschritt."},
+    {"id": "kb-rep-strength", "topic": "Wiederholungsbereiche",
+     "text": "Für maximale Kraft trainiert man im Bereich von 1–5 Wiederholungen bei 85–100% des 1RM mit langen Pausen (3–5 Minuten)."},
+    {"id": "kb-rep-hypertrophy", "topic": "Wiederholungsbereiche",
+     "text": "Für Muskelaufbau (Hypertrophie) sind 6–12 Wiederholungen bei 67–85% des 1RM optimal, mit Pausen von 60–120 Sekunden und nahe am Muskelversagen."},
+    {"id": "kb-rep-endurance", "topic": "Wiederholungsbereiche",
+     "text": "Für Kraftausdauer trainiert man 15+ Wiederholungen bei unter 67% des 1RM mit kurzen Pausen (unter 60 Sekunden)."},
+    {"id": "kb-compound", "topic": "Übungsauswahl",
+     "text": "Grundübungen (Kniebeuge, Kreuzheben, Bankdrücken, Schulterdrücken, Klimmzug) trainieren mehrere Muskelgruppen gleichzeitig und sind die effizientesten Übungen für Kraft und Masse."},
+    {"id": "kb-isolation", "topic": "Übungsauswahl",
+     "text": "Isolationsübungen (Bizepscurls, Trizepsdrücken, Beinstrecker) trainieren einen einzelnen Muskel und eignen sich, um Schwachstellen gezielt nachzubelasten."},
+    {"id": "kb-volume", "topic": "Trainingsvolumen",
+     "text": "Pro Muskelgruppe und Woche sind etwa 10–20 harte Arbeitssätze ein guter Richtwert für Muskelaufbau. Mehr ist nicht automatisch besser und kann die Erholung überfordern."},
+    {"id": "kb-frequency", "topic": "Trainingsfrequenz",
+     "text": "Jede Muskelgruppe 2× pro Woche zu trainieren führt meist zu besserem Aufbau als nur 1× pro Woche, weil die Muskelproteinsynthese öfter angeregt wird."},
+    {"id": "kb-rest", "topic": "Erholung",
+     "text": "Muskeln wachsen in der Erholung, nicht im Training. Eine Muskelgruppe braucht etwa 48 Stunden Pause, bevor sie wieder schwer belastet wird."},
+    {"id": "kb-sleep", "topic": "Erholung",
+     "text": "Schlaf ist der wichtigste Erholungsfaktor: 7–9 Stunden pro Nacht unterstützen Hormonhaushalt, Regeneration und Muskelaufbau. Schlafmangel bremst den Fortschritt deutlich."},
+    {"id": "kb-protein", "topic": "Ernährung",
+     "text": "Für Muskelaufbau sind etwa 1,6–2,2 g Protein pro Kilogramm Körpergewicht und Tag empfehlenswert, gleichmäßig über mehrere Mahlzeiten verteilt."},
+    {"id": "kb-calories-surplus", "topic": "Ernährung",
+     "text": "Muskelaufbau gelingt am besten in einem leichten Kalorienüberschuss (etwa +250–500 kcal/Tag). Ein zu großer Überschuss führt vor allem zu Fettzunahme."},
+    {"id": "kb-calories-deficit", "topic": "Ernährung",
+     "text": "Fettabbau erfordert ein Kaloriendefizit. Ein moderates Defizit (etwa 300–500 kcal/Tag) plus Krafttraining und ausreichend Protein erhält dabei die Muskelmasse."},
+    {"id": "kb-hydration", "topic": "Ernährung",
+     "text": "Ausreichend Wasser (etwa 30–40 ml pro kg Körpergewicht) verbessert Leistung und Konzentration. Schon leichte Dehydrierung senkt die Trainingsleistung."},
+    {"id": "kb-warmup", "topic": "Technik",
+     "text": "Ein Aufwärmen mit leichten Aufwärmsätzen vor den Arbeitssätzen bereitet Gelenke und Nervensystem vor und senkt das Verletzungsrisiko."},
+    {"id": "kb-form", "topic": "Technik",
+     "text": "Saubere Technik mit voller Bewegungsamplitude ist wichtiger als hohes Gewicht. Schlechte Form mit zu viel Gewicht erhöht das Verletzungsrisiko und reduziert den Reiz auf den Zielmuskel."},
+    {"id": "kb-progressive-deload", "topic": "Periodisierung",
+     "text": "Eine Deload-Woche mit reduziertem Volumen oder Gewicht alle 4–8 Wochen hilft, Übertraining vorzubeugen und Ermüdung abzubauen."},
+    {"id": "kb-legs", "topic": "Muskelgruppen",
+     "text": "Die Beinmuskulatur umfasst Quadrizeps (vordere Oberschenkel), Beinbeuger (hintere Oberschenkel), Gesäß und Waden. Kniebeugen und Kreuzheben sind die wichtigsten Beinübungen."},
+    {"id": "kb-back", "topic": "Muskelgruppen",
+     "text": "Der Rücken besteht u.a. aus Latissimus, Trapezmuskel und Rückenstreckern. Klimmzüge und Rudern bauen einen breiten, starken Rücken auf."},
+    {"id": "kb-chest", "topic": "Muskelgruppen",
+     "text": "Die Brustmuskulatur wird durch Drückbewegungen wie Bankdrücken, Schrägbankdrücken und Liegestütze trainiert; Flys setzen einen zusätzlichen Dehnreiz."},
+    {"id": "kb-progress-tracking", "topic": "Fortschritt",
+     "text": "Fortschritt sollte gemessen werden: Trainingsgewichte, Wiederholungen, Körpergewicht und Fotos zeigen objektiv, ob das Programm funktioniert."},
+    {"id": "kb-plateau", "topic": "Fortschritt",
+     "text": "Bei einem Plateau helfen: Übungen variieren, Volumen oder Intensität anpassen, eine Deload-Woche einlegen oder Ernährung und Schlaf überprüfen."},
+    {"id": "kb-1rm", "topic": "Kennzahlen",
+     "text": "Der 1RM (One-Rep-Max) ist das Maximalgewicht für eine saubere Wiederholung. Er lässt sich z.B. mit der Epley-Formel aus Gewicht und Wiederholungen schätzen und dient zur Steuerung der Trainingsintensität."},
+    {"id": "kb-doms", "topic": "Erholung",
+     "text": "Muskelkater (DOMS) tritt 24–72 Stunden nach ungewohnter Belastung auf und ist kein verlässlicher Indikator für ein gutes Training. Leichte Bewegung kann ihn lindern."},
+    {"id": "kb-cardio", "topic": "Ausdauer",
+     "text": "Moderates Cardio unterstützt Herzgesundheit und Erholung und steht Muskelaufbau bei vernünftigem Umfang nicht im Weg. Sehr hohes Ausdauervolumen kann den Kraftaufbau beeinträchtigen."},
+    {"id": "kb-beginner", "topic": "Trainingsplanung",
+     "text": "Anfänger profitieren von einem einfachen Ganzkörperplan 3× pro Woche mit Grundübungen. Komplexe Splits sind erst bei fortgeschrittenem Niveau nötig."},
+    {"id": "kb-split", "topic": "Trainingsplanung",
+     "text": "Gängige Splits sind Ganzkörper, Ober-/Unterkörper (Upper/Lower) und Push/Pull/Beine. Die beste Aufteilung ist die, die zur Wochenfrequenz und Erholung passt."},
+    {"id": "kb-injury", "topic": "Sicherheit",
+     "text": "Scharfe oder stechende Schmerzen sind ein Warnsignal — Training abbrechen statt 'durchziehen'. Ein leichtes Brennen im Muskel ist dagegen normal."},
+]

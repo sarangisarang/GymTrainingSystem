@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from data_base_sql.database import get_db
+from data_base_sql.knowledge_store import search_knowledge
 from data_base_sql.models import Exercise, Workout
 from fastAPI_functions.security import get_current_user
 
@@ -238,8 +239,26 @@ def _meta_event(result: dict) -> str:
     return f"data: {META_SENTINEL}{json.dumps(result, ensure_ascii=False)}\n\n"
 
 
+def _knowledge_block(message: str) -> str:
+    """Retrieve relevant fitness facts (RAG, #32) and format them for the prompt.
+
+    Returns an empty string when the vector store is unavailable or nothing
+    relevant is found, so the coach keeps working without retrieved knowledge.
+    """
+    hits = search_knowledge(message, limit=3)
+    facts = [h["document"] for h in hits if h.get("document")]
+    if not facts:
+        return ""
+    joined = "\n".join(f"- {f}" for f in facts)
+    return (
+        "Gesichertes Fitness-Fachwissen (nutze es, wenn es zur Frage passt; "
+        "erfinde keine Fakten darüber hinaus):\n"
+        f"{joined}\n\n"
+    )
+
+
 async def _stream_gemini(
-    message: str, context: str, tag_map: dict[str, str]
+    message: str, context: str, tag_map: dict[str, str], knowledge: str = ""
 ) -> AsyncIterator[str]:
     has_data = bool(tag_map)
 
@@ -258,6 +277,7 @@ async def _stream_gemini(
 
     full_prompt = (
         f"{SYSTEM_PROMPT}\n\n"
+        f"{knowledge}"
         f"Trainingsdaten des Athleten (letzte 10 Einheiten):\n\n{context}\n\n"
         f"Frage: {message}"
     )
@@ -375,8 +395,10 @@ async def ai_coach(
             detail="KI-Coach ist nicht konfiguriert. GEMINI_API_KEY fehlt.",
         )
 
+    knowledge = _knowledge_block(body.message)
+
     return StreamingResponse(
-        _stream_gemini(body.message, context, tag_map),
+        _stream_gemini(body.message, context, tag_map, knowledge),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
