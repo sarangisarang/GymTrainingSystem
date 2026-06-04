@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Protected from "@/components/Protected";
 import { useAuth } from "@/components/AuthProvider";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   generateNextCycle,
   generateProgram,
@@ -54,6 +55,7 @@ export default function ProgramsPage() {
 }
 
 function ProgramsInner() {
+  const t = useTranslations();
   const { user } = useAuth();
   const [exercises, setExercises] = useState<ExerciseRead[]>([]);
   const [maxes, setMaxes] = useState<StrengthMaxRead[]>([]);
@@ -102,7 +104,7 @@ function ProgramsInner() {
         ]);
       }
     } catch (e: any) {
-      setErr(e?.message || "Failed to load programs");
+      setErr(e?.message || t("programs.loadError"));
     } finally {
       setLoading(false);
     }
@@ -161,7 +163,7 @@ function ProgramsInner() {
   async function persistMaxes() {
     const validRows = rows.filter((r) => r.exercise_id && Number(r.one_rep_max) > 0);
     if (validRows.length === 0) {
-      throw new Error("Please add at least one valid exercise max.");
+      throw new Error(t("programs.noValidMax"));
     }
     for (const row of validRows) {
       await saveStrengthMax({
@@ -180,10 +182,10 @@ function ProgramsInner() {
     setOk(null);
     try {
       await persistMaxes();
-      setOk("Max values saved.");
+      setOk(t("programs.maxesSaved"));
       await loadAll();
     } catch (e: any) {
-      setErr(e?.message || "Failed to save max values");
+      setErr(e?.message || t("programs.saveError"));
     } finally {
       setSaving(false);
     }
@@ -201,10 +203,10 @@ function ProgramsInner() {
         training_days_per_week: trainingDays,
         exercise_ids: validRows.map((x) => x.exercise_id),
       });
-      setOk("4-week plan generated successfully.");
+      setOk(t("programs.planGenerated"));
       await loadAll();
     } catch (e: any) {
-      setErr(e?.message || "Failed to generate program");
+      setErr(e?.message || t("programs.generateError"));
     } finally {
       setSaving(false);
     }
@@ -226,10 +228,10 @@ function ProgramsInner() {
           result: row.result,
         })),
       });
-      setOk("Next cycle generated successfully.");
+      setOk(t("programs.nextCycleGenerated"));
       await loadAll();
     } catch (e: any) {
-      setErr(e?.message || "Failed to generate next cycle");
+      setErr(e?.message || t("programs.nextCycleError"));
     } finally {
       setSaving(false);
     }
@@ -240,33 +242,33 @@ function ProgramsInner() {
       <div className="card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="h1">📈 Smart Programs</h1>
+            <h1 className="h1">📈 {t("programs.title")}</h1>
             <p className="muted mt-2">
-              Save one-rep max values, generate a 4-week plan, and include percentages, rest times, tempo and duration formulas automatically.
+              {t("programs.subtitle")}
             </p>
           </div>
           <button className="btn-ghost" type="button" onClick={loadAll}>
-            Refresh
+            {t("common.refresh")}
           </button>
         </div>
       </div>
 
-      {loading ? <p className="muted">Loading…</p> : null}
+      {loading ? <p className="muted">{t("programs.loading")}</p> : null}
       {err ? <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">{err}</div> : null}
       {ok ? <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-200">{ok}</div> : null}
 
       <div className="card p-6 space-y-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="label">Goal</label>
+            <label className="label">{t("programs.goal")}</label>
             <select className="input" value={goal} onChange={(e) => setGoal(e.target.value as Goal)}>
-              <option value="strength">Strength</option>
-              <option value="hypertrophy">Hypertrophy</option>
-              <option value="endurance">Endurance</option>
+              <option value="strength">{t("programs.goalStrength")}</option>
+              <option value="hypertrophy">{t("programs.goalHypertrophy")}</option>
+              <option value="endurance">{t("programs.goalEndurance")}</option>
             </select>
           </div>
           <div>
-            <label className="label">Training days / week</label>
+            <label className="label">{t("programs.trainingDays")}</label>
             <input
               className="input"
               type="number"
@@ -277,24 +279,24 @@ function ProgramsInner() {
             />
           </div>
           <div>
-            <label className="label">Cycle start date</label>
+            <label className="label">{t("programs.cycleStart")}</label>
             <input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="h2">Exercise maxes</h2>
-            <button className="btn-ghost" type="button" onClick={addRow}>+ Add</button>
+            <h2 className="h2">{t("programs.exerciseMaxes")}</h2>
+            <button className="btn-ghost" type="button" onClick={addRow}>{t("programs.add")}</button>
           </div>
 
-          {rows.length === 0 ? <p className="muted">No rows yet.</p> : null}
+          {rows.length === 0 ? <p className="muted">{t("programs.noRows")}</p> : null}
 
           {rows.map((row, index) => (
             <div key={index} className="rounded-2xl border border-neutral-800 p-4">
               <div className="grid gap-3 md:grid-cols-5">
                 <div>
-                  <label className="label">Exercise</label>
+                  <label className="label">{t("programs.exercise")}</label>
                   <select
                     className="input"
                     value={row.exercise_id}
@@ -308,7 +310,7 @@ function ProgramsInner() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">1RM / Max</label>
+                  <label className="label">{t("programs.oneRmMax")}</label>
                   <input
                     className="input"
                     type="number"
@@ -319,7 +321,7 @@ function ProgramsInner() {
                   />
                 </div>
                 <div>
-                  <label className="label">Increment</label>
+                  <label className="label">{t("programs.increment")}</label>
                   <input
                     className="input"
                     type="number"
@@ -330,29 +332,29 @@ function ProgramsInner() {
                   />
                 </div>
                 <div>
-                  <label className="label">Load mode</label>
+                  <label className="label">{t("programs.loadMode")}</label>
                   <select
                     className="input"
                     value={row.load_mode}
                     onChange={(e) => updateRow(index, { load_mode: e.target.value as LoadMode })}
                   >
-                    <option value="TOTAL">Total weight</option>
-                    <option value="PER_HAND">Per hand / dumbbell</option>
+                    <option value="TOTAL">{t("programs.totalWeight")}</option>
+                    <option value="PER_HAND">{t("programs.perHand")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="label">Next cycle result</label>
+                  <label className="label">{t("programs.nextCycleResult")}</label>
                   <select
                     className="input"
                     value={row.result}
                     onChange={(e) => updateRow(index, { result: e.target.value as ProgressResult })}
                   >
-                    <option value="SUCCESS">Completed well</option>
-                    <option value="REPEAT">Repeat same max</option>
-                    <option value="FAIL">Too hard / failed</option>
+                    <option value="SUCCESS">{t("programs.resultSuccess")}</option>
+                    <option value="REPEAT">{t("programs.resultRepeat")}</option>
+                    <option value="FAIL">{t("programs.resultFail")}</option>
                   </select>
                   <button className="mt-2 text-xs text-neutral-400 hover:underline" type="button" onClick={() => removeRow(index)}>
-                    Remove
+                    {t("programs.remove")}
                   </button>
                 </div>
               </div>
@@ -362,39 +364,39 @@ function ProgramsInner() {
 
         <div className="flex flex-wrap gap-2">
           <button className="btn-ghost" type="button" onClick={onSaveMaxes} disabled={saving}>
-            {saving ? "Saving…" : "Save maxes"}
+            {saving ? t("programs.saving") : t("programs.saveMaxes")}
           </button>
           <button className="btn-primary" type="button" onClick={onGenerateProgram} disabled={saving}>
-            Generate 4-week program
+            {t("programs.generate4Week")}
           </button>
           <button className="btn-ghost" type="button" onClick={onGenerateNextCycle} disabled={saving || !latestProgram}>
-            Generate next cycle
+            {t("programs.generateNextCycle")}
           </button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="card p-6">
-          <h2 className="h2">Saved max values</h2>
+          <h2 className="h2">{t("programs.savedMaxValues")}</h2>
           {maxes.length === 0 ? (
-            <p className="muted mt-3">No maxes saved yet.</p>
+            <p className="muted mt-3">{t("programs.noMaxesSaved")}</p>
           ) : (
             <div className="mt-4 overflow-auto">
               <table className="w-full text-sm">
                 <thead className="text-left text-neutral-400">
                   <tr>
-                    <th className="py-2">Exercise</th>
-                    <th className="py-2">1RM</th>
-                    <th className="py-2">Training max</th>
-                    <th className="py-2">Mode</th>
+                    <th className="py-2">{t("programs.exercise")}</th>
+                    <th className="py-2">{t("programs.oneRm")}</th>
+                    <th className="py-2">{t("programs.trainingMax")}</th>
+                    <th className="py-2">{t("programs.mode")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {maxes.map((max) => (
                     <tr key={max.id} className="border-t border-neutral-800">
                       <td className="py-2">{exName(max.exercise_id)}</td>
-                      <td className="py-2">{formatNum(max.one_rep_max)} kg</td>
-                      <td className="py-2">{formatNum(max.training_max)} kg</td>
+                      <td className="py-2">{formatNum(max.one_rep_max)} {t("common.kg")}</td>
+                      <td className="py-2">{formatNum(max.training_max)} {t("common.kg")}</td>
                       <td className="py-2">{max.load_mode}</td>
                     </tr>
                   ))}
@@ -405,18 +407,18 @@ function ProgramsInner() {
         </div>
 
         <div className="card p-6">
-          <h2 className="h2">Generated cycles</h2>
+          <h2 className="h2">{t("programs.generatedCycles")}</h2>
           {programs.length === 0 ? (
-            <p className="muted mt-3">No programs generated yet.</p>
+            <p className="muted mt-3">{t("programs.noProgramsGenerated")}</p>
           ) : (
             <div className="mt-4 space-y-3">
               {programs.slice(0, 5).map((program) => (
                 <div key={program.id} className="rounded-2xl border border-neutral-800 p-4 text-sm">
-                  <p className="font-medium capitalize">{program.goal}</p>
+                  <p className="font-medium capitalize">{t(`programs.goal${program.goal[0].toUpperCase()+program.goal.slice(1)}`)}</p>
                   <p className="muted mt-1">
                     {program.start_date} → {program.end_date}
                   </p>
-                  <p className="muted mt-1">{program.items.length} prescriptions</p>
+                  <p className="muted mt-1">{program.items.length} {t("programs.prescriptions")}</p>
                 </div>
               ))}
             </div>
@@ -427,13 +429,13 @@ function ProgramsInner() {
       <div className="card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="h2">Latest program preview</h2>
+            <h2 className="h2">{t("programs.latestPreview")}</h2>
             {latestProgram ? (
               <p className="muted mt-2 capitalize">
-                {latestProgram.goal} • {latestProgram.start_date} → {latestProgram.end_date}
+                {t(`programs.goal${latestProgram.goal[0].toUpperCase()+latestProgram.goal.slice(1)}`)} • {latestProgram.start_date} → {latestProgram.end_date}
               </p>
             ) : (
-              <p className="muted mt-2">Generate a program to see the schedule.</p>
+              <p className="muted mt-2">{t("programs.generateToSee")}</p>
             )}
           </div>
         </div>
@@ -442,43 +444,43 @@ function ProgramsInner() {
           <div className="mt-6 space-y-6">
             {groupedByWeek.map((group) => (
               <div key={group.week}>
-                <h3 className="text-lg font-semibold">Week {group.week}</h3>
+                <h3 className="text-lg font-semibold">{`${t("programs.week")} ${group.week}`}</h3>
                 <div className="mt-3 overflow-auto">
                   <table className="w-full text-sm">
                     <thead className="text-left text-neutral-400">
                       <tr>
-                        <th className="py-2">Day</th>
-                        <th className="py-2">Exercise</th>
-                        <th className="py-2">Sets</th>
-                        <th className="py-2">Reps</th>
+                        <th className="py-2">{t("programs.colDay")}</th>
+                        <th className="py-2">{t("programs.colExercise")}</th>
+                        <th className="py-2">{t("programs.colSets")}</th>
+                        <th className="py-2">{t("programs.colReps")}</th>
                         <th className="py-2">%</th>
-                        <th className="py-2">Weight</th>
-                        <th className="py-2">Rest</th>
-                        <th className="py-2">Tempo</th>
-                        <th className="py-2">Duration</th>
-                        <th className="py-2">Notes</th>
+                        <th className="py-2">{t("programs.colWeight")}</th>
+                        <th className="py-2">{t("programs.colRest")}</th>
+                        <th className="py-2">{t("programs.colTempo")}</th>
+                        <th className="py-2">{t("programs.colDuration")}</th>
+                        <th className="py-2">{t("programs.colNotes")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {group.items.map((item) => (
                         <tr key={item.id} className="border-t border-neutral-800 align-top">
-                          <td className="py-2">Day {item.day_number}</td>
+                          <td className="py-2">{`${t("programs.day")} ${item.day_number}`}</td>
                           <td className="py-2 font-medium">{exName(item.exercise_id)}</td>
                           <td className="py-2">{item.sets}</td>
                           <td className="py-2">{item.reps}</td>
                           <td className="py-2">{formatNum(item.percentage)}%</td>
                           <td className="py-2">
                             {item.weight_per_hand != null
-                              ? `${formatNum(item.weight_per_hand)} kg / hand (${formatNum(item.total_weight)} kg total)`
-                              : `${formatNum(item.total_weight ?? item.calculated_weight)} kg`}
+                              ? `${formatNum(item.weight_per_hand)} ${t("common.kg")} / ${t("programs.hand")} (${formatNum(item.total_weight)} ${t("common.kg")} ${t("programs.total")})`
+                              : `${formatNum(item.total_weight ?? item.calculated_weight)} ${t("common.kg")}`}
                           </td>
                           <td className="py-2">{item.rest_seconds}s</td>
                           <td className="py-2 whitespace-nowrap">
                             {item.concentric_seconds}-{item.pause_seconds}-{item.eccentric_seconds}
                           </td>
                           <td className="py-2 whitespace-nowrap">
-                            {formatDuration(item.estimated_set_duration_seconds)} / set
-                            <div className="text-xs text-neutral-500">{formatDuration(item.estimated_total_duration_seconds)} total</div>
+                            {`${formatDuration(item.estimated_set_duration_seconds)} ${t("programs.perSet")}`}
+                            <div className="text-xs text-neutral-500">{`${formatDuration(item.estimated_total_duration_seconds)} ${t("programs.totalSuffix")}`}</div>
                           </td>
                           <td className="py-2 text-neutral-400">{item.notes || "-"}</td>
                         </tr>

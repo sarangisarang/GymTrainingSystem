@@ -5,6 +5,7 @@ import Link from "next/link";
 import Protected from "@/components/Protected";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   becomeCoach,
   inviteAthlete,
@@ -26,6 +27,7 @@ export default function CoachDashboardPage() {
 function CoachDashboardInner() {
   const { user, refreshMe } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations();
   const [athletes, setAthletes] = useState<AthleteProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -46,7 +48,7 @@ function CoachDashboardInner() {
     try {
       setAthletes(await getCoachAthletes());
     } catch {
-      toast("Failed to load athletes", "error");
+      toast(t("coachDashboard.loadAthletesFailed"), "error");
     } finally {
       setLoading(false);
     }
@@ -56,9 +58,9 @@ function CoachDashboardInner() {
     try {
       await becomeCoach();
       await refreshMe();
-      toast("Du bist jetzt Coach!", "success");
+      toast(t("coachDashboard.becameCoach"), "success");
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Error", "error");
+      toast(e instanceof Error ? e.message : t("coachDashboard.error"), "error");
     }
   }
 
@@ -70,23 +72,23 @@ function CoachDashboardInner() {
       const athlete = await inviteAthlete(inviteEmail.trim());
       setAthletes((prev) => [...prev.filter((a) => a.athlete_id !== athlete.athlete_id), athlete]);
       setInviteEmail("");
-      toast(`${athlete.email} hinzugefügt`, "success");
+      toast(`${athlete.email} ${t("coachDashboard.addedSuffix")}`, "success");
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Error", "error");
+      toast(e instanceof Error ? e.message : t("coachDashboard.error"), "error");
     } finally {
       setInviting(false);
     }
   }
 
   async function handleRemove(athleteId: string) {
-    if (!confirm("Athlete entfernen?")) return;
+    if (!confirm(t("coachDashboard.removeConfirm"))) return;
     try {
       await removeAthlete(athleteId);
       setAthletes((prev) => prev.filter((a) => a.athlete_id !== athleteId));
       if (selected?.athlete_id === athleteId) setSelected(null);
-      toast("Entfernt", "success");
+      toast(t("coachDashboard.removed"), "success");
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Error", "error");
+      toast(e instanceof Error ? e.message : t("coachDashboard.error"), "error");
     }
   }
 
@@ -96,7 +98,7 @@ function CoachDashboardInner() {
     try {
       setAthleteWorkouts(await getAthleteWorkouts(athlete.athlete_id));
     } catch {
-      toast("Workouts konnten nicht geladen werden", "error");
+      toast(t("coachDashboard.workoutsLoadFailed"), "error");
     } finally {
       setLoadingWorkouts(false);
     }
@@ -107,16 +109,16 @@ function CoachDashboardInner() {
       <div className="space-y-6">
         <div className="card p-8 text-center">
           <div className="text-5xl">👨‍💼</div>
-          <h1 className="h1 mt-4">Coach-Dashboard</h1>
+          <h1 className="h1 mt-4">{t("coachDashboard.title")}</h1>
           <p className="muted mt-2">
-            Als Coach kannst du Athleten betreuen, ihre Workouts einsehen und Programme zuweisen.
+            {t("coachDashboard.gateDesc")}
           </p>
           <button
             type="button"
             className="btn-primary mt-6"
             onClick={handleBecomeCoach}
           >
-            Coach werden
+            {t("coachDashboard.becomeCoach")}
           </button>
         </div>
       </div>
@@ -128,16 +130,16 @@ function CoachDashboardInner() {
       <div className="card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="h1">Coach-Dashboard</h1>
-            <p className="muted mt-1">{athletes.length} Athlet{athletes.length !== 1 ? "en" : ""} betreut</p>
+            <h1 className="h1">{t("coachDashboard.title")}</h1>
+            <p className="muted mt-1">{athletes.length} {t("coachDashboard.athletesManaged")}</p>
           </div>
-          <Link href="/programs" className="btn-ghost">Programme</Link>
+          <Link href="/programs" className="btn-ghost">{t("nav.programs")}</Link>
         </div>
       </div>
 
       {/* Invite */}
       <div className="card p-5">
-        <h2 className="mb-3 font-semibold">Athleten einladen</h2>
+        <h2 className="mb-3 font-semibold">{t("coachDashboard.inviteHeading")}</h2>
         <form onSubmit={handleInvite} className="flex gap-2">
           <input
             type="email"
@@ -148,7 +150,7 @@ function CoachDashboardInner() {
             required
           />
           <button type="submit" className="btn-primary" disabled={inviting}>
-            {inviting ? "…" : "Einladen"}
+            {inviting ? "…" : t("coachDashboard.invite")}
           </button>
         </form>
       </div>
@@ -159,7 +161,7 @@ function CoachDashboardInner() {
         </div>
       ) : athletes.length === 0 ? (
         <div className="card p-6 text-center">
-          <p className="muted">Noch keine Athleten. Lade jemanden ein.</p>
+          <p className="muted">{t("coachDashboard.noAthletes")}</p>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
@@ -178,9 +180,9 @@ function CoachDashboardInner() {
                     <p className="font-medium">{a.name || a.email}</p>
                     <p className="muted text-xs">{a.email}</p>
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-neutral-400">
-                      <span>{a.completed_workouts} abgeschlossen</span>
-                      <span>{parseFloat(a.total_volume_kg).toLocaleString()} kg</span>
-                      {a.last_workout_date && <span>Letztes: {a.last_workout_date}</span>}
+                      <span>{a.completed_workouts} {t("coachDashboard.completed")}</span>
+                      <span>{parseFloat(a.total_volume_kg).toLocaleString()} {t("common.kg")}</span>
+                      {a.last_workout_date && <span>{t("coachDashboard.last")} {a.last_workout_date}</span>}
                     </div>
                   </div>
                   <button
@@ -188,7 +190,7 @@ function CoachDashboardInner() {
                     className="shrink-0 text-xs text-red-400 hover:text-red-300"
                     onClick={(e) => { e.stopPropagation(); handleRemove(a.athlete_id); }}
                   >
-                    Entfernen
+                    {t("coachDashboard.remove")}
                   </button>
                 </div>
               </div>
@@ -198,16 +200,16 @@ function CoachDashboardInner() {
           {/* Athlete workouts */}
           <div className="card p-5">
             {!selected ? (
-              <p className="muted text-center">Athleten auswählen um Workouts zu sehen.</p>
+              <p className="muted text-center">{t("coachDashboard.selectAthlete")}</p>
             ) : loadingWorkouts ? (
               <div className="animate-pulse space-y-2">
                 {[1, 2, 3].map((i) => <div key={i} className="h-12 rounded-lg bg-neutral-800" />)}
               </div>
             ) : (
               <>
-                <h2 className="mb-3 font-semibold">{selected.name || selected.email} — Workouts</h2>
+                <h2 className="mb-3 font-semibold">{selected.name || selected.email} — {t("coachDashboard.athleteWorkouts")}</h2>
                 {athleteWorkouts.length === 0 ? (
-                  <p className="muted text-sm">Noch keine Workouts.</p>
+                  <p className="muted text-sm">{t("coachDashboard.noWorkoutsYet")}</p>
                 ) : (
                   <div className="space-y-2">
                     {athleteWorkouts.map((w) => {
@@ -218,15 +220,15 @@ function CoachDashboardInner() {
                         <div key={w.id} className="flex items-center justify-between rounded-lg border border-neutral-800 px-3 py-2 text-sm">
                           <div>
                             <span className="text-neutral-200">{w.date}</span>
-                            <span className="ml-2 text-neutral-500">{w.workout_exercises.length} Übungen</span>
+                            <span className="ml-2 text-neutral-500">{w.workout_exercises.length} {t("common.exercises")}</span>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-neutral-400">
-                            {vol > 0 && <span>{vol.toLocaleString()} kg</span>}
+                            {vol > 0 && <span>{vol.toLocaleString()} {t("common.kg")}</span>}
                             <span className={`rounded-full px-2 py-0.5 font-medium ${
                               w.status === "COMPLETED" ? "bg-green-500/20 text-green-300" :
                               w.status === "IN_PROGRESS" ? "bg-blue-500/20 text-blue-300" :
                               "bg-neutral-800 text-neutral-400"
-                            }`}>{w.status}</span>
+                            }`}>{t(`status.${w.status}`)}</span>
                           </div>
                         </div>
                       );

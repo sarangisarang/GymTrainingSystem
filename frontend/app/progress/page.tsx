@@ -15,6 +15,7 @@ import {
   ReferenceDot,
 } from "recharts";
 import Protected from "@/components/Protected";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   getExercises,
   getExerciseHistory,
@@ -82,6 +83,7 @@ export default function ProgressPage() {
 }
 
 function ProgressInner() {
+  const t = useTranslations();
   const [exercises, setExercises] = useState<ExerciseRead[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutRead[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
@@ -101,7 +103,7 @@ function ProgressInner() {
     if (!selectedId) return;
     const target = parseFloat(targetInput);
     if (!Number.isFinite(target) || target <= 0) {
-      setPredictionErr("Enter a target weight greater than 0.");
+      setPredictionErr(t("progress.enterTarget"));
       return;
     }
     setPredictionLoading(true);
@@ -111,7 +113,7 @@ function ProgressInner() {
       setPrediction(p);
     } catch (e: unknown) {
       setPrediction(null);
-      setPredictionErr(e instanceof Error ? e.message : "Prediction failed");
+      setPredictionErr(e instanceof Error ? e.message : t("progress.predictionFailed"));
     } finally {
       setPredictionLoading(false);
     }
@@ -131,7 +133,7 @@ function ProgressInner() {
         setWorkouts(wo);
         if (ex.length > 0) setSelectedId(ex[0].id);
       } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : "Failed to load progress data");
+        setErr(e instanceof Error ? e.message : t("progress.loadError"));
       } finally {
         setLoading(false);
       }
@@ -259,8 +261,8 @@ function ProgressInner() {
   return (
     <div className="space-y-8">
       <div className="card p-6">
-        <h1 className="h1">Progress</h1>
-        <p className="muted mt-2">Visualize your strength, training volume and body-weight trends over time.</p>
+        <h1 className="h1">{t("progress.title")}</h1>
+        <p className="muted mt-2">{t("progress.subtitle")}</p>
         {err && (
           <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
             {err}
@@ -272,15 +274,15 @@ function ProgressInner() {
       <section className="card p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="h2">Strength curve</h2>
-            <p className="muted mt-1">Top weight lifted per session, with your personal record highlighted.</p>
+            <h2 className="h2">{t("progress.strengthCurve")}</h2>
+            <p className="muted mt-1">{t("progress.strengthCurveSub")}</p>
           </div>
           <select
             className="input sm:w-64"
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
           >
-            {exercises.length === 0 && <option value="">No exercises</option>}
+            {exercises.length === 0 && <option value="">{t("progress.noExercises")}</option>}
             {exercises.map((ex) => (
               <option key={ex.id} value={ex.id}>
                 {ex.name}
@@ -293,7 +295,7 @@ function ProgressInner() {
         <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950/40 p-4">
           <div className="flex flex-wrap items-end gap-3">
             <div>
-              <label className="label text-xs">Predict reaching</label>
+              <label className="label text-xs">{t("progress.predictReaching")}</label>
               <div className="mt-1 flex items-center gap-2">
                 <input
                   type="number"
@@ -307,7 +309,7 @@ function ProgressInner() {
                     if (e.key === "Enter") runPrediction();
                   }}
                 />
-                <span className="muted text-sm">kg</span>
+                <span className="muted text-sm">{t("common.kg")}</span>
               </div>
             </div>
             <button
@@ -316,7 +318,7 @@ function ProgressInner() {
               onClick={runPrediction}
               disabled={predictionLoading || !selectedId || !targetInput}
             >
-              {predictionLoading ? "Predicting…" : "Predict"}
+              {predictionLoading ? t("progress.predicting") : t("progress.predict")}
             </button>
             {prediction && (
               <button
@@ -327,7 +329,7 @@ function ProgressInner() {
                   setPredictionErr(null);
                 }}
               >
-                Clear
+                {t("progress.clear")}
               </button>
             )}
           </div>
@@ -341,39 +343,39 @@ function ProgressInner() {
           {prediction && (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg bg-neutral-900/70 p-3">
-                <p className="muted text-xs">Current</p>
-                <p className="mt-1 text-lg font-semibold">{prediction.current_weight} kg</p>
-                <p className="muted text-xs mt-1">{prediction.sessions} sessions</p>
+                <p className="muted text-xs">{t("progress.current")}</p>
+                <p className="mt-1 text-lg font-semibold">{prediction.current_weight} {t("common.kg")}</p>
+                <p className="muted text-xs mt-1">{prediction.sessions} {t("progress.sessions")}</p>
               </div>
               <div className="rounded-lg bg-neutral-900/70 p-3">
-                <p className="muted text-xs">Target</p>
-                <p className="mt-1 text-lg font-semibold">{prediction.target_weight} kg</p>
+                <p className="muted text-xs">{t("progress.target")}</p>
+                <p className="mt-1 text-lg font-semibold">{prediction.target_weight} {t("common.kg")}</p>
                 <p className="muted text-xs mt-1">
                   {prediction.slope_kg_per_week >= 0 ? "+" : ""}
-                  {prediction.slope_kg_per_week} kg / week
+                  {prediction.slope_kg_per_week} {t("progress.kgPerWeek")}
                 </p>
               </div>
               <div className="rounded-lg bg-neutral-900/70 p-3 sm:col-span-2">
                 {prediction.already_achieved ? (
                   <>
-                    <p className="muted text-xs">Result</p>
-                    <p className="mt-1 text-lg font-semibold text-emerald-400">Already achieved 🎉</p>
+                    <p className="muted text-xs">{t("progress.result")}</p>
+                    <p className="mt-1 text-lg font-semibold text-emerald-400">{t("progress.alreadyAchieved")} 🎉</p>
                   </>
                 ) : prediction.weeks_to_target != null && prediction.predicted_date ? (
                   <>
-                    <p className="muted text-xs">Estimated time to target</p>
+                    <p className="muted text-xs">{t("progress.estTimeToTarget")}</p>
                     <p className="mt-1 text-lg font-semibold">
-                      ~{prediction.weeks_to_target} weeks
+                      ~{prediction.weeks_to_target} {t("progress.weeks")}
                     </p>
-                    <p className="muted text-xs mt-1">around {prediction.predicted_date}</p>
+                    <p className="muted text-xs mt-1">{t("progress.around")} {prediction.predicted_date}</p>
                   </>
                 ) : (
                   <>
-                    <p className="muted text-xs">Result</p>
+                    <p className="muted text-xs">{t("progress.result")}</p>
                     <p className="mt-1 text-sm text-amber-300">
                       {prediction.reason === "regression"
-                        ? "Cannot estimate — recent trend is downward. Address recovery first."
-                        : "Cannot estimate — slope is essentially flat. Build momentum first."}
+                        ? t("progress.cannotRegression")
+                        : t("progress.cannotFlat")}
                     </p>
                   </>
                 )}
@@ -383,18 +385,13 @@ function ProgressInner() {
 
           {prediction && prediction.reason === "plateau" && !prediction.already_achieved && (
             <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-              ⚠ <span className="font-semibold">Plateau detected</span> — your weekly progression
-              is essentially flat ({prediction.slope_kg_per_week} kg/week). Consider a deload,
-              a program switch, or revisiting form.
+              ⚠ <span className="font-semibold">{t("progress.plateauTitle")}</span> — {t("progress.plateauBody")}
             </div>
           )}
 
           {prediction && prediction.reason === "regression" && !prediction.already_achieved && (
             <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-              🔻 <span className="font-semibold">Regression detected</span> — you&apos;re getting
-              weaker on this lift ({prediction.slope_kg_per_week} kg/week). Check recovery,
-              sleep, nutrition and form before adding load. If this persists, deload or pause
-              this exercise.
+              🔻 <span className="font-semibold">{t("progress.regressionTitle")}</span> — {t("progress.regressionBody")}
             </div>
           )}
         </div>
@@ -403,14 +400,14 @@ function ProgressInner() {
           {historyLoading ? (
             <div className="h-[300px] animate-pulse rounded-xl bg-neutral-800" />
           ) : strengthData.length === 0 ? (
-            <EmptyChart message="No weighted sets logged for this exercise yet." />
+            <EmptyChart message={t("progress.noWeightedSets")} />
           ) : (
             <>
               {prPoint && (
                 <div className="mb-3 flex items-center gap-2 text-sm">
                   <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: COLORS.pr }} />
                   <span className="muted">
-                    Personal Record: <span className="font-semibold text-neutral-100">{prPoint.weight} kg</span> on {prPoint.date}
+                    {t("progress.prLabel")} <span className="font-semibold text-neutral-100">{prPoint.weight} {t("common.kg")}</span> {prPoint.date}
                   </span>
                 </div>
               )}
@@ -422,7 +419,7 @@ function ProgressInner() {
                   <Tooltip
                     contentStyle={tooltipStyle}
                     labelStyle={{ color: "#fafafa" }}
-                    formatter={(value: number, name: string) => [`${value} kg`, name]}
+                    formatter={(value: number, name: string) => [`${value} ${t("common.kg")}`, name]}
                   />
                   <Line
                     type="monotone"
@@ -431,7 +428,7 @@ function ProgressInner() {
                     strokeWidth={2}
                     dot={{ r: 3, fill: COLORS.primary }}
                     activeDot={{ r: 5 }}
-                    name="Weight"
+                    name={t("progress.weightSeries")}
                     isAnimationActive={false}
                   />
                   <Line
@@ -441,7 +438,7 @@ function ProgressInner() {
                     strokeWidth={2}
                     strokeDasharray="6 4"
                     dot={{ r: 3, fill: COLORS.primarySoft }}
-                    name="Projection"
+                    name={t("progress.projection")}
                     isAnimationActive={false}
                   />
                   {prPoint && (
@@ -464,8 +461,8 @@ function ProgressInner() {
 
       {/* ── Weekly volume ──────────────────────────────────────────────────── */}
       <section className="card p-6">
-        <h2 className="h2">Weekly volume</h2>
-        <p className="muted mt-1">Total weight moved per week (sets × reps × weight), last 8 weeks.</p>
+        <h2 className="h2">{t("progress.weeklyVolume")}</h2>
+        <p className="muted mt-1">{t("progress.weeklyVolumeSub")}</p>
         <div className="mt-5">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={weeklyVolume} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
@@ -476,9 +473,9 @@ function ProgressInner() {
                 contentStyle={tooltipStyle}
                 labelStyle={{ color: "#fafafa" }}
                 cursor={{ fill: "rgba(99,102,241,0.1)" }}
-                formatter={(value: number) => [`${value.toLocaleString()} kg`, "Volume"]}
+                formatter={(value: number) => [`${value.toLocaleString()} ${t("common.kg")}`, t("progress.volume")]}
               />
-              <Bar dataKey="volume" fill={COLORS.bar} radius={[6, 6, 0, 0]} name="Volume" isAnimationActive={false} />
+              <Bar dataKey="volume" fill={COLORS.bar} radius={[6, 6, 0, 0]} name={t("progress.volume")} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -488,8 +485,8 @@ function ProgressInner() {
       <section className="card p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="h2">Body-weight trend</h2>
-            <p className="muted mt-1">Log your body weight to track it over time (stored on this device).</p>
+            <h2 className="h2">{t("progress.bodyWeightTrend")}</h2>
+            <p className="muted mt-1">{t("progress.bodyWeightTrendSub")}</p>
           </div>
           <BodyWeightForm
             onAdd={(date, weight) => setBodyWeights(upsertBodyWeight(date, weight))}
@@ -498,7 +495,7 @@ function ProgressInner() {
 
         <div className="mt-5">
           {bodyWeightData.length === 0 ? (
-            <EmptyChart message="No body-weight entries yet. Add one above to start your trend." />
+            <EmptyChart message={t("progress.noBodyWeight")} />
           ) : (
             <>
               <ResponsiveContainer width="100%" height={260}>
@@ -509,7 +506,7 @@ function ProgressInner() {
                   <Tooltip
                     contentStyle={tooltipStyle}
                     labelStyle={{ color: "#fafafa" }}
-                    formatter={(value: number) => [`${value} kg`, "Body weight"]}
+                    formatter={(value: number) => [`${value} ${t("common.kg")}`, t("progress.bodyWeight")]}
                   />
                   <Legend wrapperStyle={{ fontSize: "0.8rem" }} />
                   <Line
@@ -518,7 +515,7 @@ function ProgressInner() {
                     stroke={COLORS.primarySoft}
                     strokeWidth={2}
                     dot={{ r: 3, fill: COLORS.primarySoft }}
-                    name="Body weight"
+                    name={t("progress.bodyWeight")}
                     isAnimationActive={false}
                   />
                 </LineChart>
@@ -530,12 +527,12 @@ function ProgressInner() {
                     key={e.date}
                     className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-3 py-1 text-xs"
                   >
-                    {e.date}: {e.weight} kg
+                    {e.date}: {e.weight} {t("common.kg")}
                     <button
                       type="button"
                       className="text-neutral-500 hover:text-red-400"
                       onClick={() => setBodyWeights(removeBodyWeight(e.date))}
-                      aria-label={`Remove entry for ${e.date}`}
+                      aria-label={`${t("progress.removeEntry")} ${e.date}`}
                     >
                       ×
                     </button>
@@ -559,6 +556,7 @@ function EmptyChart({ message }: { message: string }) {
 }
 
 function BodyWeightForm({ onAdd }: { onAdd: (date: string, weight: number) => void }) {
+  const t = useTranslations();
   const today = ymd(new Date());
   const [date, setDate] = useState(today);
   const [weight, setWeight] = useState("");
@@ -574,11 +572,11 @@ function BodyWeightForm({ onAdd }: { onAdd: (date: string, weight: number) => vo
   return (
     <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
       <div>
-        <label className="label text-xs">Date</label>
+        <label className="label text-xs">{t("progress.date")}</label>
         <input type="date" className="input mt-1 w-40" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
       <div>
-        <label className="label text-xs">Weight (kg)</label>
+        <label className="label text-xs">{t("progress.weightKg")}</label>
         <input
           type="number"
           step="0.1"
@@ -590,7 +588,7 @@ function BodyWeightForm({ onAdd }: { onAdd: (date: string, weight: number) => vo
         />
       </div>
       <button type="submit" className="btn-primary">
-        Add
+        {t("progress.add")}
       </button>
     </form>
   );
