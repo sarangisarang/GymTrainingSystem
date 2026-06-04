@@ -282,6 +282,42 @@ export async function changePassword(data: { old_password: string; new_password:
   });
 }
 
+// ── DSGVO / GDPR (Issue #29) ─────────────────────────────────────────────
+
+/**
+ * Triggers a browser download of the user's full data export as JSON.
+ * Uses raw fetch (not apiFetch) because the response is a file, not JSON to
+ * parse. Filename comes from the server's Content-Disposition header when
+ * present, with a sensible fallback if CORS strips it.
+ */
+export async function downloadMyDataExport(): Promise<void> {
+  const token = getToken();
+  const res = await fetch(`${getApiBase()}/users/me/export`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Export failed: ${res.status}`);
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get("Content-Disposition") || "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  const filename = match?.[1] || `gymtracker-export-${Date.now()}.json`;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export async function deleteMyAccount(): Promise<void> {
+  await apiFetch<null>("/users/me", { method: "DELETE", auth: true });
+}
+
 // ── Exercises ─────────────────────────────────────────────────────────────
 
 export async function getExercises(opts?: { muscle_group?: string; search?: string }) {

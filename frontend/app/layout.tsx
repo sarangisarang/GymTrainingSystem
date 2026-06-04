@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
+          <Footer />
         </Providers>
         <Script id="register-sw" strategy="afterInteractive">{`
           if ('serviceWorker' in navigator) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Protected from "@/components/Protected";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
@@ -12,6 +13,8 @@ import {
   getAchievements,
   getWeeklyChallenge,
   setLeaderboardOptIn,
+  downloadMyDataExport,
+  deleteMyAccount,
   type AchievementsRead,
   type WeeklyChallengeRead,
 } from "@/lib/api";
@@ -25,9 +28,41 @@ export default function ProfilePage() {
 }
 
 function ProfileInner() {
-  const { user, refreshMe } = useAuth();
+  const { user, refreshMe, logout } = useAuth();
   const { toast } = useToast();
   const t = useTranslations();
+  const router = useRouter();
+
+  const [exporting, setExporting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await downloadMyDataExport();
+      toast(t("profile.exportDone"), "success");
+    } catch (e: unknown) {
+      toast(e instanceof Error ? e.message : t("profile.exportFailed"), "error");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!user) return;
+    setDeleting(true);
+    try {
+      await deleteMyAccount();
+      toast(t("profile.deleteDone"), "success");
+      logout();
+      router.push("/");
+    } catch (e: unknown) {
+      toast(e instanceof Error ? e.message : t("profile.deleteFailed"), "error");
+      setDeleting(false);
+    }
+  }
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.name || "");
@@ -324,6 +359,84 @@ function ProfileInner() {
             {pwSaving ? t("profile.saving") : t("profile.changePassword")}
           </button>
         </form>
+      </div>
+
+      <div className="card p-6 space-y-4">
+        <div>
+          <h2 className="font-semibold">{t("profile.dataPrivacy")}</h2>
+          <p className="muted mt-1 text-sm">
+            {t("profile.dataPrivacyHint")}{" "}
+            <Link href="/datenschutz" className="text-indigo-400 hover:underline">
+              {t("profile.privacyPolicy")}
+            </Link>
+            .
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-medium">{t("profile.exportData")}</p>
+            <p className="muted text-xs">{t("profile.exportDataHint")}</p>
+          </div>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={handleExport}
+            disabled={exporting}
+          >
+            {exporting ? t("profile.exporting") : t("profile.exportButton")}
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-red-700/40 bg-red-900/10 p-4 space-y-3">
+          <div>
+            <p className="font-medium text-red-300">{t("profile.dangerZone")}</p>
+            <p className="muted text-xs">{t("profile.deleteHint")}</p>
+          </div>
+          {!deleteOpen ? (
+            <button
+              type="button"
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              onClick={() => setDeleteOpen(true)}
+            >
+              {t("profile.deleteAccount")}
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <label className="label" htmlFor="delete-confirm">
+                {t("profile.deleteConfirmHint")}{" "}
+                <span className="font-mono text-neutral-200">{user?.email}</span>
+              </label>
+              <input
+                id="delete-confirm"
+                type="text"
+                className="input"
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                autoComplete="off"
+                aria-describedby="delete-confirm-hint"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                  disabled={deleting || deleteConfirm.trim() !== user?.email}
+                  onClick={handleDelete}
+                >
+                  {deleting ? t("profile.deleting") : t("profile.deleteAccountConfirm")}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => { setDeleteOpen(false); setDeleteConfirm(""); }}
+                  disabled={deleting}
+                >
+                  {t("profile.cancel")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

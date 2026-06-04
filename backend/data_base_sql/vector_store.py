@@ -239,6 +239,23 @@ def remove_workout_from_index(workout_id) -> None:
         logger.warning("Chroma remove_workout(%s) failed: %s", workout_id, exc)
 
 
+def remove_user_workouts_from_index(user_id) -> None:
+    """Bulk-delete every workout owned by this user from the workouts
+    collection. Used by the DSGVO account-delete flow (Issue #29). Relies on
+    the same `user_id` metadata that `index_workout` writes, so it stays in
+    sync without a SQL join.
+    """
+    col = _get_collection(_WORKOUTS_COLLECTION)
+    if col is None:
+        return
+    try:
+        col.delete(where={"user_id": str(user_id)})
+    except Exception as exc:
+        logger.warning(
+            "Chroma remove_user_workouts(%s) failed: %s", user_id, exc
+        )
+
+
 def _format_results(raw) -> list[dict]:
     """Chroma returns nested lists (one per query). We always query with a single
     text, so flatten the first row and zip into dicts.
