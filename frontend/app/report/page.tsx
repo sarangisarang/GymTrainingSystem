@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Protected from "@/components/Protected";
+import { useTranslations } from "@/components/I18nProvider";
 import {
   getWorkouts,
   getUserStats,
@@ -20,6 +21,7 @@ export default function ReportPage() {
 }
 
 function ReportInner() {
+  const t = useTranslations();
   const [workouts, setWorkouts] = useState<WorkoutRead[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +45,7 @@ function ReportInner() {
     try {
       await downloadReportPdf(period);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Download fehlgeschlagen");
+      setErr(e instanceof Error ? e.message : t("report.downloadFailed"));
     } finally {
       setDownloading(null);
     }
@@ -69,9 +71,9 @@ function ReportInner() {
     <div className="space-y-6">
       <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
         <div>
-          <h1 className="h1">PDF-Report</h1>
+          <h1 className="h1">{t("report.title")}</h1>
           <p className="muted mt-0.5">
-            Wochen- oder Monats-Report serverseitig generieren und herunterladen.
+            {t("report.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -81,7 +83,7 @@ function ReportInner() {
             onClick={() => handleDownload("weekly")}
             disabled={downloading !== null}
           >
-            {downloading === "weekly" ? "Erstelle..." : "Wochen-Report (PDF)"}
+            {downloading === "weekly" ? t("report.generating") : t("report.weeklyBtn")}
           </button>
           <button
             type="button"
@@ -89,7 +91,7 @@ function ReportInner() {
             onClick={() => handleDownload("monthly")}
             disabled={downloading !== null}
           >
-            {downloading === "monthly" ? "Erstelle..." : "Monats-Report (PDF)"}
+            {downloading === "monthly" ? t("report.generating") : t("report.monthlyBtn")}
           </button>
         </div>
       </div>
@@ -108,7 +110,7 @@ function ReportInner() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-neutral-50">Gym Tracker</h1>
-              <p className="text-neutral-400">Vorschau · {monthName}</p>
+              <p className="text-neutral-400">{t("report.preview")} · {monthName}</p>
             </div>
           </div>
         </div>
@@ -116,10 +118,10 @@ function ReportInner() {
         {stats && (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { label: "Workouts gesamt", value: String(stats.total_workouts) },
-              { label: "Aktuelle Streak", value: `${stats.current_streak} Tage` },
-              { label: "Beste Streak", value: `${stats.best_streak} Tage` },
-              { label: "Diese Woche", value: String(stats.workouts_this_week) },
+              { label: t("report.statTotal"), value: String(stats.total_workouts) },
+              { label: t("report.statCurrentStreak"), value: `${stats.current_streak} ${t("common.days")}` },
+              { label: t("report.statBestStreak"), value: `${stats.best_streak} ${t("common.days")}` },
+              { label: t("report.statThisWeek"), value: String(stats.workouts_this_week) },
             ].map((s) => (
               <div key={s.label} className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-center">
                 <div className="text-2xl font-bold text-indigo-400">{s.value}</div>
@@ -130,23 +132,23 @@ function ReportInner() {
         )}
 
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-          <h2 className="mb-1 font-semibold text-neutral-200">Gesamtvolumen</h2>
+          <h2 className="mb-1 font-semibold text-neutral-200">{t("report.totalVolume")}</h2>
           <p className="text-4xl font-bold text-indigo-400">
-            {totalVolume.toLocaleString("de-DE")} kg
+            {totalVolume.toLocaleString("de-DE")} {t("common.kg")}
           </p>
-          <p className="muted mt-1 text-sm">sets × wdh × gewicht (alle abgeschlossenen Workouts)</p>
+          <p className="muted mt-1 text-sm">{t("report.volumeFormula")}</p>
         </div>
 
         <div>
-          <h2 className="mb-3 font-semibold text-neutral-200">Letzte Workouts</h2>
+          <h2 className="mb-3 font-semibold text-neutral-200">{t("report.recentWorkouts")}</h2>
           <div className="overflow-hidden rounded-xl border border-neutral-800">
             <table className="w-full text-sm">
               <thead className="bg-neutral-900 text-neutral-400">
                 <tr>
-                  <th className="px-4 py-3 text-left">Datum</th>
-                  <th className="px-4 py-3 text-left">Übungen</th>
-                  <th className="px-4 py-3 text-left">Sätze</th>
-                  <th className="px-4 py-3 text-right">Volumen</th>
+                  <th className="px-4 py-3 text-left">{t("report.colDate")}</th>
+                  <th className="px-4 py-3 text-left">{t("report.colExercises")}</th>
+                  <th className="px-4 py-3 text-left">{t("report.colSets")}</th>
+                  <th className="px-4 py-3 text-right">{t("report.colVolume")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-800 bg-neutral-950">
@@ -161,7 +163,7 @@ function ReportInner() {
                       <td className="px-4 py-3 text-neutral-300">{w.workout_exercises.length}</td>
                       <td className="px-4 py-3 text-neutral-300">{sets}</td>
                       <td className="px-4 py-3 text-right font-mono text-neutral-300">
-                        {vol.toLocaleString("de-DE")} kg
+                        {vol.toLocaleString("de-DE")} {t("common.kg")}
                       </td>
                     </tr>
                   );
@@ -172,7 +174,7 @@ function ReportInner() {
         </div>
 
         <div className="border-t border-neutral-800 pt-4 text-center text-xs text-neutral-600">
-          Endgültiges PDF wird vom Backend mit reportlab erzeugt · Gym Tracker
+          {t("report.footer")}
         </div>
       </div>
     </div>

@@ -6,8 +6,10 @@ import { getExercises, getApiBase, uploadExerciseImage, type ExerciseRead } from
 import { addToCart } from "@/lib/cart";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "@/components/I18nProvider";
 import Protected from "@/components/Protected";
 
+// English values are sent to the API; the visible label is translated via t(`muscle.${g}`).
 const MUSCLE_GROUPS = ["Chest", "Back", "Shoulders", "Arms", "Core", "Legs", "Glutes", "Cardio"];
 
 export default function ExercisesPage() {
@@ -29,6 +31,7 @@ function Skeleton() {
 }
 
 function ExercisesInner() {
+  const t = useTranslations();
   const [items, setItems] = useState<ExerciseRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -50,7 +53,7 @@ function ExercisesInner() {
       });
       setItems(data || []);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Failed to load exercises");
+      setErr(e instanceof Error ? e.message : t("exercises.loadError"));
     } finally {
       setLoading(false);
     }
@@ -72,10 +75,10 @@ function ExercisesInner() {
   async function uploadImage(exerciseId: string, file: File) {
     try {
       await uploadExerciseImage(exerciseId, file);
-      toast("Image uploaded", "success");
+      toast(t("exercises.imageUploaded"), "success");
       load({ search, muscle_group: group });
     } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : "Upload failed", "error");
+      toast(e instanceof Error ? e.message : t("exercises.uploadFailed"), "error");
     }
   }
 
@@ -89,40 +92,40 @@ function ExercisesInner() {
       <div className="card p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="h1">Exercises</h1>
-            <p className="muted mt-2">Add exercises to your cart and build workouts.</p>
+            <h1 className="h1">{t("exercises.title")}</h1>
+            <p className="muted mt-2">{t("exercises.subtitle")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link className="btn-ghost" href="/exercises/new">+ New exercise</Link>
+            <Link className="btn-ghost" href="/exercises/new">{t("exercises.newExercise")}</Link>
             <button type="button" onClick={() => load({ search, muscle_group: group })} className="btn-ghost">
-              Refresh
+              {t("common.refresh")}
             </button>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           <div className="md:col-span-2">
-            <label className="label" htmlFor="exercise-search">Search</label>
+            <label className="label" htmlFor="exercise-search">{t("exercises.search")}</label>
             <input
               id="exercise-search"
               data-testid="exercise-search"
               className="input mt-2"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Bench press, squat…"
+              placeholder={t("exercises.searchPlaceholder")}
             />
           </div>
           <div>
-            <label className="label" htmlFor="muscle-group-filter">Muscle group</label>
+            <label className="label" htmlFor="muscle-group-filter">{t("exercises.muscleGroup")}</label>
             <select
               id="muscle-group-filter"
               className="input mt-2"
               value={group}
               onChange={(e) => setGroup(e.target.value)}
             >
-              <option value="ALL">All</option>
+              <option value="ALL">{t("muscle.all")}</option>
               {MUSCLE_GROUPS.map((g) => (
-                <option key={g} value={g}>{g}</option>
+                <option key={g} value={g}>{t(`muscle.${g}`)}</option>
               ))}
             </select>
           </div>
@@ -137,8 +140,8 @@ function ExercisesInner() {
         <Skeleton />
       ) : items.length === 0 ? (
         <div className="card p-6 text-center">
-          <p className="muted">No exercises found.</p>
-          <Link href="/exercises/new" className="btn-primary mt-4 inline-block">Create one</Link>
+          <p className="muted">{t("exercises.noneFound")}</p>
+          <Link href="/exercises/new" className="btn-primary mt-4 inline-block">{t("exercises.createOne")}</Link>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -179,17 +182,17 @@ function ExercisesInner() {
                         restSeconds: 30,
                         restLimitSeconds: 45,
                       });
-                      toast(`${ex.name} added to cart`, "success");
+                      toast(`${ex.name} ${t("exercises.addedSuffix")}`, "success");
                     }}
                   >
-                    Add to cart
+                    {t("exercises.addToCart")}
                   </button>
 
-                  <Link href="/cart" className="btn-ghost">Cart</Link>
+                  <Link href="/cart" className="btn-ghost">{t("exercises.cart")}</Link>
 
                   {isLoggedIn && (
-                    <label className="btn-ghost cursor-pointer" title="Upload image">
-                      Upload
+                    <label className="btn-ghost cursor-pointer" title={t("exercises.uploadTitle")}>
+                      {t("exercises.upload")}
                       <input
                         type="file"
                         accept="image/*"
