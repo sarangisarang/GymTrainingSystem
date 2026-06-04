@@ -621,5 +621,18 @@
       "RUNNING": "进行中",
       "PAUSED": "已暂停"
     }
+  },
+  "handoff": {
+    "askHuman": "咨询真人教练",
+    "sending": "发送中…",
+    "sent": "已发送给教练",
+    "error": "发送失败",
+    "dashboardTitle": "转接请求",
+    "dashboardSubtitle": "在 AI 给出低置信度回答后，请求真人教练帮助的学员。",
+    "confidenceLabel": "置信度",
+    "question": "问题",
+    "showAiAnswer": "查看 AI 回答",
+    "resolve": "标记已解决",
+    "resolved": "已标记为解决"
   }
 }

@@ -511,6 +511,43 @@ export async function getAthleteWorkouts(athleteId: string) {
   return apiFetch<WorkoutRead[]>(`/coach/athletes/${athleteId}/workouts`, { auth: true });
 }
 
+// ── Human handoff (#26) ──────────────────────────────────────────────────────
+
+export type HandoffRead = {
+  id: string;
+  athlete_id: string;
+  athlete_name?: string | null;
+  athlete_email?: string | null;
+  question: string;
+  ai_answer?: string | null;
+  confidence?: number | null;
+  status: string;
+  created_at: string;
+};
+
+export async function createHandoff(payload: {
+  question: string;
+  ai_answer?: string | null;
+  confidence?: number | null;
+}) {
+  return apiFetch<HandoffRead>("/handoff", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getCoachHandoffs() {
+  return apiFetch<HandoffRead[]>("/coach/handoffs", { auth: true });
+}
+
+export async function resolveHandoff(handoffId: string) {
+  return apiFetch<{ message: string }>(`/coach/handoffs/${handoffId}/resolve`, {
+    method: "POST",
+    auth: true,
+  });
+}
+
 export type ReportPeriod = "weekly" | "monthly";
 
 export async function downloadReportPdf(period: ReportPeriod): Promise<void> {

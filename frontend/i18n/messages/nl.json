@@ -621,5 +621,18 @@
       "RUNNING": "Bezig",
       "PAUSED": "Gepauzeerd"
     }
+  },
+  "handoff": {
+    "askHuman": "Vraag een menselijke coach",
+    "sending": "Versturen…",
+    "sent": "Naar een coach verstuurd",
+    "error": "Versturen mislukt",
+    "dashboardTitle": "Doorverwijzingsverzoeken",
+    "dashboardSubtitle": "Sporters die om een menselijke coach vroegen na een AI-antwoord met lage betrouwbaarheid.",
+    "confidenceLabel": "Betrouwbaarheid",
+    "question": "Vraag",
+    "showAiAnswer": "AI-antwoord tonen",
+    "resolve": "Afhandelen",
+    "resolved": "Gemarkeerd als afgehandeld"
   }
 }

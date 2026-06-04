@@ -51,6 +51,25 @@ class CoachInviteRequest(BaseModel):
     athlete_email: str
 
 
+class HandoffCreate(BaseModel):
+    """Athlete escalates a low-confidence AI answer to a human coach (#26)."""
+    question: str
+    ai_answer: Optional[str] = None
+    confidence: Optional[int] = None
+
+
+class HandoffRead(BaseModel):
+    id: str
+    athlete_id: str
+    athlete_name: Optional[str] = None
+    athlete_email: Optional[str] = None
+    question: str
+    ai_answer: Optional[str] = None
+    confidence: Optional[int] = None
+    status: str
+    created_at: dt.datetime
+
+
 class ExerciseCreate(BaseModel):
     name: str
     muscle_group: str

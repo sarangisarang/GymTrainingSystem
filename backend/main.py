@@ -18,6 +18,7 @@ from fastAPI_functions.reports import router as reports_router
 from fastAPI_functions.coach_dashboard import router as coach_router
 from fastAPI_functions.achievements import router as achievements_router
 from fastAPI_functions.search import router as search_router
+from fastAPI_functions.handoff import router as handoff_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -164,6 +165,7 @@ app.include_router(reports_router)
 app.include_router(coach_router)
 app.include_router(achievements_router)
 app.include_router(search_router)
+app.include_router(handoff_router)
 
 
 @app.get("/")

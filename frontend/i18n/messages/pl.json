@@ -621,5 +621,18 @@
       "RUNNING": "Działa",
       "PAUSED": "Wstrzymany"
     }
+  },
+  "handoff": {
+    "askHuman": "Zapytaj trenera",
+    "sending": "Wysyłanie…",
+    "sent": "Wysłano do trenera",
+    "error": "Nie udało się wysłać",
+    "dashboardTitle": "Prośby do trenera",
+    "dashboardSubtitle": "Podopieczni, którzy poprosili o trenera po odpowiedzi AI o niskiej pewności.",
+    "confidenceLabel": "Pewność",
+    "question": "Pytanie",
+    "showAiAnswer": "Pokaż odpowiedź AI",
+    "resolve": "Rozwiąż",
+    "resolved": "Oznaczono jako rozwiązane"
   }
 }
