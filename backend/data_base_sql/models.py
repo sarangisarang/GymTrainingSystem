@@ -46,6 +46,27 @@ class CoachClient(Base):
     athlete = relationship("User", foreign_keys=[athlete_id])
 
 
+class CoachHandoff(Base):
+    """A request to escalate a low-confidence AI-coach answer to a human coach (#26).
+
+    Created by the athlete from the AI-coach chat when the answer is flagged
+    low-confidence; surfaced to the athlete's linked coach(es) on the
+    Coach-Dashboard, where it can be marked resolved.
+    """
+    __tablename__ = "coach_handoffs"
+
+    id = UUID_PK()
+    athlete_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    question = Column(Text, nullable=False)
+    ai_answer = Column(Text, nullable=True)
+    confidence = Column(Integer, nullable=True)
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING | RESOLVED
+    created_at = Column(DateTime, default=datetime.utcnow)
+    resolved_at = Column(DateTime, nullable=True)
+
+    athlete = relationship("User", foreign_keys=[athlete_id])
+
+
 class Exercise(Base):
     __tablename__ = "exercises"
 

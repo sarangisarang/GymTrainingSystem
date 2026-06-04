@@ -621,5 +621,18 @@
       "RUNNING": "A decorrer",
       "PAUSED": "Em pausa"
     }
+  },
+  "handoff": {
+    "askHuman": "Perguntar a um treinador",
+    "sending": "A enviar…",
+    "sent": "Enviado a um treinador",
+    "error": "Não foi possível enviar",
+    "dashboardTitle": "Pedidos de encaminhamento",
+    "dashboardSubtitle": "Atletas que pediram um treinador humano após uma resposta da IA com baixa confiança.",
+    "confidenceLabel": "Confiança",
+    "question": "Pergunta",
+    "showAiAnswer": "Mostrar resposta da IA",
+    "resolve": "Resolver",
+    "resolved": "Marcado como resolvido"
   }
 }

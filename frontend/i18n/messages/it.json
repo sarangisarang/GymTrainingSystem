@@ -621,5 +621,18 @@
       "RUNNING": "In corso",
       "PAUSED": "In pausa"
     }
+  },
+  "handoff": {
+    "askHuman": "Chiedi a un coach umano",
+    "sending": "Invio in corso…",
+    "sent": "Inviato a un coach",
+    "error": "Invio non riuscito",
+    "dashboardTitle": "Richieste di assistenza",
+    "dashboardSubtitle": "Atleti che hanno chiesto un coach umano dopo una risposta dell'IA a bassa affidabilità.",
+    "confidenceLabel": "Affidabilità",
+    "question": "Domanda",
+    "showAiAnswer": "Mostra risposta IA",
+    "resolve": "Risolvi",
+    "resolved": "Contrassegnato come risolto"
   }
 }

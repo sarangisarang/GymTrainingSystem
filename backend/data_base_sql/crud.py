@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy.orm import Session
-from .models import User, Exercise, Workout, WorkoutExercise, UserExerciseMax, TrainingProgram, TrainingProgramItem, CoachClient
+from .models import User, Exercise, Workout, WorkoutExercise, UserExerciseMax, TrainingProgram, TrainingProgramItem, CoachClient, CoachHandoff
 from .calculations import build_program_item_metrics
 from .schemas import UserCreate, ExerciseCreate, WorkoutCreate, WorkoutExerciseCreate, UserExerciseMaxCreate, TrainingProgramGenerateRequest, NextCycleRequest
 from passlib.context import CryptContext
@@ -1270,3 +1270,71 @@ def get_athlete_workouts_for_coach(db: Session, coach_id: UUID, athlete_id: UUID
         .limit(20)
         .all()
     )
+
+
+# ── Human handoff (#26) ──────────────────────────────────────────────────────
+
+def _handoff_to_dict(db: Session, h: CoachHandoff) -> dict:
+    athlete = get_user(db, UUID(h.athlete_id))
+    return {
+        "id": h.id,
+        "athlete_id": h.athlete_id,
+        "athlete_name": athlete.name if athlete else None,
+        "athlete_email": athlete.email if athlete else None,
+        "question": h.question,
+        "ai_answer": h.ai_answer,
+        "confidence": h.confidence,
+        "status": h.status,
+        "created_at": h.created_at,
+    }
+
+
+def create_handoff(db: Session, athlete_id: UUID, question: str,
+                   ai_answer: str | None, confidence: int | None) -> dict:
+    """Athlete escalates a low-confidence AI answer to a human coach."""
+    handoff = CoachHandoff(
+        athlete_id=str(athlete_id),
+        question=question,
+        ai_answer=ai_answer,
+        confidence=confidence,
+    )
+    db.add(handoff)
+    db.commit()
+    db.refresh(handoff)
+    return _handoff_to_dict(db, handoff)
+
+
+def get_coach_handoffs(db: Session, coach_id: UUID) -> list[dict]:
+    """Pending handoffs from the athletes linked to this coach (newest first)."""
+    athlete_ids = [
+        link.athlete_id
+        for link in db.query(CoachClient).filter(CoachClient.coach_id == str(coach_id)).all()
+    ]
+    if not athlete_ids:
+        return []
+    handoffs = (
+        db.query(CoachHandoff)
+        .filter(CoachHandoff.athlete_id.in_(athlete_ids), CoachHandoff.status == "PENDING")
+        .order_by(CoachHandoff.created_at.desc())
+        .all()
+    )
+    return [_handoff_to_dict(db, h) for h in handoffs]
+
+
+def resolve_handoff(db: Session, coach_id: UUID, handoff_id: UUID):
+    """Mark a handoff resolved. Returns None if missing, False if not the
+    coach's athlete, True on success."""
+    handoff = db.query(CoachHandoff).filter(CoachHandoff.id == str(handoff_id)).first()
+    if not handoff:
+        return None
+    link = (
+        db.query(CoachClient)
+        .filter(CoachClient.coach_id == str(coach_id), CoachClient.athlete_id == handoff.athlete_id)
+        .first()
+    )
+    if not link:
+        return False
+    handoff.status = "RESOLVED"
+    handoff.resolved_at = datetime.utcnow()
+    db.commit()
+    return True

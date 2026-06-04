@@ -621,5 +621,18 @@
       "RUNNING": "Çalışıyor",
       "PAUSED": "Duraklatıldı"
     }
+  },
+  "handoff": {
+    "askHuman": "Bir antrenöre sor",
+    "sending": "Gönderiliyor…",
+    "sent": "Antrenöre gönderildi",
+    "error": "Gönderilemedi",
+    "dashboardTitle": "Antrenör talepleri",
+    "dashboardSubtitle": "Düşük güvenli bir yapay zekâ yanıtının ardından bir antrenöre danışmak isteyen sporcular.",
+    "confidenceLabel": "Güven",
+    "question": "Soru",
+    "showAiAnswer": "Yapay zekâ yanıtını göster",
+    "resolve": "Çöz",
+    "resolved": "Çözüldü olarak işaretlendi"
   }
 }

@@ -12,8 +12,11 @@ import {
   removeAthlete,
   getCoachAthletes,
   getAthleteWorkouts,
+  getCoachHandoffs,
+  resolveHandoff,
   type AthleteProgress,
   type WorkoutRead,
+  type HandoffRead,
 } from "@/lib/api";
 
 export default function CoachDashboardPage() {
@@ -35,13 +38,34 @@ function CoachDashboardInner() {
   const [selected, setSelected] = useState<AthleteProgress | null>(null);
   const [athleteWorkouts, setAthleteWorkouts] = useState<WorkoutRead[]>([]);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
+  const [handoffs, setHandoffs] = useState<HandoffRead[]>([]);
 
   const isCoach = user?.role === "coach";
 
   useEffect(() => {
-    if (isCoach) loadAthletes();
-    else setLoading(false);
+    if (isCoach) {
+      loadAthletes();
+      loadHandoffs();
+    } else setLoading(false);
   }, [isCoach]);
+
+  async function loadHandoffs() {
+    try {
+      setHandoffs(await getCoachHandoffs());
+    } catch {
+      /* handoffs are non-critical; keep the dashboard usable on failure */
+    }
+  }
+
+  async function handleResolve(id: string) {
+    try {
+      await resolveHandoff(id);
+      setHandoffs((prev) => prev.filter((h) => h.id !== id));
+      toast(t("handoff.resolved"), "success");
+    } catch (e: unknown) {
+      toast(e instanceof Error ? e.message : t("coachDashboard.error"), "error");
+    }
+  }
 
   async function loadAthletes() {
     setLoading(true);
@@ -154,6 +178,54 @@ function CoachDashboardInner() {
           </button>
         </form>
       </div>
+
+      {/* Human handoff requests (#26) */}
+      {handoffs.length > 0 && (
+        <div className="card p-5">
+          <h2 className="mb-3 flex items-center gap-2 font-semibold">
+            🤝 {t("handoff.dashboardTitle")}
+            <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">
+              {handoffs.length}
+            </span>
+          </h2>
+          <p className="muted mb-4 text-sm">{t("handoff.dashboardSubtitle")}</p>
+          <div className="space-y-3">
+            {handoffs.map((h) => (
+              <div key={h.id} className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-neutral-100">
+                      {h.athlete_name || h.athlete_email}
+                      {h.confidence != null && (
+                        <span className="ml-2 rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-300">
+                          {t("handoff.confidenceLabel")}: {h.confidence}%
+                        </span>
+                      )}
+                    </p>
+                    <p className="muted mt-1 text-xs">{t("handoff.question")}:</p>
+                    <p className="mt-0.5 text-sm text-neutral-200">{h.question}</p>
+                    {h.ai_answer && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-xs text-neutral-500 hover:text-neutral-300">
+                          {t("handoff.showAiAnswer")}
+                        </summary>
+                        <p className="mt-1 whitespace-pre-wrap text-xs text-neutral-400">{h.ai_answer}</p>
+                      </details>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-ghost shrink-0 text-xs"
+                    onClick={() => handleResolve(h.id)}
+                  >
+                    {t("handoff.resolve")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="animate-pulse space-y-3">

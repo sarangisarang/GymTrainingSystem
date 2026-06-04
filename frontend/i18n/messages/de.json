@@ -621,5 +621,18 @@
       "RUNNING": "Läuft",
       "PAUSED": "Pausiert"
     }
+  },
+  "handoff": {
+    "askHuman": "Coach fragen",
+    "sending": "Wird gesendet…",
+    "sent": "An Coach gesendet",
+    "error": "Senden fehlgeschlagen",
+    "dashboardTitle": "Coach-Anfragen",
+    "dashboardSubtitle": "Athleten, die nach einer KI-Antwort mit niedriger Konfidenz einen Coach angefragt haben.",
+    "confidenceLabel": "Konfidenz",
+    "question": "Frage",
+    "showAiAnswer": "KI-Antwort anzeigen",
+    "resolve": "Erledigen",
+    "resolved": "Als erledigt markiert"
   }
 }

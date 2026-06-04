@@ -621,5 +621,18 @@
       "RUNNING": "計測中",
       "PAUSED": "一時停止中"
     }
+  },
+  "handoff": {
+    "askHuman": "コーチに質問する",
+    "sending": "送信中…",
+    "sent": "コーチに送信しました",
+    "error": "送信できませんでした",
+    "dashboardTitle": "引き継ぎリクエスト",
+    "dashboardSubtitle": "AI の回答の信頼度が低かったため、コーチへの相談を希望したアスリート。",
+    "confidenceLabel": "信頼度",
+    "question": "質問",
+    "showAiAnswer": "AI の回答を表示",
+    "resolve": "解決済みにする",
+    "resolved": "解決済みにしました"
   }
 }

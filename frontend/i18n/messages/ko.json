@@ -621,5 +621,18 @@
       "RUNNING": "진행 중",
       "PAUSED": "일시정지"
     }
+  },
+  "handoff": {
+    "askHuman": "코치에게 문의하기",
+    "sending": "전송 중…",
+    "sent": "코치에게 전송됨",
+    "error": "전송할 수 없습니다",
+    "dashboardTitle": "코치 연결 요청",
+    "dashboardSubtitle": "AI 답변의 신뢰도가 낮아 코치에게 문의한 회원입니다.",
+    "confidenceLabel": "신뢰도",
+    "question": "질문",
+    "showAiAnswer": "AI 답변 보기",
+    "resolve": "해결",
+    "resolved": "해결됨으로 표시"
   }
 }

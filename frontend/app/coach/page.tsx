@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Protected from "@/components/Protected";
 import { useTranslations } from "@/components/I18nProvider";
-import { getApiBase, getToken } from "@/lib/api";
+import { getApiBase, getToken, createHandoff } from "@/lib/api";
 
 type CoachSource = { tag: string; label: string };
 
@@ -67,6 +67,8 @@ function CoachInner() {
   });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // Per-message escalation state for the human-handoff feature (#26).
+  const [escalated, setEscalated] = useState<Record<number, "sending" | "sent" | "error">>({});
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -189,6 +191,21 @@ function CoachInner() {
     }
   }
 
+  // Escalate a low-confidence answer to a human coach (#26).
+  async function escalate(i: number) {
+    if (escalated[i] === "sending" || escalated[i] === "sent") return;
+    const question = messages[i - 1]?.content || messages[i].content;
+    const answer = messages[i].content;
+    const confidence = messages[i].meta?.confidence ?? null;
+    setEscalated((prev) => ({ ...prev, [i]: "sending" }));
+    try {
+      await createHandoff({ question, ai_answer: answer, confidence });
+      setEscalated((prev) => ({ ...prev, [i]: "sent" }));
+    } catch {
+      setEscalated((prev) => ({ ...prev, [i]: "error" }));
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -261,6 +278,27 @@ function CoachInner() {
               <MessageContent content={msg.content} streaming={msg.streaming} />
               {msg.role === "assistant" && !msg.streaming && msg.meta && (
                 <CoachMetaFooter meta={msg.meta} />
+              )}
+              {msg.role === "assistant" && !msg.streaming && msg.meta?.low_confidence && (
+                <button
+                  type="button"
+                  onClick={() => escalate(i)}
+                  disabled={escalated[i] === "sending" || escalated[i] === "sent"}
+                  className={
+                    "mt-2 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition " +
+                    (escalated[i] === "sent"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                      : "border-indigo-500/40 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20")
+                  }
+                >
+                  {escalated[i] === "sent"
+                    ? `✓ ${t("handoff.sent")}`
+                    : escalated[i] === "sending"
+                      ? t("handoff.sending")
+                      : escalated[i] === "error"
+                        ? t("handoff.error")
+                        : `🤝 ${t("handoff.askHuman")}`}
+                </button>
               )}
             </div>
           </div>

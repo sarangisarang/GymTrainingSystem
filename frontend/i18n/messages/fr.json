@@ -621,5 +621,18 @@
       "RUNNING": "En cours",
       "PAUSED": "En pause"
     }
+  },
+  "handoff": {
+    "askHuman": "Demander à un coach humain",
+    "sending": "Envoi…",
+    "sent": "Envoyé à un coach",
+    "error": "Échec de l'envoi",
+    "dashboardTitle": "Demandes de relais",
+    "dashboardSubtitle": "Athlètes ayant demandé un coach humain après une réponse de l'IA peu fiable.",
+    "confidenceLabel": "Confiance",
+    "question": "Question",
+    "showAiAnswer": "Afficher la réponse de l'IA",
+    "resolve": "Résoudre",
+    "resolved": "Marqué comme résolu"
   }
 }

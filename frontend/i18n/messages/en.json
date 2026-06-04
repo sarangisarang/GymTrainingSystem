@@ -621,5 +621,18 @@
       "RUNNING": "Running",
       "PAUSED": "Paused"
     }
+  },
+  "handoff": {
+    "askHuman": "Ask a human coach",
+    "sending": "Sending…",
+    "sent": "Sent to a coach",
+    "error": "Could not send",
+    "dashboardTitle": "Handoff requests",
+    "dashboardSubtitle": "Athletes who asked for a human coach after a low-confidence AI answer.",
+    "confidenceLabel": "Confidence",
+    "question": "Question",
+    "showAiAnswer": "Show AI answer",
+    "resolve": "Resolve",
+    "resolved": "Marked resolved"
   }
 }
