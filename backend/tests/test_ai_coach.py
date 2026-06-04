@@ -74,6 +74,40 @@ def test_tags_are_normalised():
     assert {s["tag"] for s in result["sources"]} == {"T1", "T2"}
 
 
+# ── evaluate_response: robust to formatting noise the model may add ──────────
+def test_markdown_fenced_meta_is_parsed():
+    meta = "```json\n" + json.dumps({"confidence": 88, "sources": ["T1"]}) + "\n```"
+    result = evaluate_response(meta, TAG_MAP, has_data=True)
+
+    assert result["confidence"] == 88
+    assert result["warnings"] == []
+    assert [s["tag"] for s in result["sources"]] == ["T1"]
+
+
+def test_leading_text_and_trailing_junk_around_json():
+    meta = "Here: " + json.dumps({"confidence": 75, "sources": ["T2"]}) + "  \n[DONE]"
+    result = evaluate_response(meta, TAG_MAP, has_data=True)
+
+    assert result["confidence"] == 75
+    assert [s["tag"] for s in result["sources"]] == ["T2"]
+
+
+def test_string_confidence_is_coerced():
+    meta = json.dumps({"confidence": "80", "sources": ["T1"]})
+    result = evaluate_response(meta, TAG_MAP, has_data=True)
+
+    assert result["confidence"] == 80
+    assert "no_self_assessment" not in result["warnings"]
+
+
+def test_boolean_confidence_is_rejected():
+    # bool is a subclass of int — must not be read as 1/0.
+    meta = json.dumps({"confidence": True, "sources": ["T1"]})
+    result = evaluate_response(meta, TAG_MAP, has_data=True)
+
+    assert "no_self_assessment" in result["warnings"]
+
+
 # ── endpoint: no-data fallback never calls the model ─────────────────────────
 def test_coach_no_data_returns_safe_fallback(auth_client):
     client, token = auth_client  # fresh user, zero workouts
@@ -93,6 +127,28 @@ def test_coach_no_data_returns_safe_fallback(auth_client):
     assert meta["low_confidence"] is True
     assert "no_data" in meta["warnings"]
     assert meta["sources"] == []
+
+
+# ── endpoint: multi-line prose survives SSE framing (regression) ─────────────
+def test_fallback_prose_is_single_sse_line_with_newlines_preserved(auth_client):
+    # The fallback is multi-paragraph. It must be carried in ONE JSON-encoded
+    # `data:` line so the client (which concatenates payloads verbatim) does not
+    # drop everything after the first newline.
+    client, token = auth_client
+    r = client.post("/ai/coach", json={"message": "Hi"}, headers=_auth(token))
+    assert r.status_code == 200, r.text
+
+    prose_lines = [
+        line for line in r.text.splitlines()
+        if line.startswith("data: ")
+        and not line.startswith(f"data: {META_SENTINEL}")
+        and line != "data: [DONE]"
+    ]
+    assert len(prose_lines) == 1, prose_lines
+    decoded = json.loads(prose_lines[0][len("data: "):])
+    assert "noch keine aufgezeichneten Workouts" in decoded
+    assert "Sobald du dein Training protokollierst" in decoded  # 2nd paragraph survives
+    assert "\n" in decoded  # newlines preserved inside the decoded text
 
 
 # ── endpoint: empty message is rejected ──────────────────────────────────────

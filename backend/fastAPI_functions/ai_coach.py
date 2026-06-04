@@ -114,6 +114,27 @@ def _build_context(db: Session, user_id: str) -> tuple[str, dict[str, str]]:
     return "\n\n".join(lines), tag_map
 
 
+def _parse_meta_json(meta_raw: str) -> dict | None:
+    """Best-effort extraction of the model's trailing metadata JSON object.
+
+    The model is told to emit a bare ``{...}`` after the sentinel, but models
+    sometimes wrap it in a markdown fence or add stray text. Isolating the first
+    ``{`` .. last ``}`` makes parsing robust to that, so a good answer is not
+    wrongly downgraded to "uncertain" just because of formatting noise.
+    """
+    if not meta_raw:
+        return None
+    start = meta_raw.find("{")
+    end = meta_raw.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        return None
+    try:
+        data = json.loads(meta_raw[start:end + 1])
+    except (ValueError, TypeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def evaluate_response(
     meta_raw: str, tag_map: dict[str, str], has_data: bool
 ) -> dict:
@@ -131,19 +152,21 @@ def evaluate_response(
     model_confidence: int | None = None
     claimed: list[str] = []
 
-    cleaned = meta_raw.strip().strip("`").strip()
-    if cleaned:
-        try:
-            data = json.loads(cleaned)
-            raw_conf = data.get("confidence")
-            if isinstance(raw_conf, (int, float)):
-                model_confidence = int(raw_conf)
-            for s in data.get("sources", []) or []:
-                tag = str(s).upper().strip().lstrip("[").rstrip("]").strip()
-                if tag:
-                    claimed.append(tag)
-        except (ValueError, TypeError):
-            model_confidence = None
+    data = _parse_meta_json(meta_raw)
+    if data is not None:
+        raw_conf = data.get("confidence")
+        # bool is a subclass of int — exclude it so True/False isn't read as 1/0.
+        if isinstance(raw_conf, bool):
+            pass
+        elif isinstance(raw_conf, (int, float)):
+            model_confidence = int(raw_conf)
+        elif isinstance(raw_conf, str) and raw_conf.strip().lstrip("-").isdigit():
+            model_confidence = int(raw_conf.strip())
+        sources = data.get("sources")
+        for s in sources if isinstance(sources, list) else []:
+            tag = str(s).upper().strip().lstrip("[").rstrip("]").strip()
+            if tag:
+                claimed.append(tag)
 
     valid = [t for t in dict.fromkeys(claimed) if t in tag_map]
     invalid = [t for t in dict.fromkeys(claimed) if t not in tag_map]
@@ -179,8 +202,36 @@ def evaluate_response(
     }
 
 
+def _build_payload(full_prompt: str, model: str) -> dict:
+    """Per-model request payload for Gemini.
+
+    The 2.5 models enable "thinking" by default, which silently consumes the
+    output-token budget — on the coach's complex prompt, thinking alone can run to
+    well over a thousand tokens, so the visible answer (and the trailing @@@META
+    block) gets truncated before it is finished. We disable thinking for those
+    models *and* keep a high token ceiling as a safety net, so the answer plus its
+    metadata always fit even if a model ignores the thinking setting.
+    """
+    generation_config: dict = {"maxOutputTokens": 8192, "temperature": 0.7}
+    if model.startswith("gemini-2.5") or model == "gemini-flash-latest":
+        generation_config["thinkingConfig"] = {"thinkingBudget": 0}
+    return {
+        "contents": [{"parts": [{"text": full_prompt}]}],
+        "generationConfig": generation_config,
+    }
+
+
 def _sse(text: str) -> str:
-    return f"data: {text}\n\n"
+    # JSON-encode the payload so newlines inside `text` survive SSE framing. The
+    # client concatenates ``data:`` payloads verbatim, so a literal newline would
+    # split one logical chunk into lines without a ``data:`` prefix — and the
+    # client would drop everything after the first newline (e.g. bullet lists or
+    # the multi-paragraph fallback).
+    return f"data: {json.dumps(text, ensure_ascii=False)}\n\n"
+
+
+def _done() -> str:
+    return "data: [DONE]\n\n"
 
 
 def _meta_event(result: dict) -> str:
@@ -196,13 +247,13 @@ async def _stream_gemini(
     if not has_data:
         yield _sse(NO_DATA_FALLBACK)
         yield _meta_event(evaluate_response("", tag_map, has_data=False))
-        yield _sse("[DONE]")
+        yield _done()
         return
 
     api_key = os.getenv("GEMINI_API_KEY", "")
     if not api_key:
         yield _sse("⚠️ GEMINI_API_KEY nicht gesetzt.")
-        yield _sse("[DONE]")
+        yield _done()
         return
 
     full_prompt = (
@@ -210,16 +261,13 @@ async def _stream_gemini(
         f"Trainingsdaten des Athleten (letzte 10 Einheiten):\n\n{context}\n\n"
         f"Frage: {message}"
     )
-    payload = {
-        "contents": [{"parts": [{"text": full_prompt}]}],
-        "generationConfig": {"maxOutputTokens": 1024, "temperature": 0.7},
-    }
 
     async with httpx.AsyncClient(timeout=60) as client:
         response = None
         last_error = ""
 
         for model in GEMINI_MODELS:
+            payload = _build_payload(full_prompt, model)
             url = (
                 f"https://generativelanguage.googleapis.com/v1beta/models/"
                 f"{model}:streamGenerateContent?key={api_key}&alt=sse"
@@ -247,7 +295,7 @@ async def _stream_gemini(
 
         if response is None:
             yield _sse(f"⚠️ Alle Modelle nicht verfügbar: {last_error}")
-            yield _sse("[DONE]")
+            yield _done()
             return
 
         # Stream the prose, intercepting the trailing @@@META block. We hold back
@@ -305,7 +353,7 @@ async def _stream_gemini(
 
     result = evaluate_response(meta_raw, tag_map, has_data=True)
     yield _meta_event(result)
-    yield _sse("[DONE]")
+    yield _done()
 
 
 @router.post("/coach")

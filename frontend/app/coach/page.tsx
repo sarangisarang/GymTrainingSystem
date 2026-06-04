@@ -151,7 +151,15 @@ function CoachInner() {
             } catch {}
             continue;
           }
-          fullText += data;
+          // Prose chunks are JSON-encoded by the server so embedded newlines
+          // survive SSE framing; decode back to the original text.
+          let piece: string;
+          try {
+            piece = JSON.parse(data);
+          } catch {
+            piece = data;
+          }
+          fullText += piece;
           setMessages((prev) =>
             prev.map((m, i) =>
               i === prev.length - 1
