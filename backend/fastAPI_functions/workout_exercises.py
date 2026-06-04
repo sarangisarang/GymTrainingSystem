@@ -87,7 +87,13 @@ def api_update_exercise(
     we = get_workout_exercise(db, we_id)
     if not we:
         raise HTTPException(status_code=404, detail="Workout exercise not found")
+    # The exercise must currently belong to the caller…
     _require_workout_ownership(db, UUID(we.workout_id), current_user)
+    # …and if this update re-parents it, the *target* workout must belong to the
+    # caller too — otherwise a user could move their own exercise row into
+    # someone else's workout by guessing that workout's id.
+    if str(data.workout_id) != str(we.workout_id):
+        _require_workout_ownership(db, data.workout_id, current_user)
     return update_workout_exercise(db, we_id, data)
 
 

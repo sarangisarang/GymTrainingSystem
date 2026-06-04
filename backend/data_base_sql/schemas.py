@@ -67,9 +67,9 @@ class ExerciseRead(ConfiguredModel):
 
 class WorkoutExerciseInWorkoutCreate(BaseModel):
     exercise_id: UUID
-    sets: int
-    reps: int
-    weight: Optional[Decimal] = None
+    sets: int = Field(..., ge=1)
+    reps: int = Field(..., ge=1)
+    weight: Optional[Decimal] = Field(default=None, ge=0)
     rest_seconds: int = Field(default=30, ge=0, le=3600)
     rest_limit_seconds: int = Field(default=45, ge=0, le=7200)
     order_index: int = Field(default=0, ge=0)
@@ -78,9 +78,9 @@ class WorkoutExerciseInWorkoutCreate(BaseModel):
 class WorkoutExerciseCreate(BaseModel):
     workout_id: UUID
     exercise_id: UUID
-    sets: int
-    reps: int
-    weight: Optional[Decimal] = None
+    sets: int = Field(..., ge=1)
+    reps: int = Field(..., ge=1)
+    weight: Optional[Decimal] = Field(default=None, ge=0)
     rest_seconds: int = Field(default=30, ge=0, le=3600)
     rest_limit_seconds: int = Field(default=45, ge=0, le=7200)
     order_index: int = Field(default=0, ge=0)
@@ -106,7 +106,7 @@ class WorkoutCreate(BaseModel):
 
 class WorkoutStatusUpdate(BaseModel):
     status: str  # PLANNED | IN_PROGRESS | COMPLETED | CANCELLED
-    duration_seconds: Optional[int] = None
+    duration_seconds: Optional[int] = Field(default=None, ge=0)
 
 
 class WorkoutRead(ConfiguredModel):
