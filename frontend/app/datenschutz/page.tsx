@@ -63,8 +63,10 @@ export default function DatenschutzPage() {
             Googles API. Ohne aktive Anfrage findet keine Übertragung statt.
           </li>
           <li>
-            Hosting: die App läuft auf Render (Frankfurt-Region). Render speichert
-            Server-Logs gemäß deren Datenschutzrichtlinie.
+            Hosting: die App läuft auf einer Cloud-Plattform (aktuell Render oder
+            Railway, vorzugsweise EU-Region). Der Anbieter speichert
+            Server-Logs gemäß dessen Datenschutzrichtlinie. Bei Wechsel der
+            Plattform aktualisieren wir diese Seite.
           </li>
         </ul>
       </div>

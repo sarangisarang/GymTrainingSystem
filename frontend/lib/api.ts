@@ -296,8 +296,18 @@ export async function downloadMyDataExport(): Promise<void> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {
+    // Mirror apiFetch's JSON-detail unwrapping so a FastAPI 401 body like
+    // {"detail":"Not authenticated"} surfaces as the readable string in the
+    // toast, not the raw JSON.
     const text = await res.text().catch(() => "");
-    throw new Error(text || `Export failed: ${res.status}`);
+    let detail = text;
+    try {
+      const json = JSON.parse(text);
+      detail = json.detail || json.message || text;
+    } catch {
+      // text wasn't JSON, use it as-is
+    }
+    throw new Error(detail || `Request failed: ${res.status}`);
   }
   const blob = await res.blob();
   const disposition = res.headers.get("Content-Disposition") || "";

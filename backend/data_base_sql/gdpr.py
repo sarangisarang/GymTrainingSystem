@@ -108,6 +108,21 @@ def export_user_data(db: Session, user_id: UUID) -> dict[str, Any]:
         .filter(or_(CoachClient.coach_id == uid, CoachClient.athlete_id == uid))
         .all()
     )
+    # DSGVO Art. 15(4): the right of access "shall not adversely affect the
+    # rights and freedoms of others". A raw dump of CoachClient rows would
+    # include the OTHER party's user UUID in every link, leaking the identity
+    # of athletes (in a coach's export) or coaches (in an athlete's export)
+    # who never consented to being enumerated. Reduce each row to "your side
+    # of the link", a placeholder for the counterparty, and the timestamp.
+    coach_clients_safe: list[dict[str, Any]] = []
+    for c in coach_links:
+        role = "coach" if c.coach_id == uid else "athlete"
+        coach_clients_safe.append({
+            "id": c.id,
+            "role": role,
+            "counterparty": "<redacted>",
+            "created_at": _serialise(c.created_at),
+        })
 
     return {
         "generated_at": datetime.utcnow().isoformat() + "Z",
@@ -119,7 +134,7 @@ def export_user_data(db: Session, user_id: UUID) -> dict[str, Any]:
         "training_programs": [_row_to_dict(p) for p in programs],
         "training_program_items": [_row_to_dict(i) for i in program_items],
         "user_achievements": [_row_to_dict(a) for a in achievements],
-        "coach_clients": [_row_to_dict(c) for c in coach_links],
+        "coach_clients": coach_clients_safe,
     }
 
 
@@ -188,11 +203,21 @@ def delete_user_account(db: Session, user_id: UUID) -> bool:
     db.commit()
 
     # ── Step 6: best-effort vector store cleanup ─────────────────────────
+    # remove_user_workouts_from_index already wraps its Chroma call in
+    # try/except, so the only failure modes the outer catch needs to absorb
+    # are developer errors (the module being missing or its API renamed).
+    # Catch ONLY those narrow cases here so a misnamed Chroma backend etc.
+    # propagates instead of silently masking a refactor regression.
     try:
         from . import vector_store
 
         vector_store.remove_user_workouts_from_index(uid)
-    except Exception as exc:
-        logger.warning("Vector cleanup for deleted user %s failed: %s", uid, exc)
+    except (ImportError, AttributeError) as exc:
+        logger.error(
+            "Vector cleanup wiring broken for deleted user %s — "
+            "module/function missing: %s",
+            uid,
+            exc,
+        )
 
     return True
