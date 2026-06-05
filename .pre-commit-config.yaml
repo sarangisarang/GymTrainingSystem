@@ -23,22 +23,26 @@ exclude: |
   )$
 
 repos:
-  # ── Generic hygiene ────────────────────────────────────────────────────
+  # ── Generic checks (read-only) ─────────────────────────────────────────
+  # Only non-modifying validators are included. Auto-fixing hygiene hooks
+  # (trailing-whitespace, end-of-file-fixer, mixed-line-ending) are
+  # deliberately left out: on this repo's existing mixed line-endings they
+  # would rewrite dozens of unrelated files (incl. ones teammates are editing)
+  # on the first `pre-commit run --all-files`. So nothing here ever changes a
+  # file; the hooks only flag problems.
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
         args: ["--maxkb=1024"]
       - id: check-merge-conflict
-      - id: mixed-line-ending
-        args: ["--fix=lf"]
 
   # ── Python: Ruff lint (backend only) ───────────────────────────────────
-  # Uses the same rules as backend/pyproject.toml. Lint only, no formatter,
-  # to match the non-invasive posture of this PR.
+  # Uses the same rules as backend/pyproject.toml. Lint only (no --fix, no
+  # formatter), so the hook reports but never rewrites code. The per-file
+  # ignore patterns in pyproject.toml use `**/` prefixes so they match whether
+  # ruff is invoked from repo root (pre-commit) or backend/ (CI).
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
     hooks:

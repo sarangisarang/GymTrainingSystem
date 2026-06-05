@@ -50,9 +50,11 @@ pre-commit install            # aktiviert die Hooks lokal
 pre-commit run --all-files
 ```
 
-Konfiguration: `.pre-commit-config.yaml` (Whitespace-/EOF-Hygiene, Ruff für
-backend/, ESLint für frontend/). Die Hooks sind nach Ordner gescoped, sodass
-Python-Tools nie das Frontend anfassen und umgekehrt.
+Konfiguration: `.pre-commit-config.yaml`. Die Hooks sind bewusst **read-only**
+(Ruff für backend/, ESLint für frontend/, plus YAML-/Merge-Conflict-/Large-File-
+Checks) und nach Ordner gescoped: kein Hook schreibt jemals eine Datei um, sie
+melden nur Probleme. So löst der erste `pre-commit run --all-files` keinen
+Whitespace-/Line-Ending-Sweep über fremde Dateien aus.
 
 ## CI
 

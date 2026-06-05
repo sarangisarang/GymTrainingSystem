@@ -22,10 +22,16 @@ select = ["E", "W", "F"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
+# NOTE: patterns use a leading `**/` so they match regardless of the working
+# directory ruff is invoked from. CI runs ruff with cwd=backend (paths like
+# `tests/conftest.py`), but the pre-commit hook runs from the repo root (paths
+# like `backend/tests/conftest.py`). A bare `tests/*` would only match the
+# former; `**/tests/*` matches both.
+#
 # Tests and seed scripts legitimately mutate sys.path (to import `main`) before
 # their module imports, which trips E402. That ordering is intentional.
-"tests/*" = ["E402"]
-"seed_*.py" = ["E402"]
+"**/tests/*" = ["E402"]
+"**/seed_*.py" = ["E402"]
 # crud.py has two pre-existing items owned by the backend author:
 #   - E402: a few mid-file imports (decimal/timedelta) kept next to their use.
 #   - F811: get_report_period_data is defined twice (lines ~846 and ~970); the
@@ -34,7 +40,7 @@ ignore = ["E501"]
 #     Tracked separately (see PR description) rather than silently swept.
 #   - F401: one unused `date` import. Left for the file's author to drop so this
 #     code-quality PR touches zero lines of an actively-edited module.
-"data_base_sql/crud.py" = ["E402", "F811", "F401"]
+"**/crud.py" = ["E402", "F811", "F401"]
 
 [tool.coverage.run]
 # Measure only application source, not the test files themselves, the one-off
