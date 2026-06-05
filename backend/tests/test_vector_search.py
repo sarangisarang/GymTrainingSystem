@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import uuid
 
-import pytest
 from fastapi.testclient import TestClient
 
 from data_base_sql import vector_store

@@ -35,7 +35,6 @@ from sqlalchemy.orm import Session
 
 from .models import (
     CoachClient,
-    Exercise,
     TrainingProgram,
     TrainingProgramItem,
     User,

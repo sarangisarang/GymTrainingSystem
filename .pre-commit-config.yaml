@@ -1,0 +1,60 @@
+# Pre-commit hooks for Issue #31 (Code Quality).
+#
+# OPT-IN: these hooks do nothing until a developer runs, once per clone:
+#     pip install pre-commit
+#     pre-commit install
+# Until then commits behave exactly as before. This is deliberate so the hooks
+# never block a teammate's in-flight work without them choosing to enable it.
+#
+# The hooks are scoped: Python tooling only touches backend/, the formatting
+# hygiene hooks skip generated/vendored/data paths. Run against everything once
+# with:  pre-commit run --all-files
+
+exclude: |
+  (?x)^(
+    frontend/node_modules/.*|
+    frontend/\.next/.*|
+    frontend/.*\.tsbuildinfo|
+    frontend/i18n/messages/.*|
+    backend/\.venv/.*|
+    backend/static/.*|
+    infra/\.terraform/.*|
+    .*\.db
+  )$
+
+repos:
+  # ── Generic hygiene ────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  # ── Python: Ruff lint (backend only) ───────────────────────────────────
+  # Uses the same rules as backend/pyproject.toml. Lint only, no formatter,
+  # to match the non-invasive posture of this PR.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        files: ^backend/
+        args: ["--config", "backend/pyproject.toml"]
+
+  # ── Frontend: ESLint (local hook, needs node_modules installed) ────────
+  # Local hook because it reuses the project's own eslint + flat config rather
+  # than a pinned mirror. Triggers when any frontend source file is staged and
+  # lints the whole frontend (simple + cross-platform; ESLint is fast here).
+  - repo: local
+    hooks:
+      - id: eslint-frontend
+        name: eslint (frontend)
+        entry: npm --prefix frontend run lint
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|mjs)$
+        pass_filenames: false

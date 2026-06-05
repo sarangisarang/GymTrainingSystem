@@ -419,7 +419,7 @@ function ProgressInner() {
                   <Tooltip
                     contentStyle={tooltipStyle}
                     labelStyle={{ color: "#fafafa" }}
-                    formatter={(value: number, name: string) => [`${value} ${t("common.kg")}`, name]}
+                    formatter={(value, name) => [`${Number(value)} ${t("common.kg")}`, name]}
                   />
                   <Line
                     type="monotone"
@@ -473,7 +473,7 @@ function ProgressInner() {
                 contentStyle={tooltipStyle}
                 labelStyle={{ color: "#fafafa" }}
                 cursor={{ fill: "rgba(99,102,241,0.1)" }}
-                formatter={(value: number) => [`${value.toLocaleString()} ${t("common.kg")}`, t("progress.volume")]}
+                formatter={(value) => [`${Number(value).toLocaleString()} ${t("common.kg")}`, t("progress.volume")]}
               />
               <Bar dataKey="volume" fill={COLORS.bar} radius={[6, 6, 0, 0]} name={t("progress.volume")} isAnimationActive={false} />
             </BarChart>
@@ -506,7 +506,7 @@ function ProgressInner() {
                   <Tooltip
                     contentStyle={tooltipStyle}
                     labelStyle={{ color: "#fafafa" }}
-                    formatter={(value: number) => [`${value} ${t("common.kg")}`, t("progress.bodyWeight")]}
+                    formatter={(value) => [`${Number(value)} ${t("common.kg")}`, t("progress.bodyWeight")]}
                   />
                   <Legend wrapperStyle={{ fontSize: "0.8rem" }} />
                   <Line

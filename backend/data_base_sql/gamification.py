@@ -17,7 +17,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Callable
 from uuid import UUID
 
 from sqlalchemy.orm import Session

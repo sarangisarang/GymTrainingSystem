@@ -34,8 +34,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run backend tests
-        run: python -m pytest -q
+      - name: Ruff lint (Issue #31)
+        run: python -m ruff check .
+
+      - name: Run backend tests with coverage (Issue #31)
+        # Threshold starts just below the current ~71% app-source coverage so it
+        # passes today and leaves a small buffer; ratchet upward as tests grow.
+        run: python -m pytest -q --cov --cov-report=term-missing --cov-fail-under=65
 
   frontend-checks:
     name: Frontend build and tests
@@ -62,6 +67,9 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Run ESLint (Issue #31)
+        run: npm run lint
 
       - name: Run TypeScript check
         run: npm run typecheck

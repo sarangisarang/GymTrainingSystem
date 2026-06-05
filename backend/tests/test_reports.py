@@ -9,10 +9,8 @@ from __future__ import annotations
 from datetime import date, timedelta
 from uuid import UUID
 
-import pytest
 
 from data_base_sql.crud import get_report_period_data
-from data_base_sql.models import Exercise, Workout, WorkoutExercise, User
 
 
 def _auth(token: str) -> dict:
@@ -91,7 +89,6 @@ def test_monthly_with_completed_workout_returns_pdf(auth_client):
     r = client.get("/reports/monthly", headers=_auth(token))
     assert r.status_code == 200
     assert r.content.startswith(b"%PDF-")
-    iso = today.isocalendar()
     # filename should embed year + month
     assert f"{today.year}-{today.month:02d}" in r.headers.get("content-disposition", "")
 

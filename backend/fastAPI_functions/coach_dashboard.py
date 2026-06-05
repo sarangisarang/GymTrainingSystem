@@ -18,7 +18,6 @@ from data_base_sql.crud import (
     remove_athlete_from_coach,
     get_coach_athletes,
     get_athlete_workouts_for_coach,
-    get_workouts_paginated,
 )
 
 router = APIRouter(prefix="/coach", tags=["Coach Dashboard"])
