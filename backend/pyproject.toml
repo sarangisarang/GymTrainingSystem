@@ -40,7 +40,11 @@ ignore = ["E501"]
 #     Tracked separately (see PR description) rather than silently swept.
 #   - F401: one unused `date` import. Left for the file's author to drop so this
 #     code-quality PR touches zero lines of an actively-edited module.
-"**/crud.py" = ["E402", "F811", "F401"]
+# Anchored to the data_base_sql/ path (not a bare `**/crud.py`) so a future
+# per-feature crud.py elsewhere in the tree does NOT inherit these suppressions
+# and silently hide real F811/F401/E402 bugs. The `**/` prefix still lets it
+# match from both CI (cwd=backend) and pre-commit (cwd=repo-root).
+"**/data_base_sql/crud.py" = ["E402", "F811", "F401"]
 
 [tool.coverage.run]
 # Measure only application source, not the test files themselves, the one-off
