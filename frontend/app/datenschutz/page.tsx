@@ -2,6 +2,7 @@
 // document — but honest about what is stored, why, and how users can exercise
 // their DSGVO rights (export + deletion are linked back to the profile page).
 import Link from "next/link";
+import LocaleNotice from "./LocaleNotice";
 
 export const metadata = {
   title: "Datenschutz · Gym Tracker",
@@ -12,6 +13,7 @@ export const metadata = {
 export default function DatenschutzPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <LocaleNotice />
       <div className="card p-6">
         <h1 className="h1">Datenschutzerklärung</h1>
         <p className="muted mt-2">
@@ -63,8 +65,10 @@ export default function DatenschutzPage() {
             Googles API. Ohne aktive Anfrage findet keine Übertragung statt.
           </li>
           <li>
-            Hosting: die App läuft auf Render (Frankfurt-Region). Render speichert
-            Server-Logs gemäß deren Datenschutzrichtlinie.
+            Hosting: die App läuft auf einer Cloud-Plattform (aktuell Render oder
+            Railway, vorzugsweise EU-Region). Der Anbieter speichert
+            Server-Logs gemäß dessen Datenschutzrichtlinie. Bei Wechsel der
+            Plattform aktualisieren wir diese Seite.
           </li>
         </ul>
       </div>

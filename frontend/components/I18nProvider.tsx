@@ -80,9 +80,19 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const t = useMemo(() => {
     const active = MESSAGES[locale] ?? MESSAGES[DEFAULT_LOCALE];
-    const fallback = MESSAGES[DEFAULT_LOCALE];
+    // Two-step fallback: prefer English over the German default for missing
+    // keys, since English is the more broadly understood lingua franca for
+    // international users. Falls back to DE (DEFAULT_LOCALE) only if English
+    // also lacks the key, then to the literal key as a last resort. This
+    // matters most for late-added feature keys (DSGVO export, etc.) that
+    // haven't been translated into every locale yet.
+    const enFallback = MESSAGES.en ?? MESSAGES[DEFAULT_LOCALE];
+    const deFallback = MESSAGES[DEFAULT_LOCALE];
     return (key: string): string =>
-      lookup(active, key) ?? lookup(fallback, key) ?? key;
+      lookup(active, key)
+      ?? lookup(enFallback, key)
+      ?? lookup(deFallback, key)
+      ?? key;
   }, [locale]);
 
   const value = useMemo(() => ({ locale, setLocale, t }), [locale, t]);

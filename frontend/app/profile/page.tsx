@@ -414,7 +414,6 @@ function ProfileInner() {
                 value={deleteConfirm}
                 onChange={(e) => setDeleteConfirm(e.target.value)}
                 autoComplete="off"
-                aria-describedby="delete-confirm-hint"
               />
               <div className="flex gap-2">
                 <button
