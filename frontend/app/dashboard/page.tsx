@@ -175,7 +175,7 @@ function DashboardInner() {
               <Tooltip
                 contentStyle={{ background: "#171717", border: "1px solid #404040", borderRadius: 10 }}
                 labelStyle={{ color: "#a3a3a3", fontSize: 12 }}
-                formatter={(v: number) => [`${v.toLocaleString()} ${t("common.kg")}`, t("dashboard.volume")]}
+                formatter={(v) => [`${Number(v).toLocaleString()} ${t("common.kg")}`, t("dashboard.volume")]}
               />
               <Bar dataKey="volume_kg" radius={[4, 4, 0, 0]}>
                 {trend.map((entry, i) => (

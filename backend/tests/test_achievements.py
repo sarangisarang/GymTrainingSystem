@@ -11,7 +11,6 @@ Covers:
 from __future__ import annotations
 
 from datetime import date, timedelta
-from uuid import UUID
 
 
 def _auth(token: str) -> dict:

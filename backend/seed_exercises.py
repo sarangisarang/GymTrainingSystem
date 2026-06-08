@@ -4,9 +4,6 @@ Run from the backend/ directory:
     python seed_exercises.py
 """
 
-import io
-import os
-import sys
 import urllib.request
 import urllib.error
 import json
@@ -477,7 +474,7 @@ def main() -> None:
 
     print("🔑  Logging in …")
     token = login(email, password)
-    print(f"✅  Token acquired")
+    print("✅  Token acquired")
 
     for i, (name, muscle_group, description, image_url) in enumerate(EXERCISES, 1):
         print(f"\n[{i}/{len(EXERCISES)}] {name} ({muscle_group})")
@@ -489,19 +486,19 @@ def main() -> None:
         except urllib.error.HTTPError as e:
             body = e.read().decode()
             if "already exists" in body.lower() or e.code == 409:
-                print(f"    ⏭   Already exists — skipping")
+                print("    ⏭   Already exists — skipping")
             else:
                 print(f"    ❌  Create failed ({e.code}): {body[:200]}")
             continue
 
         # fetch + upload image
-        print(f"    🌐  Fetching image …")
+        print("    🌐  Fetching image …")
         img_bytes = fetch_image(image_url)
         if img_bytes:
             upload_image(token, ex_id, img_bytes, f"{name.lower().replace(' ', '_')}.jpg")
             print(f"    🖼   Image uploaded ({len(img_bytes)//1024} KB)")
         else:
-            print(f"    ⚠   No image — exercise saved without photo")
+            print("    ⚠   No image — exercise saved without photo")
 
     print("\n\n🎉  Done! All exercises seeded.")
 

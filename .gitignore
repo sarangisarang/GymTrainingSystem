@@ -8,3 +8,11 @@ node_modules/
 backend/.env
 chroma_db/
 backend/chroma_db/
+
+# Code-quality tooling artifacts (Issue #31)
+.coverage
+backend/.coverage
+htmlcov/
+.ruff_cache/
+backend/.ruff_cache/
+.pre-commit-cache/

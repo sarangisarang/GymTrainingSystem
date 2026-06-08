@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Protected from "@/components/Protected";
 import { useAuth } from "@/components/AuthProvider";
@@ -95,7 +96,7 @@ function CartInner() {
       {items.length === 0 ? (
         <div className="card p-6 text-center">
           <p className="muted">{t("cart.empty")}</p>
-          <a href="/exercises" className="btn-primary mt-4 inline-block">{t("cart.browseExercises")}</a>
+          <Link href="/exercises" className="btn-primary mt-4 inline-block">{t("cart.browseExercises")}</Link>
         </div>
       ) : (
         <div className="grid gap-4">

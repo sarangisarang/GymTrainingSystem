@@ -1,0 +1,65 @@
+# Backend tooling config (Issue #31: Code Quality).
+#
+# Holds Ruff (lint) and coverage settings. There is no build-system section
+# because the backend is run directly via uvicorn, not installed as a package.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+# The bundled virtualenv and caches are never linted.
+extend-exclude = [".venv", "venv", "__pycache__", "static"]
+
+[tool.ruff.lint]
+# Stock, low-noise rule set: pycodestyle errors/warnings (E/W) and Pyflakes (F).
+# Deliberately NOT enabling isort (I) or the formatter — a repo-wide import
+# reorder / reformat would rewrite every line of files teammates are actively
+# editing and guarantee merge conflicts. Quality wins here come from removing
+# dead code, not from cosmetic reshuffling.
+select = ["E", "W", "F"]
+# E501 (line too long) is reported but not auto-fixed and would flag a lot of
+# pre-existing long strings; left off the hard set for now and revisited once
+# the team adopts a formatter.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# NOTE: patterns use a leading `**/` so they match regardless of the working
+# directory ruff is invoked from. CI runs ruff with cwd=backend (paths like
+# `tests/conftest.py`), but the pre-commit hook runs from the repo root (paths
+# like `backend/tests/conftest.py`). A bare `tests/*` would only match the
+# former; `**/tests/*` matches both.
+#
+# Tests and seed scripts legitimately mutate sys.path (to import `main`) before
+# their module imports, which trips E402. That ordering is intentional.
+"**/tests/*" = ["E402"]
+"**/seed_*.py" = ["E402"]
+# crud.py has two pre-existing items owned by the backend author:
+#   - E402: a few mid-file imports (decimal/timedelta) kept next to their use.
+#   - F811: get_report_period_data is defined twice (lines ~846 and ~970); the
+#     second shadows the first. This is a real dead-code bug, but it lives in a
+#     hot file and removing ~120 lines here would conflict with in-flight work.
+#     Tracked separately (see PR description) rather than silently swept.
+#   - F401: one unused `date` import. Left for the file's author to drop so this
+#     code-quality PR touches zero lines of an actively-edited module.
+# Anchored to the data_base_sql/ path (not a bare `**/crud.py`) so a future
+# per-feature crud.py elsewhere in the tree does NOT inherit these suppressions
+# and silently hide real F811/F401/E402 bugs. The `**/` prefix still lets it
+# match from both CI (cwd=backend) and pre-commit (cwd=repo-root).
+"**/data_base_sql/crud.py" = ["E402", "F811", "F401"]
+
+[tool.coverage.run]
+# Measure only application source, not the test files themselves, the one-off
+# seed scripts, or the optional Mongo request-logging shim (not wired into the
+# app). This keeps the reported percentage honest about exercised app code.
+source = ["data_base_sql", "fastAPI_functions", "main"]
+omit = [
+    "tests/*",
+    "seed_demo.py",
+    "seed_exercises.py",
+    "data_base_sql/mongo.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+# Don't fail a local run on coverage; the CI gate (--cov-fail-under) owns the
+# threshold so local `pytest --cov` stays informational.
+skip_covered = false
