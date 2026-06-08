@@ -5,8 +5,10 @@ Covers:
 - Export returns every owned table; password_hash is never leaked
 - Export is scoped to the calling user; other users' rows do not bleed in
 - Delete cascades through workouts, workout_exercises, user_exercise_maxes,
-  training_programs, training_program_items, user_achievements, and
-  coach_clients on BOTH coach and athlete sides
+  training_programs, training_program_items, user_achievements,
+  coach_clients on BOTH coach and athlete sides, and coach_handoffs
+- Export includes and delete removes coach_handoffs (the athlete's escalated
+  questions); leaving them orphans a NOT-NULL FK and crashes delete on Postgres
 - Delete does not touch other users' data or the shared exercises catalogue
 - After delete the JWT becomes useless (subsequent GET /me returns 401)
 - The same email can be re-registered after a delete (no unique-key zombie)
@@ -21,6 +23,7 @@ from fastapi.testclient import TestClient
 
 from data_base_sql.models import (
     CoachClient,
+    CoachHandoff,
     Exercise,
     TrainingProgram,
     TrainingProgramItem,
@@ -127,6 +130,7 @@ def test_export_contains_full_user_payload(auth_client: tuple[TestClient, str]):
         "training_program_items",
         "user_achievements",
         "coach_clients",
+        "coach_handoffs",
     ):
         assert key in payload, f"missing top-level key {key}"
 
@@ -335,6 +339,56 @@ def test_export_redacts_coach_counterparty(client: TestClient):
         assert me_b["id"] not in flat, (
             f"counterparty UUID leaked into coach's export: {link}"
         )
+
+
+def test_coach_handoffs_are_exported_and_deleted(client: TestClient):
+    """A coach handoff (#26) is the athlete's own escalated question + AI answer.
+    It must appear in their export (Art. 15) and be wiped on delete (Art. 17).
+    Leaving it behind orphans a NOT-NULL FK to users.id and makes account
+    deletion raise IntegrityError on a FK-enforcing backend (PostgreSQL in prod).
+    """
+    _, token = _register_and_login(client, "Escalator")
+    user_id = client.get("/users/me", headers=_auth(token)).json()["id"]
+
+    db = TestingSessionLocal()
+    try:
+        db.add(CoachHandoff(
+            athlete_id=user_id,
+            question="Is my squat depth correct?",
+            ai_answer="Aim for hip crease below the knee.",
+            confidence=40,
+            status="PENDING",
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+    # Export must include the handoff with its personal content
+    r = client.get("/users/me/export", headers=_auth(token))
+    assert r.status_code == 200, r.text
+    handoffs = json.loads(r.content)["coach_handoffs"]
+    assert len(handoffs) == 1, handoffs
+    assert handoffs[0]["question"] == "Is my squat depth correct?"
+    assert handoffs[0]["ai_answer"] == "Aim for hip crease below the knee."
+    assert handoffs[0]["athlete_id"] == user_id
+
+    # Delete must remove it — no orphan rows, no FK violation
+    assert client.delete("/users/me", headers=_auth(token)).status_code == 204
+
+    db = TestingSessionLocal()
+    try:
+        assert db.query(CoachHandoff).filter(
+            CoachHandoff.athlete_id == user_id
+        ).count() == 0
+        # No handoff left dangling against a user that no longer exists
+        orphans = (
+            db.query(CoachHandoff)
+            .filter(~CoachHandoff.athlete_id.in_(db.query(User.id)))
+            .count()
+        )
+        assert orphans == 0
+    finally:
+        db.close()
 
 
 def test_legacy_delete_by_id_also_cascades(auth_client: tuple[TestClient, str]):

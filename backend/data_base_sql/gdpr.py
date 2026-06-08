@@ -2,7 +2,7 @@
 
 The User model has NO SQLAlchemy cascade and NO `ondelete=CASCADE` on any FK
 column referencing users.id. A naive `db.delete(user); db.commit()` therefore
-orphans rows in seven other tables. The functions in this module do the cleanup
+orphans rows in eight other tables. The functions in this module do the cleanup
 explicitly so adding cascade behaviour to the ORM stays a follow-up refactor
 rather than a prerequisite.
 
@@ -14,6 +14,8 @@ Tables that get exported AND wiped on delete (everything user-owned):
   - training_program_items      (cascade ALREADY configured on TrainingProgram)
   - user_achievements           (FK user_id)
   - coach_clients               (FK coach_id OR athlete_id, both sides)
+  - coach_handoffs              (FK athlete_id) — the athlete's own question +
+                                the AI answer they escalated to a human coach (#26)
 
 Tables that are NEITHER exported nor wiped on a personal request:
   - exercises                   global catalogue, contains no personal data
@@ -36,6 +38,7 @@ from sqlalchemy.orm import Session
 
 from .models import (
     CoachClient,
+    CoachHandoff,
     TrainingProgram,
     TrainingProgramItem,
     User,
@@ -124,6 +127,13 @@ def export_user_data(db: Session, user_id: UUID) -> dict[str, Any]:
             "created_at": _serialise(c.created_at),
         })
 
+    # Coach handoffs the user filed as an athlete (#26). The row references only
+    # the athlete (no counterparty UUID stored), and question/ai_answer/confidence
+    # are the user's own data, so the full row is exported without redaction.
+    handoffs = (
+        db.query(CoachHandoff).filter(CoachHandoff.athlete_id == uid).all()
+    )
+
     return {
         "generated_at": datetime.utcnow().isoformat() + "Z",
         "schema_version": 1,
@@ -135,6 +145,7 @@ def export_user_data(db: Session, user_id: UUID) -> dict[str, Any]:
         "training_program_items": [_row_to_dict(i) for i in program_items],
         "user_achievements": [_row_to_dict(a) for a in achievements],
         "coach_clients": coach_clients_safe,
+        "coach_handoffs": [_row_to_dict(h) for h in handoffs],
     }
 
 
@@ -197,12 +208,21 @@ def delete_user_account(db: Session, user_id: UUID) -> bool:
         or_(CoachClient.coach_id == uid, CoachClient.athlete_id == uid)
     ).delete(synchronize_session=False)
 
-    # ── Step 5: the user row itself ──────────────────────────────────────
+    # ── Step 5: coach handoffs the user filed as an athlete (#26) ────────
+    # coach_handoffs.athlete_id is a NOT-NULL FK to users.id. Leaving these
+    # behind orphans them and, on a FK-enforcing backend (PostgreSQL in prod),
+    # makes the Step 6 user-row delete raise IntegrityError — i.e. account
+    # deletion would crash for any athlete who ever escalated an answer.
+    db.query(CoachHandoff).filter(CoachHandoff.athlete_id == uid).delete(
+        synchronize_session=False
+    )
+
+    # ── Step 6: the user row itself ──────────────────────────────────────
     db.query(User).filter(User.id == uid).delete(synchronize_session=False)
 
     db.commit()
 
-    # ── Step 6: best-effort vector store cleanup ─────────────────────────
+    # ── Step 7: best-effort vector store cleanup ─────────────────────────
     # remove_user_workouts_from_index already wraps its Chroma call in
     # try/except, so the only failure modes the outer catch needs to absorb
     # are developer errors (the module being missing or its API renamed).
