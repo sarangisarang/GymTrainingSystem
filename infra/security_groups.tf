@@ -27,6 +27,17 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Backend API exposed via the ALB on :8000 (Fargate MVP). Inline (not a
+  # standalone aws_security_group_rule) so the authoritative inline ruleset
+  # doesn't revoke it on every apply.
+  ingress {
+    description = "Backend API via ALB"
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     description = "Allow all outbound"
     from_port   = 0

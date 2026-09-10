@@ -49,3 +49,36 @@ variable "enable_documentdb" {
     error_message = "DocumentDB is out of scope (budget). MongoDB is deferred; if ever needed use external MongoDB Atlas. Keep enable_documentdb = false."
   }
 }
+
+variable "budget_alert_email" {
+  description = "E-Mail für AWS-Budget-Benachrichtigungen (nur bei enable_fargate genutzt)."
+  type        = string
+  default     = ""
+}
+
+# Echter AWS-Budget-Alarm (kostenlos) — warnt bei 80 % (Ist-Kosten) und 100 %
+# (Prognose) des Monatslimits. So bleibt das Deployment kostenkontrolliert.
+resource "aws_budgets_budget" "monthly" {
+  count        = local.fargate_enabled
+  name         = "${var.project_name}-monthly"
+  budget_type  = "COST"
+  limit_amount = "20"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.budget_alert_email]
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = [var.budget_alert_email]
+  }
+}
