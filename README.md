@@ -11,7 +11,8 @@ Trainingsprogramme aus dem 1-Rep-Max generieren, Fortschritt vorhersagen — und
 echten Coach übergibt.
 
 FastAPI-Backend, Next.js-Frontend, ~10.700 Zeilen, 109 Tests in der CI.
-Entstanden während der Techstarter-Projektphase 2026 und seitdem weitergebaut.
+Als **Teamprojekt** (zwei Entwickler) während der Techstarter-Projektphase 2026 entstanden
+und seitdem weitergebaut — die Rollenverteilung steht unten unter [Team & Rollen](#team--rollen).
 
 ---
 
@@ -135,6 +136,7 @@ und keine Voraussetzung ist.
 | **Reports** | reportlab (PDF) |
 | **Qualität** | pytest (109 Tests) · Ruff · pre-commit · Coverage in der CI |
 | **CI/CD** | GitHub Actions · Docker · Render / Railway |
+| **Infrastruktur (IaC)** | Terraform · AWS: VPC, ECS Fargate, ALB, RDS, S3, IAM, ECR |
 
 ---
 
@@ -290,6 +292,17 @@ automatisch über Let's Encrypt.
 - ORM-Cascade nachziehen, damit die DSGVO-Löschung ohne manuelles Aufräumen auskommt
 - Chroma auf einen HTTP-Server oder pgvector umstellen — Renders Disk ist flüchtig, der
   Bootstrap re-indexiert derzeit bei jedem Deploy
+
+---
+
+## Team & Rollen
+
+Ein **Teamprojekt zweier Entwickler**; der Commit-Verlauf im Repository ist öffentlich einsehbar.
+
+| Person | Beitrag |
+|--------|---------|
+| **Beka Kikalishvili** — [@sarangisarang](https://github.com/sarangisarang) | Full-Stack (Backend & Frontend): KI-Coach (Streaming, Confidence-Handling, Human-Handoff, Antwortsprache-Erkennung), mehrsprachige UI (17 Sprachen), Rep-Counter mit MediaPipe, Workout- & Programm-Logik, DSGVO-Härtung — **sowie die komplette AWS-Infrastruktur** (Terraform: VPC, ECS Fargate, ALB, RDS, S3, IAM, ECR) samt Terraform-CI und Cost-Guardrails |
+| **L. ROsocha** | Backend & Frontend: Chroma-Vector-Store (semantische Suche), Fortschritts-Prognose, Gamification (Badges, Challenge, Leaderboard), PDF-Reports, Code-Quality-Tooling (Ruff, ESLint, Coverage, pre-commit) und der CD-Deploy-Workflow |
 
 ---
 
