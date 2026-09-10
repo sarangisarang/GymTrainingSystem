@@ -85,7 +85,7 @@ resource "aws_db_instance" "postgres" {
   multi_az            = false # Single-AZ (cost)
   publicly_accessible = false # private subnets only
 
-  backup_retention_period = 1
+  backup_retention_period = 7 # automatische Backups / Point-in-Time-Recovery (7 Tage)
   skip_final_snapshot     = true
   deletion_protection     = false
 
